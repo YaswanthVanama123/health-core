@@ -165,7 +165,7 @@ namespace GeniView.Cloud.Migrations.Data
                     Description = table.Column<string>(type: "nvarchar(160)", maxLength: 160, nullable: false),
                     CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CommunityID = table.Column<long>(type: "bigint", nullable: false),
-                    ParentGroupID = table.Column<long>(type: "bigint", nullable: false)
+                    ParentGroupID = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -181,7 +181,7 @@ namespace GeniView.Cloud.Migrations.Data
                         column: x => x.ParentGroupID,
                         principalTable: "Groups",
                         principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(

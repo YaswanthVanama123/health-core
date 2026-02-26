@@ -25,6 +25,12 @@ namespace GeniView.Data.Web
         [Display(Name = "Create Date")]
         public DateTime CreateDate { get; set; }
 
+        [ForeignKey(nameof(Community))]
+        public long CommunityID { get; set; }
+
+        [ForeignKey(nameof(ParentGroup))]
+        public long? ParentGroupID { get; set; }
+
         #region Navigation Properties
 
         public virtual List<Device> Devices { get; set; }

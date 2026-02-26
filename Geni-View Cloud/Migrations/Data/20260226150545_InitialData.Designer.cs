@@ -1294,7 +1294,7 @@ namespace GeniView.Cloud.Migrations.Data
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<long>("ParentGroupID")
+                    b.Property<long?>("ParentGroupID")
                         .HasColumnType("bigint");
 
                     b.HasKey("ID");
@@ -1471,8 +1471,7 @@ namespace GeniView.Cloud.Migrations.Data
                     b.HasOne("GeniView.Data.Web.Group", "ParentGroup")
                         .WithMany()
                         .HasForeignKey("ParentGroupID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Community");
 
