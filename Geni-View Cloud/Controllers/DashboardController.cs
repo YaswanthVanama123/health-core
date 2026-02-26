@@ -9,7 +9,6 @@ using GeniView.Data.Web;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,9 +22,11 @@ namespace GeniView.Cloud.Controllers
         public DashboardDataRepository db = new DashboardDataRepository();
         private static Logger _logger = LogManager.GetCurrentClassLogger();
 
-        public dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
+        private ApplicationUser GetCurrentUser()
         {
-            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            using var repo = new IdentityDataRepository();
+            return repo.FindUserByID(id);
         }
         #endregion
 
@@ -91,7 +92,7 @@ public ActionResult About()
         public JsonResult GetCycleStatus()
         {
             var model = new CycleStatusModel();
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
@@ -131,7 +132,7 @@ public ActionResult About()
         public JsonResult GetStateOfCharge()
         {
             var model = new StateOfChargeModel();
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
@@ -171,7 +172,7 @@ public ActionResult About()
         public JsonResult GetEffectiveRotation()
         {
             var model = new EffectiveRotationModel();
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
@@ -211,7 +212,7 @@ public ActionResult About()
         public JsonResult GetTemperature()
         {
             var model = new TemperatureModel();
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
@@ -290,7 +291,7 @@ public ActionResult About()
         public JsonResult GetBatteryEfficiency()
         {
             var model = new BatteryEfficiencyModel();
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
@@ -345,7 +346,7 @@ public ActionResult About()
         public JsonResult GetBatteryActivityHistory()
         {
             var model = new BatteryActivityHistoryModel { Days = new List<BatteryActivityHistoryDay>() };
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
@@ -385,7 +386,7 @@ public ActionResult About()
         public JsonResult GetDeviceActivityHistory()
         {
             var model = new DeviceActivityHistoryModel { Days = new List<DeviceActivityHistoryDay>() };
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
@@ -425,7 +426,7 @@ public ActionResult About()
         public JsonResult GetBatteryStatus()
         {
             var model = new BatteryStatusModel();
-            var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            var currentUser = GetCurrentUser();
 
             try
             {
