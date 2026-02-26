@@ -7,12 +7,12 @@
         <div class="global-nav__filters-container">
             @if (ViewBag.ShowCommunityAndGroupFilter != null && ViewBag.ShowCommunityAndGroupFilter)
             {
-                @Html.Partial("_MainFilterPartial")
+                @await Html.PartialAsync("_MainFilterPartial")
             }
         </div>
 
         <div class="global-nav__user">
-            @Html.Partial("_LoginPartial")
+            @await Html.PartialAsync("_LoginPartial")
         </div>
     </div>
 </div>

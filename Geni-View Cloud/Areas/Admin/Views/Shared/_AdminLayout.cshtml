@@ -15,10 +15,10 @@
 
 <body class="admin-area">
     <div id="wrapper">
-        @Html.Partial("_AdminNavbar")
+        @await Html.PartialAsync("_AdminNavbar")
 
         <div id="sidebar-wrapper">
-            @Html.Partial("_AdminSidebar")
+            @await Html.PartialAsync("_AdminSidebar")
         </div>
 
         <div id="page-content-wrapper">

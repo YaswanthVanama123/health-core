@@ -2,4 +2,4 @@
 @{
     ViewBag.Title = "Editting Community : " + Model.Name;
 }
-@Html.Partial("_CommunityEditPartial", Model)
+@await Html.PartialAsync("_CommunityEditPartial", Model)

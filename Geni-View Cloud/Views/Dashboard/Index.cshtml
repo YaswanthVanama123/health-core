@@ -1200,23 +1200,23 @@
 
             <div class="dashboard-v2__grid">
                 @* Order updated to match UX *@
-                @Html.Partial("Widgets/_StateOfChargeWidget")
-                @Html.Partial("Widgets/_CycleStatusWidget")
-                @Html.Partial("Widgets/_EffectiveRotationWidget")
+                @await Html.PartialAsync("Widgets/_StateOfChargeWidget")
+                @await Html.PartialAsync("Widgets/_CycleStatusWidget")
+                @await Html.PartialAsync("Widgets/_EffectiveRotationWidget")
 
-                @Html.Partial("Widgets/_TemperatureWidget")
-                @Html.Partial("Widgets/_BatteryStatusWidget")
-                @Html.Partial("Widgets/_BatteryEfficiencyWidget")
+                @await Html.PartialAsync("Widgets/_TemperatureWidget")
+                @await Html.PartialAsync("Widgets/_BatteryStatusWidget")
+                @await Html.PartialAsync("Widgets/_BatteryEfficiencyWidget")
 
                 @* Last two widgets as in UX: Device then Batteries *@
-                @Html.Partial("Widgets/_DeviceActivityHistoryWidget")
-                @Html.Partial("Widgets/_BatteryActivityHistoryWidget")
+                @await Html.PartialAsync("Widgets/_DeviceActivityHistoryWidget")
+                @await Html.PartialAsync("Widgets/_BatteryActivityHistoryWidget")
             </div>
         </div>
     </div>
 </div>
 
-@Html.Partial("~/Views/Shared/_DashboardPopup.cshtml")
+@await Html.PartialAsync("~/Views/Shared/_DashboardPopup.cshtml")
 
 @section scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

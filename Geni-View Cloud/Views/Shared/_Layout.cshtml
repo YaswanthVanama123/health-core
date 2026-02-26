@@ -25,9 +25,9 @@
 </head>
 <body>
     <div id="wrapper">
-        @Html.Partial("_NavigationMenu")
+        @await Html.PartialAsync("_NavigationMenu")
         <div id="sidebar-wrapper">
-            @Html.Partial("_SidebarPartial")
+            @await Html.PartialAsync("_SidebarPartial")
         </div>
 
         <div id="page-content-wrapper">

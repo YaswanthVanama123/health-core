@@ -26,7 +26,7 @@
     <div class="panel maincontainer matchHight">
         <div class="panel-heading panel-collapse" data-toggle="collapse" data-target="#BytecGroupLimited">@bytec.Name</div>
         <div class="panel-body collapse in" id="BytecGroupLimited">
-            @Html.Partial("_ContactPartial", bytec)
+            @await Html.PartialAsync("_ContactPartial", bytec)
         </div>
     </div>
     @if (isCommunityUser)
@@ -34,7 +34,7 @@
         <div class="panel maincontainer matchHight">
             <div class="panel-heading panel-collapse" data-toggle="collapse" data-target="#Community">@Model.Name</div>
             <div class="panel-body collapse in" id="Community">
-                @Html.Partial("_ContactPartial", Model)
+                @await Html.PartialAsync("_ContactPartial", Model)
             </div>
         </div>
     }
