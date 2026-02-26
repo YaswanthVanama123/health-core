@@ -44,6 +44,9 @@
     <!-- Data Annotations -->
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 
+    <!-- Bundling / minification (replaces System.Web.Optimization) -->
+    <PackageReference Include="LigerShark.WebOptimizer.Core" Version="3.0.371" />
+
     <!-- Project reference to data library -->
   </ItemGroup>
 

@@ -4,6 +4,7 @@
 // Phase 3: Full middleware pipeline wired up.
 // Phase 4: Identity migrations + seed will be triggered from the EnsureDatabaseAsync call below.
 // Phase 6: MQTTBackgroundService registered here.
+// Phase 8: WebOptimizer bundles registered here.
 
 using GeniView.Cloud.Common;
 using GeniView.Cloud.Hubs;
@@ -23,6 +24,7 @@ using NLog;
 using NLog.Web;
 using System;
 using System.Threading.Tasks;
+// using WebOptimizer; — namespace available after 'dotnet restore' downloads LigerShark.WebOptimizer.Core
 
 // ── Bootstrap NLog early so startup errors are captured ────────────────────
 var logger = LogManager.Setup()
@@ -113,6 +115,50 @@ try
     // ── SignalR ──────────────────────────────────────────────────────────────
     builder.Services.AddSignalR();
 
+    // ── WebOptimizer (Phase 8) — CSS + JS bundles ────────────────────────────
+    // TODO: Run 'dotnet restore' to download LigerShark.WebOptimizer.Core, then
+    //       uncomment the block below and remove the #if guard.
+#if WEBOPTIMIZER_AVAILABLE
+    builder.Services.AddWebOptimizer(pipeline =>
+    {
+        // Main layout CSS bundle
+        pipeline.AddCssBundle("/bundles/main.css",
+            "css/main.css",
+            "css/global-nav.css",
+            "css/dataTables.min.css",
+            "css/alertify.min.css");
+
+        // Admin layout CSS bundle
+        pipeline.AddCssBundle("/bundles/admin.css",
+            "css/bootstrap-colorpicker.min.css",
+            "css/alertify.min.css",
+            "css/dataTables.min.css");
+
+        // Core JS bundle (jQuery + Bootstrap + common utilities)
+        pipeline.AddJavaScriptBundle("/bundles/lib.js",
+            "js/jquery-3.7.1.min.js",
+            "js/bootstrap.min.js",
+            "js/jquery.matchHeight.js",
+            "js/alertify.min.js");
+
+        // App JS bundle (shared across all pages)
+        pipeline.AddJavaScriptBundle("/bundles/app.js",
+            "js/Custom Scripts/global-filters.js",
+            "js/Custom Scripts/datatables.min.js",
+            "js/Custom Scripts/notification.js",
+            "js/Custom Scripts/app.js");
+
+        // Admin JS bundle
+        pipeline.AddJavaScriptBundle("/bundles/admin-app.js",
+            "js/Custom Scripts/datatables.min.js",
+            "js/jquery.matchHeight.js",
+            "js/alertify.min.js",
+            "js/Custom Scripts/bootstrap-colorpicker.min.js",
+            "js/Custom Scripts/notification.js",
+            "js/Custom Scripts/app.js");
+    });
+#endif
+
     // ── Hangfire — use SQL Server storage ───────────────────────────────────
     builder.Services.AddHangfire(cfg => cfg
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
@@ -165,6 +211,9 @@ try
 
     // ── Middleware pipeline (ORDER MATTERS) ──────────────────────────────────
     app.UseHttpsRedirection();
+#if WEBOPTIMIZER_AVAILABLE
+    app.UseWebOptimizer();      // Phase 8: must be before UseStaticFiles
+#endif
     app.UseStaticFiles();
     app.UseRouting();
     app.UseSession();           // must be before Authentication

@@ -1,8 +1,16 @@
-﻿// Notification
+// notification.js — Phase 8: ASP.NET Core SignalR client
+// Replaces jquery.signalR-2.x hub proxy ($.connection.notificationHub / $.connection.hub.start)
+// with the @microsoft/signalr HubConnectionBuilder API.
+
 var el = document.querySelector('.notification');
-$(function () {
-    var chat = $.connection.notificationHub;
-    chat.client.addNotifcation = function (title, message, timestamp) {
+
+(function () {
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/notificationHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("addNotifcation", function (title, message, timestamp) {
         var count = Number(el.getAttribute('data-count')) || 0;
         el.setAttribute('data-count', count + 1);
         el.classList.remove('notify');
@@ -20,18 +28,18 @@ $(function () {
 
         updateNotifications(true);
         GetDeviceEventHistory();
-    };
-    $.connection.hub.start().done(function () {
     });
 
-});
+    connection.start().catch(function (err) {
+        console.error('SignalR connection error:', err);
+    });
+})();
 
 function updateNotifications(update) {
     var listItems = $("#discussion li").toArray();
     var showListItems = listItems.splice(0, 5);
-    if (!update) 
+    if (!update)
         $('#discussion li').remove();
-    
 
     $(listItems).hide();
     $(showListItems).show();
