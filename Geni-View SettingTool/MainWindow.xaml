@@ -1,9 +1,6 @@
-<Window x:Class="Geni_View_SettingTool.MainWindow"
-        x:Name="mainWindow"
-        xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Geni_View_SettingTool"
-        xmlns:local3="clr-namespace:Geni_View_SettingTool.Models"
         Title="Geni-View Setting Tool" Width="750" Height="600"
         WindowStartupLocation="CenterScreen" FontSize="18">
 

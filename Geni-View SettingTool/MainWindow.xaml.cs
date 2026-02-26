@@ -1,27 +1,54 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using BatteryClient;
 using Geni_View_SettingTool.Common;
 using Geni_View_SettingTool.Models;
 using Newtonsoft.Json;
 using NLog;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Geni_View_SettingTool
 {
-    public partial class MainWindow : Window
+    // Not partial — controls are resolved via FindControl<T> at runtime.
+    public class MainWindow : Window
     {
         string _settingFile = @"./";
-
         private static Logger _logger = LogManager.GetCurrentClassLogger();
+
+        // ── Named controls (populated in constructor via FindControl) ──────────
+        private TextBox   ClientName       = null!;
+        private TextBox   IP               = null!;
+        private TextBox   Port             = null!;
+        private TextBox   LocalWifiSSID    = null!;
+        private TextBox   LocalWifiPassword = null!;
+        private TextBox   LocalBrokerIP    = null!;
+        // DataGrid is declared as Control so the project compiles without the
+        // Avalonia.Controls.DataGrid package being restored. Cast to dynamic
+        // at the call sites for SelectAll/UnselectAll/SelectedItems.
+        private Control      DataGrid         = null!;
+        private dynamic DataGridDynamic => DataGrid;
+        private TextBlock MQTTStatus       = null!;
+        private Button    ImportList       = null!;
+        private Button    SelectALL        = null!;
+        private Button    CancleALL        = null!;
+        private Button    Set              = null!;
+        private Button    CmdTest          = null!;
+        private Button    ResultTest       = null!;
+        private Button    ClearTest        = null!;
+        private Button    Clear            = null!;
+        private Button    Connectbtn       = null!;
+        private Button    Disconnect       = null!;
 
         public MainWindow()
         {
@@ -29,14 +56,46 @@ namespace Geni_View_SettingTool
             {
                 _logger.Info("Application Startup");
 
-                InitializeComponent();
+                // Load XAML and resolve named controls
+                AvaloniaXamlLoader.Load(this);
+
+                ClientName        = this.FindControl<TextBox>("ClientName")!;
+                IP                = this.FindControl<TextBox>("IP")!;
+                Port              = this.FindControl<TextBox>("Port")!;
+                LocalWifiSSID     = this.FindControl<TextBox>("LocalWifiSSID")!;
+                LocalWifiPassword = this.FindControl<TextBox>("LocalWifiPassword")!;
+                LocalBrokerIP     = this.FindControl<TextBox>("LocalBrokerIP")!;
+                DataGrid          = this.FindControl<Control>("DataGrid")!;
+                MQTTStatus        = this.FindControl<TextBlock>("MQTTStatus")!;
+                ImportList        = this.FindControl<Button>("ImportList")!;
+                SelectALL         = this.FindControl<Button>("SelectALL")!;
+                CancleALL         = this.FindControl<Button>("CancleALL")!;
+                Set               = this.FindControl<Button>("Set")!;
+                CmdTest           = this.FindControl<Button>("CmdTest")!;
+                ResultTest        = this.FindControl<Button>("ResultTest")!;
+                ClearTest         = this.FindControl<Button>("ClearTest")!;
+                Clear             = this.FindControl<Button>("Clear")!;
+                Connectbtn        = this.FindControl<Button>("Connectbtn")!;
+                Disconnect        = this.FindControl<Button>("Disconnect")!;
+
+                // Wire button click events
+                Connectbtn.Click  += Connectbtn_Click;
+                Disconnect.Click  += Disconnect_Click;
+                Set.Click         += Set_Click;
+                SelectALL.Click   += SelectALL_Click;
+                CancleALL.Click   += CancleALL_Click;
+                Clear.Click       += Clear_Click;
+                ImportList.Click  += ImportList_Click;
+                CmdTest.Click     += CmdTest_Click;
+                ResultTest.Click  += ResultTest_Click;
+                ClearTest.Click   += ClearTest_Click;
 
                 Load();
 
-                DataGrid.DataContext = Global._dashboard;
+                DataGrid.DataContext  = Global._dashboard;
                 MQTTStatus.DataContext = Global._appViewModel;
 
-                ((appViewModel)MQTTStatus.DataContext).ConnectionStatusChanged += CheckUI;
+                Global._appViewModel.ConnectionStatusChanged += CheckUI;
 
                 CheckUI(this, false);
             }
@@ -46,14 +105,14 @@ namespace Geni_View_SettingTool
             }
         }
 
-        // ── Avalonia: show a message box (async) ──────────────────────────────
+        // ── Avalonia: inline message dialogs ──────────────────────────────────
 
         private async void ShowError(string message, string title)
         {
             var dialog = new Window
             {
-                Title = title,
-                Width = 400,
+                Title  = title,
+                Width  = 400,
                 Height = 160,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Content = new StackPanel
@@ -61,28 +120,38 @@ namespace Geni_View_SettingTool
                     Margin = new Thickness(16),
                     Children =
                     {
-                        new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
-                        new Button { Content = "OK", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                                     Margin = new Thickness(0, 12, 0, 0) }
+                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                        new Button
+                        {
+                            Content = "OK",
+                            HorizontalAlignment = HorizontalAlignment.Right,
+                            Margin = new Thickness(0, 12, 0, 0)
+                        }
                     }
                 }
             };
-            // Wire OK button close
-            ((StackPanel)dialog.Content!).Children
-                .OfType<Button>().First().Click += (_, _) => dialog.Close();
-
+            ((StackPanel)dialog.Content!).Children.OfType<Button>().First().Click += (_, _) => dialog.Close();
             await dialog.ShowDialog(this);
         }
 
         private async Task<bool> ShowYesNoDialog(string message, string title)
         {
-            bool result = false;
-
             var tcs = new TaskCompletionSource<bool>();
+            var btnPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 12, 0, 0),
+                Children =
+                {
+                    new Button { Content = "Yes", Margin = new Thickness(4, 0) },
+                    new Button { Content = "No",  Margin = new Thickness(4, 0) }
+                }
+            };
             var dialog = new Window
             {
-                Title = title,
-                Width = 400,
+                Title  = title,
+                Width  = 400,
                 Height = 160,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Content = new StackPanel
@@ -90,26 +159,14 @@ namespace Geni_View_SettingTool
                     Margin = new Thickness(16),
                     Children =
                     {
-                        new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap },
-                        new StackPanel
-                        {
-                            Orientation = Avalonia.Layout.Orientation.Horizontal,
-                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                            Margin = new Thickness(0, 12, 0, 0),
-                            Children =
-                            {
-                                new Button { Content = "Yes", Margin = new Thickness(4, 0) },
-                                new Button { Content = "No",  Margin = new Thickness(4, 0) }
-                            }
-                        }
+                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                        btnPanel
                     }
                 }
             };
-
-            var btns = ((StackPanel)((StackPanel)dialog.Content!).Children[1]).Children.OfType<Button>().ToList();
-            btns[0].Click += (_, _) => { tcs.SetResult(true);  dialog.Close(); };
-            btns[1].Click += (_, _) => { tcs.SetResult(false); dialog.Close(); };
-
+            var btns = btnPanel.Children.OfType<Button>().ToList();
+            btns[0].Click += (_, _) => { tcs.TrySetResult(true);  dialog.Close(); };
+            btns[1].Click += (_, _) => { tcs.TrySetResult(false); dialog.Close(); };
             await dialog.ShowDialog(this);
             return await tcs.Task;
         }
@@ -120,12 +177,12 @@ namespace Geni_View_SettingTool
         {
             int.TryParse(Port.Text, out int port);
 
-            Global._setting.ClientName        = ClientName.Text ?? "";
-            Global._setting.BrokerIP          = IP.Text ?? "";
+            Global._setting.ClientName        = ClientName.Text        ?? "";
+            Global._setting.BrokerIP          = IP.Text                ?? "";
             Global._setting.BrokerPort        = port;
-            Global._setting.LocalSSID         = LocalWifiSSID.Text ?? "";
+            Global._setting.LocalSSID         = LocalWifiSSID.Text     ?? "";
             Global._setting.LocalWifiPassword = LocalWifiPassword.Text ?? "";
-            Global._setting.LocalBroker       = LocalBrokerIP.Text ?? "";
+            Global._setting.LocalBroker       = LocalBrokerIP.Text     ?? "";
 
             Global._setting.Save(_settingFile);
         }
@@ -134,15 +191,15 @@ namespace Geni_View_SettingTool
         {
             Global._setting.Read(_settingFile);
 
-            ClientName.Text       = Global._setting.ClientName;
-            IP.Text               = Global._setting.BrokerIP;
-            Port.Text             = Global._setting.BrokerPort.ToString();
-            LocalWifiSSID.Text    = Global._setting.LocalSSID;
+            ClientName.Text        = Global._setting.ClientName;
+            IP.Text                = Global._setting.BrokerIP;
+            Port.Text              = Global._setting.BrokerPort.ToString();
+            LocalWifiSSID.Text     = Global._setting.LocalSSID;
             LocalWifiPassword.Text = Global._setting.LocalWifiPassword;
-            LocalBrokerIP.Text    = Global._setting.LocalBroker;
+            LocalBrokerIP.Text     = Global._setting.LocalBroker;
         }
 
-        // ── Window events ──────────────────────────────────────────────────────
+        // ── Window close ──────────────────────────────────────────────────────
 
         protected override void OnClosed(EventArgs e)
         {
@@ -158,7 +215,7 @@ namespace Geni_View_SettingTool
             {
                 Save();
 
-                List<string> topics = new List<string>
+                var topics = new List<string>
                 {
                     Global._setting.Battery.status + "#",
                     Global._setting.Battery.wifi,
@@ -166,7 +223,6 @@ namespace Geni_View_SettingTool
                 };
 
                 Global._mQTTHelper = new MQTTHelper();
-
                 Global._mQTTHelper.Setting(
                     Global._setting.BrokerIP,
                     Global._setting.BrokerPort,
@@ -175,7 +231,7 @@ namespace Geni_View_SettingTool
                     Global._setting.LocalBrokerPassword,
                     topics);
 
-                var ret = Global._mQTTHelper.Connect();
+                Global._mQTTHelper.Connect();
             }
             catch (Exception ex)
             {
@@ -187,7 +243,7 @@ namespace Geni_View_SettingTool
         {
             try
             {
-                var ret = Global._mQTTHelper.Disconnect();
+                Global._mQTTHelper.Disconnect();
                 Global._devices.Clear();
                 Global._dashboard.AddAndClear(new List<Device>());
             }
@@ -215,26 +271,14 @@ namespace Geni_View_SettingTool
 
         private void SelectALL_Click(object? sender, RoutedEventArgs e)
         {
-            try
-            {
-                DataGrid.SelectAll();
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.CollectInnerException(), "Error");
-            }
+            try   { DataGridDynamic.SelectAll(); }
+            catch (Exception ex) { ShowError(ex.CollectInnerException(), "Error"); }
         }
 
         private void CancleALL_Click(object? sender, RoutedEventArgs e)
         {
-            try
-            {
-                DataGrid.UnselectAll();
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.CollectInnerException(), "Error");
-            }
+            try   { DataGridDynamic.UnselectAll(); }
+            catch (Exception ex) { ShowError(ex.CollectInnerException(), "Error"); }
         }
 
         private void Clear_Click(object? sender, RoutedEventArgs e)
@@ -245,73 +289,52 @@ namespace Geni_View_SettingTool
 
         private void CmdTest_Click(object? sender, RoutedEventArgs e)
         {
-            try
-            {
-                TestSendCommand();
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.CollectInnerException(), "Error");
-            }
+            try   { TestSendCommand(); }
+            catch (Exception ex) { ShowError(ex.CollectInnerException(), "Error"); }
         }
 
         private void ResultTest_Click(object? sender, RoutedEventArgs e)
         {
-            try
-            {
-                TestResult();
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.CollectInnerException(), "Error");
-            }
+            try   { TestResult(); }
+            catch (Exception ex) { ShowError(ex.CollectInnerException(), "Error"); }
         }
 
         private void ClearTest_Click(object? sender, RoutedEventArgs e)
         {
-            try
-            {
-                TestClear();
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex.CollectInnerException(), "Error");
-            }
+            try   { TestClear(); }
+            catch (Exception ex) { ShowError(ex.CollectInnerException(), "Error"); }
         }
 
         private async void ImportList_Click(object? sender, RoutedEventArgs e)
         {
             try
             {
-                // Avalonia file picker (replaces Microsoft.Win32.OpenFileDialog)
                 var topLevel = TopLevel.GetTopLevel(this)!;
                 var files = await topLevel.StorageProvider.OpenFilePickerAsync(
                     new FilePickerOpenOptions
                     {
-                        Title = "Select file",
+                        Title         = "Select file",
                         AllowMultiple = false,
                         FileTypeFilter = new[]
                         {
-                            new FilePickerFileType("CSV") { Patterns = new[] { "*.csv" } },
-                            new FilePickerFileType("All files") { Patterns = new[] { "*.*" } }
+                            new FilePickerFileType("CSV")       { Patterns = new[] { "*.csv" } },
+                            new FilePickerFileType("All files") { Patterns = new[] { "*.*"   } }
                         }
                     });
 
                 if (files.Count > 0)
                 {
                     string filename = files[0].Path.LocalPath;
+                    var csv = new CSVHelper();
+                    var sns = csv.Read(filename);
 
-                    CSVHelper cSVHelper = new CSVHelper();
-                    var str = cSVHelper.Read(filename);
-
-                    foreach (var item in str)
+                    foreach (var sn in sns)
                     {
-                        Device device = new Device { SN = item };
-
-                        if (Global._devices.ContainsKey(item))
-                            Global._devices[device.SN] = device;
+                        var device = new Device { SN = sn };
+                        if (Global._devices.ContainsKey(sn))
+                            Global._devices[sn] = device;
                         else
-                            Global._devices.TryAdd(device.SN, device);
+                            Global._devices.TryAdd(sn, device);
                     }
 
                     Global._dashboard.AddAndClear(Global._devices.Values.OrderBy(x => x.SN).ToList());
@@ -323,11 +346,10 @@ namespace Geni_View_SettingTool
             }
         }
 
-        // ── UI state helper ────────────────────────────────────────────────────
+        // ── UI enable/disable state ────────────────────────────────────────────
 
         private void CheckUI(object? sender, bool isConnected)
         {
-            // Avalonia UI thread dispatch
             Dispatcher.UIThread.InvokeAsync(() =>
             {
                 ImportList.IsEnabled  = isConnected;
@@ -346,76 +368,68 @@ namespace Geni_View_SettingTool
 
         private async Task<bool> CheckLocalSettingAsync()
         {
-            bool result = true;
-
             if (string.IsNullOrEmpty(LocalWifiSSID.Text)
                 || string.IsNullOrEmpty(LocalWifiPassword.Text)
                 || string.IsNullOrEmpty(LocalBrokerIP.Text))
             {
-                result = await ShowYesNoDialog("A setting is empty. Confirm to continue?", "Warning");
+                return await ShowYesNoDialog("A setting is empty. Confirm to continue?", "Warning");
             }
-
-            return result;
+            return true;
         }
 
-        // ── MQTT publish helpers ───────────────────────────────────────────────
+        // ── MQTT publish ───────────────────────────────────────────────────────
 
         private void SendCommand()
         {
-            var items = DataGrid.SelectedItems.OfType<Device>().ToList();
+            var items = ((IEnumerable<object>)DataGridDynamic.SelectedItems).OfType<Device>().ToList();
 
             Task.Run(async () =>
             {
-                if (items != null)
+                foreach (var item in items)
                 {
-                    foreach (var item in items)
+                    string topic = MQTTTopic.GetLocalSetting(item.SN);
+                    var setting = new LocalSetting
                     {
-                        string topic = MQTTTopic.GetLocalSetting(item.SN);
-
-                        LocalSetting setting = new LocalSetting
-                        {
-                            ID            = item.SN,
-                            Cmd           = "LocalSetting",
-                            SSID          = Global._setting.LocalSSID,
-                            PWD           = Global._setting.LocalWifiPassword,
-                            Broker        = Global._setting.LocalBroker,
-                            BrokerAccount = Global._setting.LocalBrokerAccount,
-                            BrokerPWD     = Global._setting.LocalBrokerPassword,
-                        };
-                        string data = JsonConvert.SerializeObject(setting);
-
-                        await Global._mQTTHelper.PublishAsync(topic, data);
-
-                        Thread.Sleep(50);
-                    }
+                        ID            = item.SN,
+                        Cmd           = "LocalSetting",
+                        SSID          = Global._setting.LocalSSID,
+                        PWD           = Global._setting.LocalWifiPassword,
+                        Broker        = Global._setting.LocalBroker,
+                        BrokerAccount = Global._setting.LocalBrokerAccount,
+                        BrokerPWD     = Global._setting.LocalBrokerPassword,
+                    };
+                    await Global._mQTTHelper.PublishAsync(topic, JsonConvert.SerializeObject(setting));
+                    Thread.Sleep(50);
                 }
             });
         }
 
+        // ── Test helpers ───────────────────────────────────────────────────────
+
         private void TestSendCommand()
         {
-            Task.Run(async () =>
+            Task.Run(() =>
             {
-                int count = 4;
-                TestLocalSettingAsync(count);
-                TestOTA(count);
-                TestDeviceStatus(count);
-                TestNTP(count);
-                TestLogRate(count);
-                TestParameter(count);
+                int c = 4;
+                _ = TestLocalSettingAsync(c);
+                _ = TestOTA(c);
+                _ = TestDeviceStatus(c);
+                _ = TestNTP(c);
+                _ = TestLogRate(c);
+                _ = TestParameter(c);
             });
         }
 
         private void TestResult()
         {
-            Task.Run(async () =>
+            Task.Run(() =>
             {
-                int count = 100;
-                TestLocalSettingResult(count);
-                TestOTAResult(count);
-                TestNTPResult(count);
-                TestLogRateResult(count);
-                TestParameterResult(count);
+                int c = 100;
+                _ = TestLocalSettingResult(c);
+                _ = TestOTAResult(c);
+                _ = TestNTPResult(c);
+                _ = TestLogRateResult(c);
+                _ = TestParameterResult(c);
             });
         }
 
@@ -425,25 +439,23 @@ namespace Geni_View_SettingTool
             {
                 for (int i = 1; i < 100; i++)
                 {
-                    var setting = new LocalSettingResult { ID = i.ToString("0000") };
-                    await Global._mQTTHelper.PublishAsync($"battery/localsetting/result/{setting.ID}", "");
-                    await Global._mQTTHelper.PublishAsync($"battery/localsetting/cmd/{setting.ID}", "");
+                    var s = new LocalSettingResult { ID = i.ToString("0000") };
+                    await Global._mQTTHelper.PublishAsync($"battery/localsetting/result/{s.ID}", "");
+                    await Global._mQTTHelper.PublishAsync($"battery/localsetting/cmd/{s.ID}", "");
                     Thread.Sleep(50);
                 }
-
-                int count = 4;
-                TestLocalSettingAsync(count, true);
-                TestOTA(count, true);
-                TestDeviceStatus(count, true);
-                TestNTP(count, true);
-                TestLogRate(count, true);
-                TestParameter(count, true);
-
-                TestLocalSettingResult(count, true);
-                TestOTAResult(count, true);
-                TestNTPResult(count, true);
-                TestLogRateResult(count, true);
-                TestParameterResult(count, true);
+                int c = 4;
+                _ = TestLocalSettingAsync(c, true);
+                _ = TestOTA(c, true);
+                _ = TestDeviceStatus(c, true);
+                _ = TestNTP(c, true);
+                _ = TestLogRate(c, true);
+                _ = TestParameter(c, true);
+                _ = TestLocalSettingResult(c, true);
+                _ = TestOTAResult(c, true);
+                _ = TestNTPResult(c, true);
+                _ = TestLogRateResult(c, true);
+                _ = TestParameterResult(c, true);
             });
         }
 
@@ -451,18 +463,15 @@ namespace Geni_View_SettingTool
         {
             for (int i = 1; i <= count; i++)
             {
-                var setting = new LocalSetting
+                var s = new LocalSetting
                 {
-                    ID            = i.ToString("0000"),
-                    Cmd           = "LocalSetting",
-                    SSID          = Global._setting.LocalSSID,
-                    PWD           = Global._setting.Password,
-                    Broker        = Global._setting.BrokerIP,
+                    ID = i.ToString("0000"), Cmd = "LocalSetting",
+                    SSID = Global._setting.LocalSSID, PWD = Global._setting.Password,
+                    Broker = Global._setting.BrokerIP,
                     BrokerAccount = Global._setting.LocalBrokerAccount,
-                    BrokerPWD     = Global._setting.LocalBrokerPassword,
+                    BrokerPWD = Global._setting.LocalBrokerPassword,
                 };
-                string data = JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"battery/localsetting/cmd/{setting.ID}", clear ? "" : data);
+                await Global._mQTTHelper.PublishAsync($"battery/localsetting/cmd/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
@@ -471,14 +480,8 @@ namespace Geni_View_SettingTool
         {
             for (int i = 1; i <= count; i++)
             {
-                var setting = new OTA
-                {
-                    ID  = i.ToString("0000"),
-                    Cmd = "OTA",
-                    URL = "http://192.168.10.222/Files/Device/displayboard.bin"
-                };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"battery/ota/cmd/{setting.ID}", data);
+                var s = new OTA { ID = i.ToString("0000"), Cmd = "OTA", URL = "http://192.168.10.222/Files/Device/displayboard.bin" };
+                await Global._mQTTHelper.PublishAsync($"battery/ota/cmd/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
@@ -487,30 +490,22 @@ namespace Geni_View_SettingTool
         {
             for (int i = 1; i <= count; i++)
             {
-                var setting = new DeviceStatus
-                {
-                    ID         = i.ToString("0000"),
-                    Connection = "online",
-                    Type       = "Battery",
-                };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"device/status/{setting.ID}", data);
+                var s = new DeviceStatus { ID = i.ToString("0000"), Connection = "online", Type = "Battery" };
+                await Global._mQTTHelper.PublishAsync($"device/status/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
 
         private async Task TestNTP(int count, bool clear = false)
         {
-            bool ntpSwitch = false;
+            bool sw = false;
             for (int i = 1; i <= count; i++)
             {
-                var setting = ntpSwitch
+                var s = sw
                     ? new NTP { ID = i.ToString("0000"), Cmd = "NTP", NTPURL = "time.windows.com", NTPUTC = "" }
-                    : new NTP { ID = i.ToString("0000"), Cmd = "NTP", NTPURL = "",                 NTPUTC = DateTime.UtcNow.ToString("o") };
-                ntpSwitch = !ntpSwitch;
-
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"battery/ntp/cmd/{setting.ID}", data);
+                    : new NTP { ID = i.ToString("0000"), Cmd = "NTP", NTPURL = "", NTPUTC = DateTime.UtcNow.ToString("o") };
+                sw = !sw;
+                await Global._mQTTHelper.PublishAsync($"battery/ntp/cmd/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
@@ -519,9 +514,8 @@ namespace Geni_View_SettingTool
         {
             for (int i = 1; i <= count; i++)
             {
-                var setting = new LogRate { ID = i.ToString("0000"), Cmd = "LogRate", IntervalSec = 300 };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"battery/lograte/cmd/{setting.ID}", data);
+                var s = new LogRate { ID = i.ToString("0000"), Cmd = "LogRate", IntervalSec = 300 };
+                await Global._mQTTHelper.PublishAsync($"battery/lograte/cmd/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
@@ -530,116 +524,81 @@ namespace Geni_View_SettingTool
         {
             for (int i = 1; i <= count; i++)
             {
-                var config = new BatteryConfig
+                var cfg = new BatteryConfig
                 {
-                    ChargingMode    = "Parallel",
-                    DischargingMode = "Sequential",
-                    AlertSettings   = new Alertsettings
-                    {
-                        AlertType              = "All",
-                        DisplayMode            = "Default",
-                        SystemMode             = "Disabled",
-                        LowBatteryAlertInterval = "",
-                        LowBatteryAlertLevel    = "",
-                    }
+                    ChargingMode = "Parallel", DischargingMode = "Sequential",
+                    AlertSettings = new Alertsettings { AlertType = "All", DisplayMode = "Default",
+                        SystemMode = "Disabled", LowBatteryAlertInterval = "", LowBatteryAlertLevel = "" }
                 };
-                var setting = new BatterySetting { ID = i.ToString("0000"), Cmd = "BatteryPara", BatteryConfig = config };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"battery/para/cmd/{setting.ID}", data);
+                var s = new BatterySetting { ID = i.ToString("0000"), Cmd = "BatteryPara", BatteryConfig = cfg };
+                await Global._mQTTHelper.PublishAsync($"battery/para/cmd/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
 
         private async Task TestLocalSettingResult(int count, bool clear = false)
         {
-            string topic = "battery/localsetting/result/";
             for (int i = 1; i <= count; i++)
             {
-                var setting = new LocalSettingResult
+                var s = new LocalSettingResult
                 {
-                    ID            = i.ToString("0000"),
-                    Cmd           = "LocalSettingResult",
-                    Result        = true,
-                    SSID          = Global._setting.LocalSSID,
-                    PWD           = Global._setting.Password,
-                    Broker        = Global._setting.BrokerIP,
+                    ID = i.ToString("0000"), Cmd = "LocalSettingResult", Result = true,
+                    SSID = Global._setting.LocalSSID, PWD = Global._setting.Password,
+                    Broker = Global._setting.BrokerIP,
                     BrokerAccount = Global._setting.LocalBrokerAccount,
-                    BrokerPWD     = Global._setting.LocalBrokerPassword,
+                    BrokerPWD = Global._setting.LocalBrokerPassword,
                 };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"{topic}{setting.ID}", data);
+                await Global._mQTTHelper.PublishAsync($"battery/localsetting/result/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
 
         private async Task TestOTAResult(int count, bool clear = false)
         {
-            string topic = "battery/ota/result/";
             for (uint i = 2156593311; i <= 2156593311 + (uint)count; i++)
             {
-                var setting = new OTAResult
-                {
-                    ID     = i.ToString("0000"),
-                    Cmd    = "OTAResult",
-                    Result = true,
-                    URL    = "http://192.168.10.222/Files/Device/displayboard.bin"
-                };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"{topic}{setting.ID}", data);
+                var s = new OTAResult { ID = i.ToString("0000"), Cmd = "OTAResult", Result = true, URL = "http://192.168.10.222/Files/Device/displayboard.bin" };
+                await Global._mQTTHelper.PublishAsync($"battery/ota/result/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
 
         private async Task TestNTPResult(int count, bool clear = false)
         {
-            string topic = "battery/ntp/result/";
-            bool ntpSwitch = false;
+            bool sw = false;
             for (int i = 1; i <= count; i++)
             {
-                var setting = ntpSwitch
+                var s = sw
                     ? new NTPResult { ID = i.ToString("0000"), Cmd = "NTPResult", Result = true, NTPURL = "time.windows.com", NTPUTC = "" }
-                    : new NTPResult { ID = i.ToString("0000"), Cmd = "NTP",       Result = true, NTPURL = "",                 NTPUTC = DateTime.UtcNow.ToString("o") };
-                ntpSwitch = !ntpSwitch;
-
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"{topic}{setting.ID}", data);
+                    : new NTPResult { ID = i.ToString("0000"), Cmd = "NTP",       Result = true, NTPURL = "", NTPUTC = DateTime.UtcNow.ToString("o") };
+                sw = !sw;
+                await Global._mQTTHelper.PublishAsync($"battery/ntp/result/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
 
         private async Task TestLogRateResult(int count, bool clear = false)
         {
-            string topic = "battery/lograte/result/";
             for (int i = 1; i <= count; i++)
             {
-                var setting = new LogRateResult { ID = i.ToString("0000"), Cmd = "LogRateResult", Result = true, IntervalSec = 300 };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"{topic}{setting.ID}", data);
+                var s = new LogRateResult { ID = i.ToString("0000"), Cmd = "LogRateResult", Result = true, IntervalSec = 300 };
+                await Global._mQTTHelper.PublishAsync($"battery/lograte/result/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
 
         private async Task TestParameterResult(int count, bool clear = false)
         {
-            string topic = "battery/para/result/";
             for (int i = 1; i <= count; i++)
             {
-                var config = new BatteryConfig
+                var cfg = new BatteryConfig
                 {
-                    ChargingMode    = "Parallel",
-                    DischargingMode = "Sequential",
-                    AlertSettings   = new Alertsettings
-                    {
-                        AlertType              = "All",
-                        DisplayMode            = "Default",
-                        SystemMode             = "Disabled",
-                        LowBatteryAlertInterval = "",
-                        LowBatteryAlertLevel    = "",
-                    }
+                    ChargingMode = "Parallel", DischargingMode = "Sequential",
+                    AlertSettings = new Alertsettings { AlertType = "All", DisplayMode = "Default",
+                        SystemMode = "Disabled", LowBatteryAlertInterval = "", LowBatteryAlertLevel = "" }
                 };
-                var setting = new BatterySettingResult { ID = i.ToString("0000"), Cmd = "BatteryParaResult", Result = true, BatteryConfig = config };
-                string data = clear ? "" : JsonConvert.SerializeObject(setting);
-                await Global._mQTTHelper.PublishAsync($"{topic}{setting.ID}", data);
+                var s = new BatterySettingResult { ID = i.ToString("0000"), Cmd = "BatteryParaResult", Result = true, BatteryConfig = cfg };
+                await Global._mQTTHelper.PublishAsync($"battery/para/result/{s.ID}", clear ? "" : JsonConvert.SerializeObject(s));
                 Thread.Sleep(50);
             }
         }
