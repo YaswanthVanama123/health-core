@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using GeniView.Cloud.Controllers.API;
+using Hangfire;
 using Hangfire.Storage;
 using NLog;
 using System;
@@ -19,26 +20,25 @@ namespace GeniView.Cloud.Common
 
 		MQTTMsgParser _MQTTMsgParser = new MQTTMsgParser();
 
-		// NOTE: LogApiController is resolved via Hangfire's job activator (IServiceScopeFactory)
-		// in Program.cs. Direct instantiation here is replaced by the string-based job registration below.
-
 		public HFScheduler()
 		{
 		}
 
 		public void Setting()
 		{
-			string every1Sec   = "*/1 * * * * *";
+			string every1Sec = "*/1 * * * * *";
 
 			RemoveAllJobs();
+			ClearAndCreateJobs();
 
-			ClearAndCreateJobs(); //initialize
+			// LogApiController is resolved by Hangfire's built-in job activator,
+			// which creates a DI scope per job execution via IServiceScopeFactory.
+			RecurringJob.AddOrUpdate<LogApiController>(
+				"ProcessLog",
+				x => x.ProcessLogJob(CancellationToken.None),
+				every1Sec);
 
-			// NOTE: In Phase 6, replace this with:
-			//   RecurringJob.AddOrUpdate<LogApiController>("ProcessLog",
-			//       x => x.ProcessLogJob(CancellationToken.None), every1Sec);
-			// using Hangfire's IServiceScopeFactory job activator.
-			// Stubbed here to avoid direct controller instantiation (IServiceProvider not available statically).
+			_logger.Info("HFScheduler: ProcessLog recurring job registered (every 1 sec).");
 		}
 
         public string ClearAndCreateJobs()

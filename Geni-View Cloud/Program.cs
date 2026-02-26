@@ -130,9 +130,10 @@ try
             }));
     builder.Services.AddHangfireServer();
 
-    // ── MQTT singleton (Phase 6: will become a BackgroundService) ───────────
+    // ── MQTT singleton + BackgroundService (Phase 6) ────────────────────────
     builder.Services.AddSingleton<MQTTHelper>(sp =>
         new MQTTHelper(sp.GetRequiredService<IConfiguration>()));
+    builder.Services.AddHostedService<MQTTBackgroundService>();
 
     // ─────────────────────────────────────────────────────────────────────────
     var app = builder.Build();
@@ -189,25 +190,10 @@ try
         name: "default",
         pattern: "{controller=Dashboard}/{action=Index}/{id?}");
 
-    // ── Hangfire recurring jobs ──────────────────────────────────────────────
-    // Phase 6: RecurringJob.AddOrUpdate<LogApiController>(...) wired here once
-    //          the MQTT BackgroundService is in place.
-
-    // ── Start MQTT connection after a short delay (non-blocking) ────────────
-    // Phase 6: replace with a proper BackgroundService.
-    _ = Task.Run(async () =>
-    {
-        try
-        {
-            await Task.Delay(TimeSpan.FromSeconds(10));
-            var mqtt = app.Services.GetRequiredService<MQTTHelper>();
-            await mqtt.Connect();
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, "MQTT startup connection failed.");
-        }
-    });
+    // ── Hangfire recurring jobs (Phase 6) ────────────────────────────────────
+    // Hangfire's built-in AspNetCoreJobActivator resolves LogApiController
+    // from a DI scope per job execution — no direct instantiation needed.
+    new HFScheduler().Setting();
 
     logger.Info("Application started successfully.");
     app.Run();
