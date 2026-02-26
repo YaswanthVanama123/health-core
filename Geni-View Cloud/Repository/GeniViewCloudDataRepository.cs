@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web;
-using GeniView.Data.Hardware;
-using GeniView.Data.Web;
-using GeniView.Data.Agent;
 using GeniView.Cloud.Models;
+using GeniView.Data.Agent;
+using GeniView.Data.Hardware;
 using GeniView.Data.Hardware.Event;
+using GeniView.Data.Web;
+using Microsoft.EntityFrameworkCore;
 
 namespace GeniView.Cloud.Repository
 {
     public partial class GeniViewCloudDataRepository : DbContext
     {
-        public GeniViewCloudDataRepository() : base("name=GeniViewCloudDataRepository")
+        public GeniViewCloudDataRepository(DbContextOptions<GeniViewCloudDataRepository> options)
+            : base(options)
         {
-           Database.SetInitializer(new GeniViewCloudDataRepositoryInitializer());
         }
 
         public virtual DbSet<Agent> Agents { get; set; }
@@ -28,11 +24,18 @@ namespace GeniView.Cloud.Repository
         public virtual DbSet<Device> Devices { get; set; }
         public virtual DbSet<DeviceEvent> DeviceEvents { get; set; }
         public virtual DbSet<Group> Groups { get; set; }
-        
+
         public virtual DbSet<MailServer> MailServer { get; set; }
         public virtual DbSet<DeviceEventNotification> DeviceEventActionNotifications { get; set; }
         public virtual DbSet<ApplicationUpdate> ApplicationUpdates { get; set; }
         public virtual DbSet<ApplicationLog> ApplicationLogs { get; set; }
         public virtual DbSet<UserActivityHistory> UserActivityHistory { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            // Disable lazy loading proxies — same behaviour as EF6 ProxyCreationEnabled = false
+            // Use explicit .Include() calls in repositories for eager loading.
+        }
     }
 }

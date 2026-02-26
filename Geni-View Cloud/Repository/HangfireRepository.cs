@@ -1,22 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web;
-using GeniView.Data.Hardware;
-using GeniView.Data.Web;
-using GeniView.Data.Agent;
-using GeniView.Cloud.Models;
-using GeniView.Data.Hardware.Event;
+using Microsoft.EntityFrameworkCore;
 
 namespace GeniView.Cloud.Repository
 {
+    // Minimal DbContext used only to ensure the Hangfire database exists.
+    // Hangfire manages its own schema — this context is only used for DB creation.
     public partial class HangfireRepository : DbContext
     {
-        public HangfireRepository() : base("name=GeniViewCloudHangfireRepository")
+        public HangfireRepository(DbContextOptions<HangfireRepository> options)
+            : base(options)
         {
-            Database.SetInitializer(new HangfireRepositoryInitializer());
-            var ret = Database.CreateIfNotExists();
         }
     }
 }

@@ -1,38 +1,25 @@
-﻿using GeniView.Cloud.Models;
-using GeniView.Cloud.PowerBI;
-using GeniView.Data.Hardware.Event;
+using Microsoft.EntityFrameworkCore;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.IO;
-using System.Linq;
-using System.Web;
-using System.Web.Hosting;
 
 namespace GeniView.Cloud.Repository
 {
-    // WARNING : CHANGING THIS WILL CAUSE TO LOOSE ALL DATA
-    public class HangfireRepositoryInitializer : IDatabaseInitializer<HangfireRepository>
+    // Ensures the Hangfire SQL database exists at startup.
+    // Called once from Program.cs before Hangfire services start.
+    public class HangfireRepositoryInitializer
     {
-        private static Logger _logger = LogManager.GetCurrentClassLogger();
-        public void InitializeDatabase(HangfireRepository context)
+        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
+        public static void EnsureCreated(HangfireRepository context)
         {
             try
             {
-                if (!context.Database.Exists())
-                {
-                    context.Database.Create();
-                }
-                else if (context.Database.CompatibleWithModel(true))
-                {
-                }
+                context.Database.EnsureCreated();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                _logger.Error("Hangfire database creation failed.", ex);
+                _logger.Error(ex, "Hangfire database creation failed.");
             }
         }
-
     }
 }

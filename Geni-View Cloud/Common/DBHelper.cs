@@ -1,10 +1,8 @@
-﻿using EntityFramework.Utilities;
 using GeniView.Cloud.Repository;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
-using System.Web;
 
 namespace GeniView.Cloud.Common
 {
@@ -14,46 +12,41 @@ namespace GeniView.Cloud.Common
 
         public GeniViewCloudDataRepository DB
         {
-            get
-            {
-                return _db;
-            }
-            set
-            {
-                _db = value;
-            }
+            get { return _db; }
+            set { _db = value; }
         }
 
-        public DBHelper()
+        public DBHelper(GeniViewCloudDataRepository db)
         {
-            GeniViewCloudDataRepository _db = new GeniViewCloudDataRepository();
+            _db = db;
         }
-
 
         public virtual void BatchInsert<TContext, T>(TContext db, DbSet<T> dbSet, List<T> dataList)
             where TContext : DbContext
             where T : class
         {
-            if (dataList.Any() == true)
+            if (dataList.Any())
             {
-                EFBatchOperation.For<TContext, T>(db, dbSet).InsertAll<T>(dataList);
+                db.AddRange(dataList);
+                db.SaveChanges();
             }
         }
 
-        public virtual void UpdateAll<TContext, T>(TContext db, DbSet<T> dbSet, List<T> dataList, Action<UpdateSpecification<T>> updateSpecification)
+        public virtual void UpdateAll<TContext, T>(TContext db, DbSet<T> dbSet, List<T> dataList)
             where TContext : DbContext
             where T : class
         {
-            if (dataList.Any() == true)
+            if (dataList.Any())
             {
-                EFBatchOperation.For<TContext, T>(db, dbSet).UpdateAll<T>(dataList, updateSpecification);
+                db.UpdateRange(dataList);
+                db.SaveChanges();
             }
         }
 
         public void Dispose()
         {
-            _db.Dispose();
-            GC.Collect();
+            _db?.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

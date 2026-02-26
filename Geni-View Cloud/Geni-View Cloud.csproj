@@ -37,6 +37,7 @@
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.11" />
 
     <!-- Caching -->
+    <!-- TODO: upgrade to 8.0.1+ when network available (NU1903 vulnerability in 8.0.0) -->
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
 
     <!-- Data Annotations -->

@@ -1,77 +1,64 @@
-﻿using GeniView.Cloud.Models;
+using GeniView.Cloud.Models;
 using GeniView.Cloud.PowerBI;
 using GeniView.Data.Hardware.Event;
+using Microsoft.EntityFrameworkCore;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.IO;
 using System.Linq;
-using System.Web;
-using System.Web.Hosting;
 
 namespace GeniView.Cloud.Repository
 {
-    // WARNING : CHANGING THIS WILL CAUSE TO LOOSE ALL DATA
-    public class GeniViewCloudDataRepositoryInitializer : IDatabaseInitializer<GeniViewCloudDataRepository>
+    // WARNING: CHANGING THIS WILL CAUSE DATA LOSS
+    // Called once at startup via Program.cs after EF Core migrations are applied.
+    public class GeniViewCloudDataRepositoryInitializer
     {
-        private static Logger _logger = LogManager.GetCurrentClassLogger();
-        public void InitializeDatabase(GeniViewCloudDataRepository context)
+        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
+        public static void Seed(GeniViewCloudDataRepository context)
         {
             try
             {
-                if (!context.Database.Exists())
+                // Populate device event notification definitions
+                foreach (var item in DeviceEventNotification.Seed())
                 {
-                    context.Database.Create();
-                    Seed(context);
+                    if (!context.DeviceEventActionNotifications.Any(x => x.UID == item.UID))
+                        context.DeviceEventActionNotifications.Add(item);
                 }
-                else if (context.Database.CompatibleWithModel(true))
+
+                // Populate application update entries
+                foreach (var item in ApplicationUpdate.Seed())
                 {
-                    Seed(context);
+                    if (!context.ApplicationUpdates.Any(x => x.AppId == item.AppId))
+                        context.ApplicationUpdates.Add(item);
                 }
-            }
-            catch(Exception ex)
-            {
-                _logger.Error("Database creation failed.", ex);
-            }
-        }
 
-        private void Seed(GeniViewCloudDataRepository context)
-        {
-            // Populate device events.
-            foreach (var item in DeviceEventNotification.Seed())
-            {
-                if (!context.DeviceEventActionNotifications.Any(x => x.UID == item.UID))
-                    context.DeviceEventActionNotifications.Add(item);
-            }
+                // Create default agent for G3 flow
+                var findAgent = context.Agents.FirstOrDefault(a => a.Name.ToLower() == "default");
+                if (findAgent == null)
+                {
+                    var defaultAgent = Data.Agent.Agent.Default();
+                    context.Agents.Add(defaultAgent);
+                }
 
-            // Populate application update entires.
-            foreach (var item in ApplicationUpdate.Seed())
-            {
-                if (!context.ApplicationUpdates.Any(x => x.AppId == item.AppId))
-                    context.ApplicationUpdates.Add(item);
-            }
+                // Create SQL views for analytics
+                try
+                {
+                    context.Database.ExecuteSqlRaw(StoredProcedures.AgentBatteryLogsWithDurationView);
+                    context.Database.ExecuteSqlRaw(StoredProcedures.AgentDeviceLogsWithDurationView);
+                    context.Database.ExecuteSqlRaw(StoredProcedures.InternalBatteryLogsWithDurationView);
+                    context.Database.ExecuteSqlRaw(StoredProcedures.InternalDeviceLogsWithDurationView);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Cannot create SQL views.");
+                }
 
-            // Create default agent for G3 flow
-            var findAgent = context.Agents.Where(a => a.Name.ToLower() == "default").FirstOrDefault();
-            if (findAgent == null)
-            {
-                var defaultAgent = Data.Agent.Agent.Default();
-                context.Agents.Add(defaultAgent);
-            }
-
-            try
-            {
-                context.Database.ExecuteSqlCommand(StoredProcedures.AgentBatteryLogsWithDurationView, new object[0]);
-                context.Database.ExecuteSqlCommand(StoredProcedures.AgentDeviceLogsWithDurationView,new object[0]);
-                context.Database.ExecuteSqlCommand(StoredProcedures.InternalBatteryLogsWithDurationView, new object[0]);
-                context.Database.ExecuteSqlCommand(StoredProcedures.InternalDeviceLogsWithDurationView, new object[0]);
+                context.SaveChanges();
             }
             catch (Exception ex)
             {
-                _logger.Error("Cannot create sql views.", ex);
+                _logger.Error(ex, "Database seeding failed.");
             }
-            context.SaveChanges();
         }
     }
 }
