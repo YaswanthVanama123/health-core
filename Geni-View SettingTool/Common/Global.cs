@@ -1,5 +1,4 @@
-﻿using BatteryClient;
-using Geni_View_SettingTool.Models;
+﻿using Geni_View_SettingTool.Models;
 using NLog;
 using System;
 using System.Collections.Concurrent;

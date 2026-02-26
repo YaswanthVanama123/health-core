@@ -1,27 +1,24 @@
-﻿using System;
+using Avalonia.Threading;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
 
 namespace Geni_View_SettingTool.Models
 {
-    public class Device: INotifyPropertyChanged
+    public class Device : INotifyPropertyChanged
     {
         private string _sn;
-        public string SN 
-        { 
-            get { return _sn; } 
-            set 
+        public string SN
+        {
+            get { return _sn; }
+            set
             {
                 _sn = value;
-                OnPropertyChanged("SN"); 
-            } 
+                OnPropertyChanged("SN");
+            }
         }
 
         private string _ssid;
@@ -74,18 +71,10 @@ namespace Geni_View_SettingTool.Models
             get { return _createTime; }
             set
             {
-
-                DateTime dt;
-
-                if (DateTime.TryParse(value, out dt) == true)
-                {
+                if (DateTime.TryParse(value, out DateTime dt))
                     _createTime = dt.ToString("yyyy-MM-dd HH:mm:ss:ffff");
-                }
                 else
-                {
                     _createTime = value;
-                }
-
 
                 OnPropertyChanged("CreateTime");
             }
@@ -110,54 +99,39 @@ namespace Geni_View_SettingTool.Models
 
         public bool AddAndClear(List<Device> devices)
         {
-            bool result = false;
-            
-
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            // Avalonia UI thread dispatch (replaces Application.Current.Dispatcher.BeginInvoke)
+            Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Devices.Clear();
-
                 foreach (var item in devices)
-                {
                     Devices.Add(item);
-                }
+            });
 
-            }));
-
-
-            return result;
+            return false;
         }
 
-        public bool AddOrUpdate(string sn ,Device data)
+        public bool AddOrUpdate(string sn, Device data)
         {
-            bool result = false;
-                var device = Devices.Where(x => x.SN == sn).FirstOrDefault();
+            var device = Devices.FirstOrDefault(x => x.SN == sn);
 
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (device == null)
+                    Devices.Add(data);
+                else
                 {
-                    if (device == null)
-                    {
-                        Devices.Add(data);
-                        result = true;
-                    }
-                    else
-                    {
-                        device = data;
+                    int idx = Devices.IndexOf(device);
+                    if (idx >= 0) Devices[idx] = data;
+                }
+            });
 
-                        result = true;
-                    }
-                }));
-
-            return result;
+            return true;
         }
 
-        // INotifyPropertyChanged implementation
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-
     }
 }

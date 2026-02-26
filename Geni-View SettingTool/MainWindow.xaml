@@ -1,33 +1,17 @@
-﻿<Window x:Class="Geni_View_SettingTool.MainWindow"
+<Window x:Class="Geni_View_SettingTool.MainWindow"
         x:Name="mainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Geni_View_SettingTool"
-        xmlns:local2="clr-namespace:Geni_View_SettingTool.Common"
         xmlns:local3="clr-namespace:Geni_View_SettingTool.Models"
-        
-        mc:Ignorable="d"
-        
-        Title="Geni-View Setting Tool" Width="750" Height="600"  
-        Closed="Window_Closed" WindowStartupLocation="CenterScreen" FontSize="18">
-    <!--<Window.DataContext>
-        <local3:Dashboard/>
-    </Window.DataContext>-->
-
-
+        Title="Geni-View Setting Tool" Width="750" Height="600"
+        WindowStartupLocation="CenterScreen" FontSize="18">
 
     <Grid>
         <Grid.Resources>
-            <Style TargetType="DataGridCell">
-                <Style.Triggers>
-                    <Trigger Property="DataGridCell.IsSelected" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                    </Trigger>
-                </Style.Triggers>
+            <Style Selector="DataGridCell:selected /template/ ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
             </Style>
-
         </Grid.Resources>
 
         <Grid.ColumnDefinitions>
@@ -37,11 +21,10 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="570*"/>
-            <RowDefinition Height="30*" MinHeight="30"/>
+            <RowDefinition Height="30" MinHeight="30"/>
         </Grid.RowDefinitions>
 
-        <!--<Viewbox HorizontalAlignment="Stretch" VerticalAlignment="Top">-->
-        <TabControl Grid.Row="0" HorizontalAlignment="Stretch"  VerticalAlignment="Top" Grid.ColumnSpan="2"  >
+        <TabControl Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Grid.ColumnSpan="2">
             <TabItem Header="Broker Connection">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
@@ -59,26 +42,19 @@
                     </Grid.RowDefinitions>
 
                     <Label Grid.Row="0" Content="Client Name:" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Name="ClientName"  Style="{StaticResource TextBox}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Name="ClientName" />
 
                     <Label Grid.Row="1" Content="IP:" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Name="IP"  Style="{StaticResource TextBox}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Name="IP" />
 
                     <Label Grid.Row="2" Content="Port:" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Name="Port" Style="{StaticResource TextBox}"/>
-
-                    <!--<Label Grid.Row="3" Content="Account:" />
-                    <TextBox Grid.Row="3"  Grid.Column="2" Name="Account"   Style="{StaticResource TextBox}"/>
-
-                    <Label Grid.Row="4" Content="Password:" />
-                    <TextBox Grid.Row="4"  Grid.Column="3" Name="Password" Style="{StaticResource TextBox}"/>-->
+                    <TextBox Grid.Row="2" Grid.Column="1" Name="Port" />
 
                     <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button  Name="Connectbtn" Content="Connect"  Margin="8"  Click="Connectbtn_Click" />
-                        <Button  Grid.Column="2" Name="Disconnect" Content="Disconnect" Width="110"  Margin="8" Click="Disconnect_Click" />
+                        <Button Name="Connectbtn" Content="Connect" Margin="8" Click="Connectbtn_Click" />
+                        <Button Name="Disconnect" Content="Disconnect" Width="110" Margin="8" Click="Disconnect_Click" />
                     </StackPanel>
                 </Grid>
-
             </TabItem>
 
             <TabItem Header="Publish Settings">
@@ -89,111 +65,63 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="10*"  MinHeight="30"/>
-                        <RowDefinition Height="10*"  MinHeight="30"/>
-                        <RowDefinition Height="10*"  MinHeight="30"/>
-                        <RowDefinition Height="10*"  MinHeight="30"/>
-                        <RowDefinition Height="10*"  MinHeight="30"/>
-                        <RowDefinition Height="0*"  MinHeight="0"/>
-                        <RowDefinition Height="0*"  MinHeight="0"/>
-                        <RowDefinition Height="10*"  MinHeight="40"/>
+                        <RowDefinition Height="10*" MinHeight="30"/>
+                        <RowDefinition Height="10*" MinHeight="30"/>
+                        <RowDefinition Height="10*" MinHeight="30"/>
+                        <RowDefinition Height="10*" MinHeight="30"/>
+                        <RowDefinition Height="10*" MinHeight="30"/>
+                        <RowDefinition Height="0" MinHeight="0"/>
+                        <RowDefinition Height="0" MinHeight="0"/>
+                        <RowDefinition Height="10*" MinHeight="40"/>
                         <RowDefinition Height="600*"/>
-                        
-                        <!--<RowDefinition Height="150*" />
-                        <RowDefinition Height="150*" />
-                        <RowDefinition Height="150*" />
-                        <RowDefinition Height="150*" />
-                        <RowDefinition Height="150*" />
-                        <RowDefinition Height="150*" />
-                        <RowDefinition Height="150*" />
-                        <RowDefinition Height="150*" />
-                        <RowDefinition Height="600*"/>-->
                     </Grid.RowDefinitions>
 
-                    <Label Grid.Row="0" Content="WIFI"  />
+                    <Label Grid.Row="0" Content="WIFI" />
 
                     <Label Grid.Row="1" Content="   SSID:" Grid.ColumnSpan="2" />
-                    <TextBox Grid.Row="1"  Grid.Column="2" Name="LocalWifiSSID"  Style="{StaticResource TextBox}"/>
+                    <TextBox Grid.Row="1" Grid.Column="2" Name="LocalWifiSSID" />
 
                     <Label Grid.Row="2" Content="   Password:" Grid.ColumnSpan="2" />
-                    <TextBox Grid.Row="2"  Grid.Column="2" Name="LocalWifiPassword" Style="{StaticResource TextBox}"/>
+                    <TextBox Grid.Row="2" Grid.Column="2" Name="LocalWifiPassword" />
 
                     <Label Grid.Row="3" Content="Broker" Grid.ColumnSpan="2" />
 
                     <Label Grid.Row="4" Content="   Address:" Grid.ColumnSpan="2" />
-                    <TextBox Grid.Row="4"  Grid.Column="2" Name="LocalBrokerIP"  Style="{StaticResource TextBox}"/>
+                    <TextBox Grid.Row="4" Grid.Column="2" Name="LocalBrokerIP" />
 
-                    <!--<Label Grid.Row="5" Content="   Account:" Grid.ColumnSpan="2" />
-                    <TextBox Grid.Row="5"  Grid.Column="2" Name="LocalBrokerAccount"  Style="{StaticResource TextBox}"/>
-
-                    <Label Grid.Row="6" Content="   Password:" Grid.ColumnSpan="2" />
-                    <TextBox Grid.Row="6"  Grid.Column="2" Name="LocalBrokerPassword"  Style="{StaticResource TextBox}"/>-->
-
-                    <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" >
-                        <Button Name="ImportList" Content="Import"  Margin="8" Click="ImportList_Click"/>
-                        <Button Name="SelectALL" Content="Select ALL"  Margin="8" Click="SelectALL_Click" />
+                    <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal">
+                        <Button Name="ImportList" Content="Import" Margin="8" Click="ImportList_Click"/>
+                        <Button Name="SelectALL" Content="Select ALL" Margin="8" Click="SelectALL_Click" />
                         <Button Name="CancleALL" Content="Cancle ALL" Margin="8" Click="CancleALL_Click" />
-                        <Button Name="Set" Content="Set"  Click="Set_Click" Margin="8" />
-                        <Button Name="Clear" Content="Clear"   Margin="8" Click="Clear_Click" />
+                        <Button Name="Set" Content="Set" Click="Set_Click" Margin="8" />
+                        <Button Name="Clear" Content="Clear" Margin="8" Click="Clear_Click" />
 
-                        <Button Name="CmdTest" Content="CmdTest" Visibility="Hidden"  Margin="8" Click="CmdTest_Click" />
-                        <Button Name="ResultTest" Content="ResultTest" Visibility="Hidden"  Margin="8" Click="ResultTest_Click" />
-                        <Button Name="ClearTest" Content="ClearTest" Visibility="Hidden"  Margin="8"  Click="ClearTest_Click" />
+                        <Button Name="CmdTest" Content="CmdTest" IsVisible="False" Margin="8" Click="CmdTest_Click" />
+                        <Button Name="ResultTest" Content="ResultTest" IsVisible="False" Margin="8" Click="ResultTest_Click" />
+                        <Button Name="ClearTest" Content="ClearTest" IsVisible="False" Margin="8" Click="ClearTest_Click" />
                     </StackPanel>
 
-                    <DataGrid Grid.Row="8" Grid.ColumnSpan="2" Name="DataGrid" DataContext="{Binding Dashboard}" ItemsSource="{Binding Devices}"  
-                                  SelectionUnit="FullRow" SelectionMode="Extended" AutoGenerateColumns="False"
-                                  IsReadOnly="True" VerticalAlignment="Stretch"  Height="auto">
-
+                    <DataGrid Grid.Row="8" Grid.ColumnSpan="2" Name="DataGrid"
+                              ItemsSource="{Binding Devices}"
+                              SelectionMode="Extended" AutoGenerateColumns="False"
+                              IsReadOnly="True" VerticalAlignment="Stretch">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="SN" Binding="{Binding SN}" />
-
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" >
-
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Background" Value="Transparent"/>
-                                        <Style.Triggers>
-                                            <!-- 綁定到數據模型的Status屬性 -->
-                                            <DataTrigger Binding="{Binding Status}" Value="online">
-                                                <Setter Property="Background" Value="YellowGreen"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Status}" Value="offline">
-                                                <Setter Property="Background" Value="Red"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-
-                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" />
                             <DataGridTextColumn Header="SSID" Binding="{Binding SSID}" />
                             <DataGridTextColumn Header="Broker" Binding="{Binding Broker}" />
                             <DataGridTextColumn Header="Result" Binding="{Binding Result}" />
-                            <!--<DataGridTextColumn Header="CreateTime" Binding="{Binding CreateTime}" />-->
                         </DataGrid.Columns>
                     </DataGrid>
-
                 </Grid>
             </TabItem>
         </TabControl>
 
-        <StatusBar  Grid.Row="1" Grid.ColumnSpan="2">
-            <StatusBarItem>
-                <TextBlock Name="MQTTStatus" FontSize="18" >
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Text" Value="MQTT:Offline" />
-                            <Setter Property="Background" Value="Red" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                    <Setter Property="Text" Value="MQTT:Online" />
-                                    <Setter Property="Background" Value="YellowGreen" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </StatusBarItem>
-        </StatusBar>
+        <!-- Status bar (Avalonia: plain Panel + TextBlock with DataBinding) -->
+        <Panel Grid.Row="1" Grid.ColumnSpan="2" Background="Transparent">
+            <TextBlock Name="MQTTStatus" FontSize="18"
+                       Text="{Binding IsConnected, Converter={x:Static local:MQTTStatusConverter.Instance}}"
+                       Background="{Binding IsConnected, Converter={x:Static local:MQTTBgConverter.Instance}}" />
+        </Panel>
     </Grid>
 </Window>

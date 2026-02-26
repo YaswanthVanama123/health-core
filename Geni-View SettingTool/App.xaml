@@ -1,16 +1,15 @@
-﻿<Application x:Class="Geni_View_SettingTool.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<Application x:Class="Geni_View_SettingTool.App"
+             xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Geni_View_SettingTool"
-             StartupUri="MainWindow.xaml">
+             RequestedThemeVariant="Default">
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
     <Application.Resources>
-        
-        <Style TargetType="TextBox" x:Key="TextBox">
+        <Style Selector="TextBox">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Margin" Value="2,0,2,0" />
             <Setter Property="MinWidth" Value="100" />
-
         </Style>
-        
     </Application.Resources>
 </Application>
