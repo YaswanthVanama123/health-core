@@ -1,0 +1,79 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-cloud",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Geni-View Cloud/Geni-View Cloud.csproj",
+                "--configuration",
+                "Debug"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build-settingtool",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Geni-View SettingTool/Geni-View SettingTool.csproj",
+                "--configuration",
+                "Debug"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-all",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/GeniViewCloud.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "ef-migrate-identity",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "ef",
+                "migrations",
+                "add",
+                "InitialIdentity",
+                "--context",
+                "ApplicationDbContext",
+                "--output-dir",
+                "Migrations/Identity",
+                "--project",
+                "${workspaceFolder}/Geni-View Cloud/Geni-View Cloud.csproj"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "ef-migrate-data",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "ef",
+                "migrations",
+                "add",
+                "InitialData",
+                "--context",
+                "GeniViewCloudDataRepository",
+                "--output-dir",
+                "Migrations/Data",
+                "--project",
+                "${workspaceFolder}/Geni-View Cloud/Geni-View Cloud.csproj"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,0 +1,46 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Geni-View Cloud",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-cloud",
+            "program": "${workspaceFolder}/Geni-View Cloud/bin/Debug/net8.0/GeniView.Cloud.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Geni-View Cloud",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "https://localhost:5001;http://localhost:5000"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Geni-View Cloud/Views"
+            }
+        },
+        {
+            "name": "Launch Geni-View Cloud (No Build)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/Geni-View Cloud/bin/Debug/net8.0/GeniView.Cloud.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Geni-View Cloud",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "https://localhost:5001;http://localhost:5000"
+            }
+        },
+        {
+            "name": "Launch Geni-View SettingTool",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-settingtool",
+            "program": "${workspaceFolder}/Geni-View SettingTool/bin/Debug/net8.0/Geni_View_SettingTool.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Geni-View SettingTool",
+            "stopAtEntry": false,
+            "env": {}
+        }
+    ]
+}
