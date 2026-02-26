@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Cryptography;
 
 namespace GeniView.Data.Agent
 {
+    [Index(nameof(AgentID), IsUnique = true)]
     public class Agent
     {
         public long ID { get; set; }
 
-        [Index(IsUnique = true)]
         [StringLength(40)]
         public string AgentID { get; set; }
 

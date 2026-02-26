@@ -1,11 +1,13 @@
 ﻿using GeniView.Data.Hardware.Event;
 using GeniView.Data.Web;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GeniView.Data.Hardware
 {
+    [Index(nameof(SerialNumber), IsUnique = true)]
     public class Device : Abstract.Data
     {
         public Device() { }
@@ -42,7 +44,6 @@ namespace GeniView.Data.Hardware
 
         public bool IsDeactivated { get; set; }
 
-        [Index(IsUnique = true)]
         [StringLength(10)]
         public string SerialNumber { get; set; }
 

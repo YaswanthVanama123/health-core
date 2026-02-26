@@ -1,9 +1,11 @@
 ﻿using GeniView.Data.Web;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GeniView.Data.Hardware
 {
+    [Index(nameof(SerialNumberCode), IsUnique = true)]
     public class Battery : Abstract.Data
     {
         public Battery() { }
@@ -56,7 +58,6 @@ namespace GeniView.Data.Hardware
         /// </summary>
         public double DesignVoltage { get; set; }
 
-        [Index(IsUnique = true)]
         public long? SerialNumberCode { get; set; }
 
         public string SerialNumber { get; set; }

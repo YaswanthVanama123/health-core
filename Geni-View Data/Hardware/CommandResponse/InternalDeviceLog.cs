@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Xml.Serialization;
 
 namespace GeniView.Data.Hardware
 {
+    [Index(nameof(Device_ID), nameof(Timestamp), Name = "IX_Device_ID_Timestamp")]
     public class InternalDeviceLog : Abstract.Data
     {
         public InternalDeviceLog() { }
@@ -79,7 +81,6 @@ namespace GeniView.Data.Hardware
         [XmlElement("EventCode")]
         public int EventCodeRaw { get; set; }
 
-        [Index("IX_Device_ID_Timestamp", Order = 2)]
         public DateTime Timestamp { get; set; }
 
         public string DeviceSerialNumber { get; set; }
@@ -127,7 +128,6 @@ namespace GeniView.Data.Hardware
         #region Navigation Properties
         public Nullable<long> Agent_ID { get; set; }
 
-        [Index("IX_Device_ID_Timestamp", Order = 1)]
         public Nullable<long> Device_ID { get; set; }
 
         [ForeignKey("Device_ID")]  //Add this attribute or we cannot update the Device_ID.

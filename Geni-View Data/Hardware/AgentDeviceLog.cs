@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GeniView.Data.Hardware
 {
+    [Index(nameof(Device_ID), nameof(Timestamp), Name = "IX_Device_ID_Timestamp")]
     public class AgentDeviceLog : Abstract.Data
     {
         public AgentDeviceLog()
@@ -124,7 +126,6 @@ namespace GeniView.Data.Hardware
 
         #region Log
 
-        [Index("IX_Device_ID_Timestamp", Order = 2)]
         public DateTime Timestamp { get; set; }
 
         #endregion
@@ -133,7 +134,6 @@ namespace GeniView.Data.Hardware
 
         public Nullable<long> Agent_ID { get; set; }
 
-        [Index("IX_Device_ID_Timestamp", Order = 1)]
         public Nullable<long> Device_ID { get; set; }
 
         [ForeignKey("Device_ID")]  //Add this attribute or we cannot update the Device_ID.

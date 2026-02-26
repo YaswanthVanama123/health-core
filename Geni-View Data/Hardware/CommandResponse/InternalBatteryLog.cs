@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Xml.Serialization;
 
 namespace GeniView.Data.Hardware
 {
+    [Index(nameof(Battery_ID), nameof(Timestamp), Name = "IX_BatteryID_Timestamp")]
     public class InternalBatteryLog : Abstract.Data
     {
         public InternalBatteryLog() { }
@@ -65,7 +67,6 @@ namespace GeniView.Data.Hardware
 
         [XmlElement("EventCode")]
         public int EventCodeRaw { get; set; }
-        [Index("IX_BatteryID_Timestamp", Order = 2)]
         public DateTime Timestamp { get; set; }
 
         public long BatterySerialNumberCode { get; set; }
@@ -137,7 +138,6 @@ namespace GeniView.Data.Hardware
         #region Navigation Properties
 
         public Nullable<long> Agent_ID { get; set; }
-        [Index("IX_BatteryID_Timestamp", Order = 1)]
         public Nullable<long> Battery_ID { get; set; }
 
         [XmlIgnore] // Need this for XmlSerializer used for exporting to XML file.

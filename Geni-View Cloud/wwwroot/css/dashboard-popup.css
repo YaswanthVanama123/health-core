@@ -1,0 +1,910 @@
+.gv-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17,24,39,.45);
+    z-index: 2000;
+    padding: 132px 40px 40px;
+    overflow: auto;
+    display: none;
+    align-items: flex-start;
+    justify-content: center
+}
+
+    .gv-popup-overlay.is-open {
+        display: flex
+    }
+
+.gv-popup {
+    background: #fff;
+    border-radius: 10px;
+    max-width: 1351px;
+    margin: 0 auto;
+    padding: 18px 18px 14px;
+    position: relative;
+    width: 100%
+}
+
+.gv-popup__close {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #111827;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 18px;
+    line-height: 24px;
+    cursor: pointer;
+    opacity: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Header layout (search centered) */
+.gv-popup__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-bottom: 12px
+}
+
+.gv-popup__title {
+    flex: 1 1 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start
+}
+
+.gv-popup__title-text {
+    font-weight: 700;
+    font-size: 28px;
+    color: #111827;
+    display: inline-block;
+    line-height: 1
+}
+
+/*.gv-popup__subtitle {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280
+}*/
+
+.gv-popup__search {
+    flex: 1 1 0;
+    display: flex;
+    justify-content: center
+}
+
+    .gv-popup__search input {
+        width: 360px;
+        max-width: 45vw;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 12px;
+        outline: none
+    }
+
+.gv-popup__table-wrap {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden
+}
+
+/* Table alignment + keep content visible */
+.gv-popup__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    line-height: 1;
+    table-layout: auto
+}
+
+    .gv-popup__table thead th {
+        background: #1f3bb3;
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        line-height: 1;
+        padding: 10px;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle
+    }
+
+    .gv-popup__table tbody td {
+        padding: 10px;
+        border-top: 1px solid #eef2ff;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 500
+    }
+
+        /* Allow these columns to wrap so long values are fully visible (no cutting) */
+        .gv-popup__table thead th:nth-child(7),
+        .gv-popup__table tbody td:nth-child(7),
+        .gv-popup__table thead th:nth-child(8),
+        .gv-popup__table tbody td:nth-child(8) {
+            
+            word-break: break-word
+        }
+
+    .gv-popup__table tbody tr:nth-child(even) {
+        background: #eef4ff
+    }
+
+.gv-popup__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 4px 0;
+    gap: 12px;
+}
+
+.gv-popup__pager {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+}
+
+.gv-popup__info {
+    width: 166px;
+    height: 20px;
+    font-family: "Instrument Sans", sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: 0;
+    color: #6b7280;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.gv-page {
+    display: inline-block;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin: 0 3px;
+    color: #111827;
+    text-decoration: none
+}
+
+    .gv-page.current {
+        background: #e0e7ff;
+        border-color: #c7d2fe;
+        font-weight: 800
+    }
+
+    .gv-page.disabled {
+        opacity: .4;
+        pointer-events: none
+    }
+
+/* Inline icon + text cells */
+.gv-cell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px
+}
+
+.gv-cell__icon {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    display: inline-block;
+    vertical-align: middle
+}
+
+/* SoC colored values */
+.gv-soc--high {
+    color: #22c55e;
+    font-weight: 800
+}
+
+.gv-soc--low {
+    color: #fbbf24;
+    font-weight: 800
+}
+
+.gv-soc--charge {
+    color: #f97316;
+    font-weight: 800
+}
+
+/* Popup header State of Charge icon sizing */
+.gv-popup__title .soc-status__title-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center
+}
+
+    .gv-popup__title .soc-status__title-icon img {
+        width: 48px;
+        height: 48px;
+        display: block
+    }
+
+/* === Temp + Status column tweaks (add at end) === */
+
+/* Temp column (6th): reduce icon/text gap */
+.gv-popup__table tbody td:nth-child(6) .gv-cell {
+    gap: 2px;
+}
+
+/* Status column (7th): enforce width and keep content inside padding */
+.gv-popup__table thead th:nth-child(7) {
+    width: 190px;
+    max-width: 190px;
+    
+}
+.gv-popup__table tbody td:nth-child(7) {
+    width: 190px;
+    max-width: 190px;
+    text-align: left;
+}
+
+/* Ensure the icon+text block doesn't "hang" outside the cell */
+.gv-popup__table tbody td:nth-child(7) {
+    padding-left: 10px; /* keeps icon within column padding */
+    padding-right: 10px;
+    overflow: hidden; /* prevents icon from rendering outside the cell */
+}
+
+    /* Left-align icon+text within Status cells and reduce gap */
+    .gv-popup__table tbody td:nth-child(7) .gv-cell {
+        justify-content: flex-start;
+        gap: 3px;
+    }
+
+/* --- Temp/Status header spacing + Status single-line rows (override) --- */
+
+/* Increase column separation between Temp (6) and Status (7) by widening Status col */
+.gv-popup__table thead th:nth-child(7) {
+    text-align: left;
+}
+
+/* Status column: keep content on ONE line and tighten icon-text spacing */
+.gv-popup__table tbody td:nth-child(7) {
+    white-space: nowrap; /* force single line */
+    word-break: normal; /* prevent breaking */
+}
+
+    .gv-popup__table tbody td:nth-child(7) .gv-cell {
+        gap: 2px; /* requested icon-text gap */
+        flex-wrap: nowrap; /* ensure icon + text never wraps */
+    }
+
+
+.gv-popup__table thead th:nth-child(8) {
+    width: 108px;
+    max-width: 108px;
+    text-align: left;
+    white-space: nowrap;
+}
+.gv-popup__table tbody td:nth-child(8) {
+    width: 108px;
+    max-width: 108px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.gv-popup__table thead th:nth-child(9),
+.gv-popup__table thead td:nth-child(9) {
+    width: 103px;
+    max-width: 103px;
+    text-align: center;
+}
+
+.gv-popup__table thead th:nth-child(10),
+.gv-popup__table thead td:nth-child(10) {
+    width: 124px;
+    max-width: 124px;
+    text-align: center;
+}
+
+/* === Fix "merged" last three headers by enforcing real column widths === */
+
+/* Give thead cells some separation */
+.gv-popup__table thead th {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+    /* Force widths for last 3 columns (8=Last Attached, 9=Last Charged, 10=Last Discharged) */
+    .gv-popup__table thead th:nth-child(8),
+    .gv-popup__table tbody td:nth-child(8) {
+        width: 130px; /* was 108px */
+        max-width: 130px;
+        min-width: 130px;
+    }
+
+    .gv-popup__table thead th:nth-child(9),
+    .gv-popup__table tbody td:nth-child(9) {
+        width: 140px; /* was 103px */
+        max-width: 140px;
+        min-width: 140px;
+    }
+
+    .gv-popup__table thead th:nth-child(10),
+    .gv-popup__table tbody td:nth-child(10) {
+        width: 155px; /* was 124px */
+        max-width: 155px;
+        min-width: 155px;
+    }
+
+    /* Keep the header text readable and not glued together */
+    .gv-popup__table thead th:nth-child(8),
+    .gv-popup__table thead th:nth-child(9),
+    .gv-popup__table thead th:nth-child(10) {
+        letter-spacing: 0.2px;
+    }
+
+    /* --- Increase spacing only between Status (7) and Last Attached (8) --- */
+    .gv-popup__table thead th:nth-child(7),
+    .gv-popup__table tbody td:nth-child(7) {
+        width: 220px; /* was 190px */
+        max-width: 220px;
+        min-width: 220px;
+    }
+
+    /* Optional: give Last Attached a bit more room (helps visual separation) */
+    .gv-popup__table thead th:nth-child(8),
+    .gv-popup__table tbody td:nth-child(8) {
+        width: 140px; /* was 130px */
+        max-width: 140px;
+        min-width: 140px;
+    }
+
+/* Ensure popup can grow to accommodate the wider table (no merging) */
+.gv-popup {
+    max-width: 1450px; /* was 1351px */
+}
+
+/* --- Make search visually centered by balancing header columns --- */
+.gv-popup__title {
+    flex: 0 0 auto; /* stop it from stretching */
+}
+
+.gv-popup__search {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding-left: 0; /* ensure no left padding offsets it */
+}
+
+
+.gv-popup__header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-bottom: 12px
+}
+
+/* Keep title at left */
+.gv-popup__title {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 10px;
+    align-items: center
+}
+
+/* Place search immediately to the right of the title block */
+.gv-popup__search {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-start;
+    margin-left: 10px;
+    padding-left: 0
+}
+
+    /* Let the input size naturally but not overflow the header */
+    .gv-popup__search input {
+        width: 360px;
+        max-width: 45vw;
+    }
+
+.gv-popup__pm {
+    width: 143px;
+    height: 20px;
+    font-family: "Instrument Sans", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: 0;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.gv-popup__title {
+    gap: 3px;
+    align-items: center;
+}
+
+.gv-popup__title-text {
+    margin-left: 0;
+    padding-left: 0;
+    line-height: 1;
+}
+
+.gv-popup__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+/* === Search box redesign (icon + text style + container size) === */
+.gv-popup__search {
+    position: relative;
+    width: 400px;
+    height: 45px;
+    opacity: 1;
+    border-radius: 12px;
+    justify-content: flex-start;
+    align-items: center;
+    margin-left: 10px;
+    padding-left: 0;
+}
+
+    /* Keep input full size of container, with left padding to make room for the icon */
+    .gv-popup__search input {
+        width: 400px;
+        height: 45px;
+        border-radius: 12px;
+        padding-left: 41px; /* text left = 41px */
+        padding-right: 12px;
+        padding-top: 0;
+        padding-bottom: 0;
+        font-family: "Instrument Sans", sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 1;
+        letter-spacing: 0;
+        color: rgba(68, 68, 68, 0.72);
+    }
+
+        /* Placeholder style (the text you listed is placeholder) */
+        .gv-popup__search input::placeholder {
+            font-family: "Instrument Sans", sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 1;
+            letter-spacing: 0;
+            color: rgba(68, 68, 68, 0.72);
+            opacity: 1;
+        }
+
+/* Icon placement and size */
+.gv-popup__search-icon {
+    position: absolute;
+    left: 19px;
+    top: 15.5px;
+    width: 14px;
+    height: 14px;
+    opacity: 1;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .gv-popup__search-icon img {
+        width: 14px;
+        height: 14px;
+        display: block;
+    }
+
+/* Force each header (blue bar) column to 50px */
+.gv-popup__table thead th {
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
+}
+
+/* === Pager button sizing + typography overrides (add at end) === */
+
+.gv-page {
+    border-width: 1px;
+    border-radius: 2px;
+    opacity: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    /* Page number text style (applies to <, > too unless overridden below) */
+    font-family: "Instrument Sans", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: 0;
+    color: rgba(56, 67, 172, 1);
+}
+
+/* 1) Previous (<) */
+.gv-popup__pager .gv-page:first-child {
+    width: 34px;
+    height: 26px;
+    padding-top: 8px;
+    padding-right: 14px;
+    padding-bottom: 8px;
+    padding-left: 14px;
+    gap: 12px;
+}
+
+/* 2) Next (>) */
+.gv-popup__pager .gv-page:last-child {
+    width: 34px;
+    height: 26px;
+    padding-top: 8px;
+    padding-right: 14px;
+    padding-bottom: 8px;
+    padding-left: 14px;
+    gap: 12px;
+    /* angle: -180 deg */
+    transform: rotate(180deg);
+}
+
+/* 3) Page number buttons (everything except first/last) */
+.gv-popup__pager .gv-page:not(:first-child):not(:last-child) {
+    width: 32px;
+    height: 38px;
+    padding: 8px;
+    gap: 10px;
+}
+
+/* 1) Previous (<) + 2) Next (>) - align with page buttons */
+.gv-popup__pager .gv-page:first-child,
+.gv-popup__pager .gv-page:last-child {
+    width: 34px;
+    height: 38px; /* was 26px; match page buttons */
+    padding: 8px; /* match page buttons */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform: none; /* remove the 180deg rotation */
+}
+
+/* Increase spacing between arrows and page numbers */
+.gv-popup__pager .gv-page:first-child {
+    margin-right: 10px; /* gap: <  to  1 */
+}
+
+.gv-popup__pager .gv-page:last-child {
+    margin-left: 10px; /* gap: last page  to  > */
+}
+
+/* Align all pager items on the same baseline (bottom) */
+.gv-popup__pager {
+    align-items: flex-end; /* makes 26px arrows sit on same row as 38px pages */
+}
+
+    /* Prev/Next sizing (keep small), no rotation */
+    .gv-popup__pager .gv-page:first-child,
+    .gv-popup__pager .gv-page:last-child {
+        width: 34px;
+        height: 26px;
+        padding: 0; /* ensure true 34x26 visual size */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transform: none;
+    }
+
+    /* Keep page buttons as-is */
+    .gv-popup__pager .gv-page:not(:first-child):not(:last-child) {
+        width: 32px;
+        height: 38px;
+        padding: 8px;
+    }
+
+/* === Pager final alignment (place at very end of file) === */
+
+/* Keep all pager items centered vertically in the same row */
+.gv-popup__pager {
+    align-items: center; /* override previous flex-end */
+}
+
+    /* Prev/Next stay 34x26 and centered */
+    .gv-popup__pager .gv-page:first-child,
+    .gv-popup__pager .gv-page:last-child {
+        width: 34px;
+        height: 26px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transform: none;
+    }
+
+
+/* === Column sizing overrides (keep at end to win the cascade) === */
+
+/* Use fixed table layout so widths are respected consistently */
+.gv-popup__table {
+    table-layout: fixed;
+}
+
+    /* Status (7) - reduce width and keep content tidy */
+    .gv-popup__table thead th:nth-child(7),
+    .gv-popup__table tbody td:nth-child(7) {
+        width: 140px;
+        min-width: 140px;
+        max-width: 140px;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+        .gv-popup__table tbody td:nth-child(7) .gv-cell {
+            justify-content: flex-start;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+
+    /* Last Attached (8) - ensure normal spacing like other columns */
+    .gv-popup__table thead th:nth-child(8),
+    .gv-popup__table tbody td:nth-child(8) {
+        width: 140px;
+        min-width: 140px;
+        max-width: 140px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    /* Last Charged (9) */
+    .gv-popup__table thead th:nth-child(9),
+    .gv-popup__table tbody td:nth-child(9) {
+        width: 140px;
+        min-width: 140px;
+        max-width: 140px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    /* Last Discharged (10) */
+    .gv-popup__table thead th:nth-child(10),
+    .gv-popup__table tbody td:nth-child(10) {
+        width: 155px;
+        min-width: 155px;
+        max-width: 155px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+.gv-popup__subtitle {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.gv-popup__close {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #111827;
+    border-radius: 6px;
+    background: transparent;
+    font-family: "Instrument Sans", sans-serif;
+    font-weight: 700;
+    font-size: 22px; /* X size */
+    line-height: 22px; /* prevents vertical mis-centering */
+    cursor: pointer;
+    opacity: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; /* avoid glyph shifting */
+}
+
+    .gv-popup__close:focus {
+        outline: none;
+    }
+
+/*.gv-popup__title-text {
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1.05;*/ /* slightly tighter than 1 */
+    /*color: #111827;
+    display: inline-block;
+}*/
+
+.gv-popup__subtitle {
+    margin-top: 2px; /* reduced gap */
+    font-family: "Instrument Sans", sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    line-height: 1.1;
+    color: #6b7280;
+}
+
+.gv-popup__subtitle--high {
+    color: #22c55e; /* same as .gv-soc--high */
+}
+
+.gv-popup__subtitle--low {
+    color: #fbbf24; /* same as .gv-soc--low */
+}
+
+.gv-popup__subtitle--charge {
+    color: #f97316; /* same as .gv-soc--charge */
+}
+
+/* Popup subtitle colors (threshold-based, set dynamically from clicked card) */
+.gv-popup__subtitle--high { color: #22c55e; }
+.gv-popup__subtitle--low { color: #fbbf24; }
+.gv-popup__subtitle--charge { color: #f97316; }
+
+/* Module Status (battery status) */
+.gv-popup__subtitle--oncharge { color: #22c55e; }
+.gv-popup__subtitle--ondischarge { color: #2563eb; }
+.gv-popup__subtitle--onidle { color: #f97316; }
+.gv-popup__subtitle--offcharge { color: #84cc16; }
+.gv-popup__subtitle--offidle { color: #f59e0b; }
+
+/* --- Popup subtitle overrides (requested) --- */
+
+/* Temperature widget: Discharging / Idle cards */
+.gv-popup__subtitle--temp-discharge-normal { color: #fbbf24; }
+.gv-popup__subtitle--temp-discharge-warning { color: rgba(251, 13, 70, 1); }
+
+/* Module Status widget: cards */
+.gv-popup__subtitle--module-onidle { color: rgba(255, 116, 65, 1); }
+.gv-popup__subtitle--module-offcharge { color: #fbbf24; }
+.gv-popup__subtitle--module-offidle { color: rgba(251, 13, 70, 1); }
+
+
+
+/* ================================
+   Sidebar-aware popup layout (FIXED)
+   - Works with current DOM: overlay is inside #wrapper
+   - Same left gap for collapsed and expanded
+   - Popup auto-fits between sidebar and right edge
+================================ */
+
+:root {
+    --gv-popup-edge-gap: 40px; /* SAME gap as your overlay padding-left/right today */
+}
+
+/* Default overlay padding unchanged */
+.gv-popup-overlay {
+    padding: 132px var(--gv-popup-edge-gap) 40px;
+    justify-content: center;
+}
+
+/* Sidebar expanded: push overlay content area to the right, keep same gap */
+body:not(.admin-area) #wrapper.toggled:not(.sidebar-collapsed) #dashboardPopupOverlay.gv-popup-overlay.is-open {
+    padding-left: calc(var(--gv-sidebar-expanded-width) + var(--gv-popup-edge-gap));
+    padding-right: var(--gv-popup-edge-gap);
+    justify-content: flex-start; /* start after sidebar gap */
+}
+
+/* Sidebar collapsed: keep same gap (40px) from the collapsed sidebar too */
+body:not(.admin-area) #wrapper.toggled.sidebar-collapsed #dashboardPopupOverlay.gv-popup-overlay.is-open {
+    padding-left: calc(var(--gv-sidebar-collapsed-width) + var(--gv-popup-edge-gap));
+    padding-right: var(--gv-popup-edge-gap);
+    justify-content: flex-start; /* keep consistent behavior */
+}
+
+/* Popup: auto-shrink to available width between sidebar and right edge */
+body:not(.admin-area) #wrapper.toggled #dashboardPopupOverlay .gv-popup {
+    width: min(1450px, 100%);
+    margin: 0; /* since overlay controls alignment */
+}
+
+/* Table: if popup shrinks, keep spacing by allowing horizontal scroll instead of squeezing */
+.gv-popup__table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.gv-popup__table {
+    min-width: 1200px;
+}
+
+/* Keep icon + text on one line */
+.gv-cell {
+    flex-wrap: nowrap;
+}
+
+/* ===========================================
+   Universal popup: Cycle Count + Temp alignment
+   - Fix single vs double digit left-shift
+   - Fix temp icon variants start alignment
+=========================================== */
+
+/* 1) Make icon+value layout consistent using a grid */
+.gv-popup__table tbody td:nth-child(5) .gv-cell,
+.gv-popup__table tbody td:nth-child(6) .gv-cell {
+    display: inline-grid; /* centerable "block", but with fixed internal columns */
+    grid-auto-flow: column;
+    grid-template-columns: 14px auto; /* fixed icon column, text column */
+    align-items: center;
+    column-gap: 4px; /* consistent spacing */
+    justify-content: start; /* icon always starts at same position within the cell */
+}
+
+/* 2) Ensure the whole grid is centered inside the table cell */
+.gv-popup__table tbody td:nth-child(5),
+.gv-popup__table tbody td:nth-child(6) {
+    text-align: center;
+}
+
+    /* 3) Normalize icon sizing so different SVG/PNG assets align identically */
+    .gv-popup__table tbody td:nth-child(5) .gv-cell__icon,
+    .gv-popup__table tbody td:nth-child(6) .gv-cell__icon {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        display: block; /* avoid baseline/inline-image quirks */
+        object-fit: contain; /* keep aspect but normalize box */
+    }
+
+/* ===========================================
+   FINAL OVERRIDE: hard-align Cycle Count (5) + Temp (6)
+   - same start x-position for icons
+   - same start x-position for values
+   - centered as a whole inside the cell
+=========================================== */
+
+.gv-popup__table tbody td:nth-child(5),
+.gv-popup__table tbody td:nth-child(6) {
+    text-align: center;
+}
+
+    /* Make the icon+value behave like a centered 2-cell layout */
+    .gv-popup__table tbody td:nth-child(5) .gv-cell,
+    .gv-popup__table tbody td:nth-child(6) .gv-cell {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0 !important; /* we control spacing via slots */
+    }
+
+    /* Icon slot: fixed width so all icons start the same */
+    .gv-popup__table tbody td:nth-child(5) .gv-cell__icon,
+    .gv-popup__table tbody td:nth-child(6) .gv-cell__icon {
+        width: 14px !important;
+        height: 14px !important;
+        display: block !important;
+        flex: 0 0 14px !important;
+        object-fit: contain;
+        margin-right: 4px; /* fixed separation */
+    }
+
+    /* Value slot: fixed width to prevent single vs double digit shifting */
+    .gv-popup__table tbody td:nth-child(5) .gv-cell > span:last-child,
+    .gv-popup__table tbody td:nth-child(6) .gv-cell > span:last-child {
+        display: inline-block;
+        width: 44px; /* enough for e.g. "1000" or "31°C" */
+        text-align: left; /* value starts same x-position */
+        font-variant-numeric: tabular-nums; /* same digit width */
+    }
+
+
+/* ===========================================
+   Popup modal behavior: block ALL background interactions
+   - Sidebar/navbar/page cannot be clicked/hovered
+   - Only popup is interactive
+=========================================== */
+
+/* Overlay must intercept pointer events */
+#dashboardPopupOverlay.gv-popup-overlay.is-open {
+    pointer-events: auto;
+}
+
+    /* Popup remains clickable */
+    #dashboardPopupOverlay.gv-popup-overlay.is-open .gv-popup {
+        pointer-events: auto;
+    }
+
+/* Ensure overlay is above sidebar/navbar (sidebar uses z-index: 9999 in main.css) */
+#dashboardPopupOverlay.gv-popup-overlay {
+    z-index: 20000;
+}

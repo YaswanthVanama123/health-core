@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GeniView.Data.Hardware
 {
+    [Index(nameof(Battery_ID), nameof(Timestamp), Name = "IX_BatteryID_Timestamp")]
     public class AgentBatteryLog : Abstract.Data
     {
         public AgentBatteryLog DeepCopy()
@@ -43,7 +45,6 @@ namespace GeniView.Data.Hardware
 
         public string DeviceSerialNumber { get; set; }
 
-        [Index("IX_BatteryID_Timestamp", Order = 2)]
         public DateTime Timestamp { get; set; }
 
         #endregion
@@ -52,7 +53,6 @@ namespace GeniView.Data.Hardware
 
         public Nullable<long> Agent_ID { get; set; }
 
-        [Index("IX_BatteryID_Timestamp", Order = 1)]
         public Nullable<long> Battery_ID { get; set; }
 
         [ForeignKey("Battery_ID")]  //Add this attribute or we cannot update the Battery_ID.
