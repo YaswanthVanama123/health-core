@@ -1,5 +1,8 @@
-﻿namespace GeniView.Data.Hardware
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GeniView.Data.Hardware
 {
+    [ComplexType]
     public class DeviceLocation
     {
         public DeviceLocation DeepCopy()

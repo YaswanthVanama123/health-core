@@ -1,7 +1,9 @@
-﻿using System.Xml.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Xml.Serialization;
 
 namespace GeniView.Data.Hardware
 {
+    [ComplexType]
     public class DeviceStatus : Abstract.Data
     {
         public DeviceStatus() { }

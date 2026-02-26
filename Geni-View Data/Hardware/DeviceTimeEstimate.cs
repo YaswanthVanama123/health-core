@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GeniView.Data.Hardware
 {
+    [ComplexType]
     public class DeviceTimeEstimate : Abstract.Data
     {
         public DeviceTimeEstimate() { }

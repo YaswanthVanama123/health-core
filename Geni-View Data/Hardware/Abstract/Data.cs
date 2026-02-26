@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
@@ -20,7 +21,8 @@ namespace GeniView.Data.Hardware.Abstract
             Errors = new Dictionary<string, List<string>>();
         }
 
-        [XmlIgnore] // Need this for XmlSerializer used for exporting settings to XML file.
+        [NotMapped]   // EF Core cannot map Dictionary<string, List<string>> — validation-only field
+        [XmlIgnore]   // XmlSerializer: exclude from XML export
         public Dictionary<string, List<string>> Errors { get; set; }
 
         public bool HasErrors

@@ -2,6 +2,7 @@
 
 namespace GeniView.Data.Hardware
 {
+    [ComplexType]
     public class DevicePowerOutputSettings : Abstract.Data
     {
         public DevicePowerOutputSettings DeepCopy()
