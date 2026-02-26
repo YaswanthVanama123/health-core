@@ -24,7 +24,7 @@ using NLog;
 using NLog.Web;
 using System;
 using System.Threading.Tasks;
-// using WebOptimizer; — namespace available after 'dotnet restore' downloads LigerShark.WebOptimizer.Core
+using WebOptimizer;
 
 // ── Bootstrap NLog early so startup errors are captured ────────────────────
 var logger = LogManager.Setup()
@@ -116,9 +116,6 @@ try
     builder.Services.AddSignalR();
 
     // ── WebOptimizer (Phase 8) — CSS + JS bundles ────────────────────────────
-    // TODO: Run 'dotnet restore' to download LigerShark.WebOptimizer.Core, then
-    //       uncomment the block below and remove the #if guard.
-#if WEBOPTIMIZER_AVAILABLE
     builder.Services.AddWebOptimizer(pipeline =>
     {
         // Main layout CSS bundle
@@ -157,7 +154,6 @@ try
             "js/Custom Scripts/notification.js",
             "js/Custom Scripts/app.js");
     });
-#endif
 
     // ── Hangfire — use SQL Server storage ───────────────────────────────────
     builder.Services.AddHangfire(cfg => cfg
@@ -211,9 +207,7 @@ try
 
     // ── Middleware pipeline (ORDER MATTERS) ──────────────────────────────────
     app.UseHttpsRedirection();
-#if WEBOPTIMIZER_AVAILABLE
-    app.UseWebOptimizer();      // Phase 8: must be before UseStaticFiles
-#endif
+    app.UseWebOptimizer();      // must be before UseStaticFiles
     app.UseStaticFiles();
     app.UseRouting();
     app.UseSession();           // must be before Authentication
