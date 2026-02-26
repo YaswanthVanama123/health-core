@@ -1,18 +1,13 @@
-﻿using GeniView.Cloud.Models;
+// IApplicationUpdateService.cs — Phase 7 stub
+// WCF [ServiceContract]/[OperationContract] attributes removed.
+// In Phase 7, this interface will be implemented as a REST API controller.
+using GeniView.Cloud.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.ServiceModel;
-using System.Text;
 
 namespace GeniView.Cloud.Services
 {
-    // NOTE: You can use the "Rename" command on the "Refactor" menu to change the interface name "IApplicationUpdateService" in both code and config file together.
-    [ServiceContract]
     public interface IApplicationUpdateService
     {
-        [OperationContract]
         ApplicationUpdate CheckForUpdate(Guid appId, Version currentVersion);
     }
 }

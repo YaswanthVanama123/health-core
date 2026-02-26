@@ -17,7 +17,7 @@
                     <label id="EditModeParentGroupID" hidden="hidden">@Model.ParentGroupID</label>
 
                     <div class="form-group">
-                        @Html.Label("Community", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <label class="control-label col-md-2">Community</label>
                         <div class="col-md-10">
                             @Html.DropDownListFor(model => model.CommunityID, Enumerable.Empty<SelectListItem>(), htmlAttributes: new { @class = "form-control", @id = "CommunitiesDDL" })
                             @Html.ValidationMessageFor(model => model.CommunityID, "", new { @class = "text-danger" })
@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="form-group">
-                        @Html.Label("Parent Group", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <label class="control-label col-md-2">Parent Group</label>
                         <div class="col-md-10">
                             @Html.DropDownListFor(model => model.ParentGroupID, Enumerable.Empty<SelectListItem>(), htmlAttributes: new { @class = "form-control", @id = "GroupsDDL" })
                             @Html.ValidationMessageFor(model => model.ParentGroupID, "", new { @class = "text-danger" })
@@ -33,7 +33,7 @@
                     </div>
 
                     <div class="form-group">
-                        @Html.Label("Group Name", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <label class="control-label col-md-2">Group Name</label>
                         <div class="col-md-10">
                             @Html.EditorFor(model => model.Group.Name, new { htmlAttributes = new { @class = "form-control" } })
                             @Html.ValidationMessageFor(model => model.Group.Name, "", new { @class = "text-danger" })

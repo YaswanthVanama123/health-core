@@ -1,15 +1,22 @@
 ﻿using GeniView.Cloud.Models;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Web;
+using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Web;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware.Event;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Cloud.Common;
-using System.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace GeniView.Cloud.Repository
 {
@@ -99,14 +106,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 1️⃣ Get latest cycle count per Battery_ID (NO filters here)
                 var spRows = db.Database
-                    .SqlQuery<CycleStatusRow>("EXEC " + CycleStatusStoredProcedureName)
+                    .SqlQueryRaw<CycleStatusRow>("EXEC " + CycleStatusStoredProcedureName)
                     .ToList();
 
                 // 2️⃣ Resolve batteries that belong to current filter scope
@@ -253,14 +257,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 1️⃣ SP returns latest SoC per Battery_ID (GLOBAL)
                 var spRows = db.Database
-                    .SqlQuery<StateOfChargeRow>("EXEC " + StateOfChargeStoredProcedureName)
+                    .SqlQueryRaw<StateOfChargeRow>("EXEC " + StateOfChargeStoredProcedureName)
                     .ToList();
 
                 // 2️⃣ Resolve batteries IN SCOPE (Community / Group / SubGroups)
@@ -403,14 +404,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 1️⃣ Get latest timestamp per Battery_ID (NO filters here)
                 var spRows = db.Database
-                    .SqlQuery<EffectiveRotationRow>("EXEC " + EffectiveRotationStoredProcedureName)
+                    .SqlQueryRaw<EffectiveRotationRow>("EXEC " + EffectiveRotationStoredProcedureName)
                     .ToList();
 
                 // 2️⃣ Build battery scope using filters
@@ -552,14 +550,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 1️⃣ SP → latest temperature per Battery_ID
                 var spRows = db.Database
-                    .SqlQuery<TemperatureRow>("EXEC " + TemperatureStoredProcedureName)
+                    .SqlQueryRaw<TemperatureRow>("EXEC " + TemperatureStoredProcedureName)
                     .ToList();
 
                 // 2️⃣ Build battery scope
@@ -703,14 +698,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 1️⃣ SP → latest efficiency data per Battery_ID
                 var spRows = db.Database
-                    .SqlQuery<BatteryEfficiencyRow>("EXEC " + BatteryEfficiencyStoredProcedureName)
+                    .SqlQueryRaw<BatteryEfficiencyRow>("EXEC " + BatteryEfficiencyStoredProcedureName)
                     .ToList();
 
                 // 2️⃣ Build battery scope (same as all other widgets)
@@ -832,14 +824,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 🔹 SP already applies Community / Group / SubGroup filtering
                 var spRows = db.Database
-                    .SqlQuery<BatteryActivityHistoryRow>(
+                    .SqlQueryRaw<BatteryActivityHistoryRow>(
                         "EXEC " + BatteryActivityHistoryStoredProcedureName +
                         " @CommunityID, @GroupID, @IncludeAllSubGroups",
                         new SqlParameter("@CommunityID", (object)communityID ?? DBNull.Value),
@@ -891,14 +880,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 🔹 SP already applies Community / Group / SubGroup filtering
                 var spRows = db.Database
-                    .SqlQuery<DeviceActivityHistoryRow>(
+                    .SqlQueryRaw<DeviceActivityHistoryRow>(
                         "EXEC " + DeviceActivityHistoryStoredProcedureName +
                         " @CommunityID, @GroupID, @IncludeAllSubGroups",
                         new SqlParameter("@CommunityID", (object)communityID ?? DBNull.Value),
@@ -979,14 +965,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 // 1️⃣ SP → latest status per Battery_ID
                 var spRows = db.Database
-                    .SqlQuery<LatestBatteryStatusRow>("EXEC " + LatestBatteryStatusStoredProcedureName)
+                    .SqlQueryRaw<LatestBatteryStatusRow>("EXEC " + LatestBatteryStatusStoredProcedureName)
                     .ToList();
 
                 // 2️⃣ Battery scope
@@ -1140,9 +1123,6 @@ namespace GeniView.Cloud.Repository
             AdminDashboardModel model = new AdminDashboardModel();
             using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 model.Communities = db.Communities.Count();
                 model.Groups = db.Groups.Count();

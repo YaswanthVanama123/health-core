@@ -21,14 +21,14 @@
                             <label id="EditModeParentGroupID" hidden="hidden">@Model.User.GroupID</label>
 
                             <div class="form-group">
-                                @Html.Label("Role", htmlAttributes: new { @class = "control-label col-md-2" })
+                                <label class="control-label col-md-2">Role</label>
                                 <div class="col-md-10">
                                     @Html.DropDownListFor(model => model.RoleName, Enumerable.Empty<SelectListItem>(), htmlAttributes: new { @class = "form-control", @id = "RolesDDL" })
                                     @Html.ValidationMessageFor(model => model.RoleName, "", new { @class = "text-danger" })
                                 </div>
                             </div>
                             <div class="form-group" id="CommunityHideDiv">
-                                @Html.Label("Community", htmlAttributes: new { @class = "control-label col-md-2" })
+                                <label class="control-label col-md-2">Community</label>
                                 <div class="col-md-10">
                                     @Html.DropDownListFor(model => model.User.CommunityID, Enumerable.Empty<SelectListItem>(), htmlAttributes: new { @class = "form-control", @id = "CommunitiesDDL" })
                                     @Html.ValidationMessage("CommunityError", new { @class = "text-danger" })
@@ -36,7 +36,7 @@
                             </div>
 
                             <div class="form-group" id="GroupHideDiv">
-                                @Html.Label("Group", htmlAttributes: new { @class = "control-label col-md-2" })
+                                <label class="control-label col-md-2">Group</label>
                                 <div class="col-md-10">
                                     @Html.DropDownListFor(model => model.User.GroupID, Enumerable.Empty<SelectListItem>(), htmlAttributes: new { @class = "form-control", @id = "GroupsDDL" })
                                     @Html.ValidationMessage("GroupIDError", new { @class = "text-danger" })
@@ -44,7 +44,7 @@
                             </div>
 
                             <div class="form-group">
-                                @Html.Label("Full Name", htmlAttributes: new { @class = "control-label col-md-2" })
+                                <label class="control-label col-md-2">Full Name</label>
                                 <div class="col-md-10">
                                     @Html.EditorFor(model => model.User.FullName, new { htmlAttributes = new { @class = "form-control" } })
                                     @Html.ValidationMessageFor(model => model.User.FullName, "", new { @class = "text-danger" })
@@ -59,7 +59,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                @Html.Label("Email Notifications", htmlAttributes: new { @class = "control-label col-md-2" })
+                                <label class="control-label col-md-2">Email Notifications</label>
                                 <div class="col-md-10">
                                     <label class="control-label">
                                         @Html.CheckBoxFor(model => model.User.IsNotificationEnable, new { @checked = "checked", htmlAttributes = new { @class = "checkbox" } })
@@ -67,7 +67,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                @Html.Label("Locked", htmlAttributes: new { @class = "control-label col-md-2" })
+                                <label class="control-label col-md-2">Locked</label>
                                 <div class="col-md-10">
                                     <label class="control-label">
                                         @Html.CheckBoxFor(model => model.isUserLocked, new { @checked = "checked", htmlAttributes = new { @class = "checkbox", @id = "ActivateUserByEmail" } })
@@ -75,7 +75,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                @Html.Label("Timezone", htmlAttributes: new { @class = "control-label col-md-2" })
+                                <label class="control-label col-md-2">Timezone</label>
                                 <div class="col-md-10">
                                     @Html.DropDownListFor(model => model.User.TimeZoneId, new SelectList(ViewBag.TimeZones, "ID", "DisplayText"), htmlAttributes: new { @class = "form-control" })
                                 </div>
@@ -83,7 +83,7 @@
                             @if (!Model.User.EmailConfirmed)
                             {
                                 <div class="form-group">
-                                    @Html.Label("Email not confirmed!", htmlAttributes: new { @class = "control-label col-md-2 text-danger" })
+                                    <label class="control-label col-md-2 text-danger">Email not confirmed!</label>
                                     <div class="col-md-10">
                                         @Html.ActionLink("Re-Send", "ReSendMailConfirmation", new { id = Model.User.Id }, new { @class = "btn btn-success btn-sm" })
                                     </div>

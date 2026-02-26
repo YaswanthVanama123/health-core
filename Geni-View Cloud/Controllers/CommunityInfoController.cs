@@ -1,15 +1,12 @@
-﻿using System;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
-using System.Web.Mvc;
-using GeniView.Cloud.Areas.Admin.Models;
 using GeniView.Cloud.Models;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.AspNet.Identity;
 using GeniView.Cloud.Repository;
 using GeniView.Data.Hardware;
 using GeniView.Data.Web;
@@ -33,7 +30,7 @@ namespace GeniView.Cloud.Controllers
             {
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    var currentUser = identityRepo.GetCurrentUser();
+                    var currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     model = communityRepo.FindByID(currentUser.CommunityID.Value);
                 }
                 return View(model);
@@ -50,19 +47,19 @@ namespace GeniView.Cloud.Controllers
         public ActionResult Edit(string id)
         {
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
 
             Community model = new Community();
             try
             {
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    var currentUser = identityRepo.GetCurrentUser();
+                    var currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     model = communityRepo.FindByID(currentUser.CommunityID.Value);
                 }
 
                 if (model == null)
-                    return HttpNotFound();
+                    return NotFound();
 
                 return View(model);
             }

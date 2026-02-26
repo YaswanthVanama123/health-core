@@ -1,15 +1,13 @@
-﻿using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
-using System.Web.Mvc;
-using GeniView.Cloud.Areas.Admin.Models;
-using Microsoft.AspNet.Identity;
 using GeniView.Cloud.Models;
-using Microsoft.AspNet.Identity.Owin;
 using System.Globalization;
 using GeniView.Cloud.Repository;
 using GeniView.Data.Hardware;
@@ -40,32 +38,32 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
-                    model = batterydb.GetBatteries(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                    model = batterydb.GetBatteries(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
 
                     //model = batterydb.BuildOptimizedQuery(SessionHelper.CommunityID, _db);
                 }
                 else if (User.IsInRole("Community Admin"))
                 {
-                    model = batterydb.GetBatteries(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                    model = batterydb.GetBatteries(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                 }
                 else if (User.IsInRole("Community Group Admin"))
                 {
-                    model = batterydb.GetBatteries(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                    model = batterydb.GetBatteries(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                 }
                 else if (User.IsInRole("Community User"))
                 {
                     if (currentUser.GroupID != null)
                     {
-                        model = batterydb.GetBatteries(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                        model = batterydb.GetBatteries(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                     }
                     else
-                        model = batterydb.GetBatteries(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                        model = batterydb.GetBatteries(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                 }
                 model = model.OrderByDescending(x => x.LastSeenOn);
                 return View(model);
@@ -92,13 +90,13 @@ namespace GeniView.Cloud.Controllers
                 var model = batterydb.FindBatteryByID(id.Value, null, null);
                 if (model == null)
                 {
-                    return HttpNotFound();
+                    return NotFound();
                 }
 
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -139,7 +137,7 @@ namespace GeniView.Cloud.Controllers
 
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -167,7 +165,7 @@ namespace GeniView.Cloud.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
 
             BatteriesListViewModel model = new BatteriesListViewModel();
@@ -178,7 +176,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -194,7 +192,7 @@ namespace GeniView.Cloud.Controllers
 
                 if (_battery == null)
                 {
-                    return HttpNotFound();
+                    return NotFound();
                 }
 
                 model = new BatteriesListViewModel()
@@ -225,7 +223,7 @@ namespace GeniView.Cloud.Controllers
                     ApplicationUser currentUser = new ApplicationUser();
                     using (var identityRepo = new IdentityDataRepository())
                     {
-                        currentUser = identityRepo.GetCurrentUser();
+                        currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                         ViewBag.CurrentUser = currentUser;
                     }
 
@@ -257,7 +255,7 @@ namespace GeniView.Cloud.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
             Battery model = new Battery();
             try
@@ -265,7 +263,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -297,7 +295,7 @@ namespace GeniView.Cloud.Controllers
                 }
 
                 if (model == null)
-                    return HttpNotFound();
+                    return NotFound();
             }
             catch (Exception ex)
             {
@@ -324,7 +322,7 @@ namespace GeniView.Cloud.Controllers
             {
                 _logger.Warn(ex, "fail while getting battery chart data.");
             }
-            return Json(model, JsonRequestBehavior.AllowGet);
+            return Json(model);
 
         }
 
@@ -352,7 +350,7 @@ namespace GeniView.Cloud.Controllers
                     _logger.Warn("Geni-View Cloud encountered an error. More information about error in details row.", ex);
                 }
             }
-            return Json(model, JsonRequestBehavior.AllowGet);
+            return Json(model);
         }
 
         public ActionResult GetBatteryDetailData(long serialNumber)
@@ -390,7 +388,7 @@ namespace GeniView.Cloud.Controllers
 
             _logger.Debug($"TestEnQueue End {Global._queueHelp._queue.Count}");
 
-            return Json(datas, JsonRequestBehavior.AllowGet);
+            return Json(datas);
         }
 
         public JsonResult TestDequeueAPI()
@@ -402,7 +400,7 @@ namespace GeniView.Cloud.Controllers
             _logger.Debug($"TestDequeueAPI end QTY:{Global._queueHelp._queue.Count}");
 
 
-            return Json(ret, JsonRequestBehavior.AllowGet);
+            return Json(ret);
         }
 
         public string TestDequeue()

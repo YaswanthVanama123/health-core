@@ -10,5 +10,11 @@ namespace GeniView.Cloud.Repository
             : base(options)
         {
         }
+
+        // Parameterless constructor for use until DI is fully wired in Phase 3.
+        public HangfireRepository()
+            : base(new DbContextOptionsBuilder<HangfireRepository>().Options)
+        {
+        }
     }
 }

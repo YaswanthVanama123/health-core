@@ -1,4 +1,4 @@
-﻿@model GeniView.Cloud.Models.DeviceListViewModel
+@model GeniView.Cloud.Models.DeviceListViewModel
 
 @{
     ViewBag.Title = "Edit Device";
@@ -6,7 +6,7 @@
 
 @section scripts
 {
-    @Scripts.Render("~/bundles/dropdownfilter")
+    <script src="~/js/dropdownfilter.min.js"></script>
 }
 
 <div class="row">
@@ -27,7 +27,7 @@
                     <label id="EditModeParentGroupID" hidden="hidden">@Model.GroupID</label>
 
                     <div class="form-group">
-                        @Html.Label("Community", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <label class="control-label col-md-2">Community</label>
                         <div class="col-md-10">
                             @Html.DropDownListFor(model => model.CommunityID, Enumerable.Empty<SelectListItem>(), htmlAttributes: new { @class = "form-control", @id = "CommunitiesDDL" })
                             @Html.ValidationMessageFor(model => model.CommunityID, "", new { @class = "text-danger" })
@@ -35,7 +35,7 @@
                     </div>
 
                     <div class="form-group">
-                        @Html.Label("Group", htmlAttributes: new { @class = "control-label col-md-2" })
+                        <label class="control-label col-md-2">Group</label>
                         <div class="col-md-10">
                             @Html.DropDownListFor(model => model.GroupID, Enumerable.Empty<SelectListItem>(), htmlAttributes: new { @class = "form-control", @id = "GroupsDDL" })
                             @Html.ValidationMessageFor(model => model.GroupID, "", new { @class = "text-danger" })

@@ -1,15 +1,13 @@
-﻿using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
-using System.Web.Mvc;
-using GeniView.Cloud.Areas.Admin.Models;
 using GeniView.Cloud.Models;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.AspNet.Identity;
 using System.Globalization;
 using GeniView.Cloud.Repository;
 using GeniView.Data.Hardware;
@@ -32,28 +30,28 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
-                    model = db.GetDevices(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                    model = db.GetDevices(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                 }
                 else if (User.IsInRole("Community Admin"))
                 {
-                    model = db.GetDevices(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                    model = db.GetDevices(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                 }
                 else if (User.IsInRole("Community Group Admin"))
                 {
-                    model = db.GetDevices(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                    model = db.GetDevices(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                 }
                 else if (User.IsInRole("Community User"))
                 {
                     if (currentUser.GroupID != null)
-                        model = db.GetDevices(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                        model = db.GetDevices(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                     else
-                        model = db.GetDevices(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, id);
+                        model = db.GetDevices(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, id);
                 }
                 return View(model);
             }
@@ -79,12 +77,12 @@ namespace GeniView.Cloud.Controllers
                 var model = db.FindDeviceByID(id.Value);
 
                 if (model == null)
-                    return HttpNotFound();
+                    return NotFound();
 
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -124,7 +122,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -159,7 +157,7 @@ namespace GeniView.Cloud.Controllers
         public ActionResult Edit(long? id)
         {
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
 
             DeviceListViewModel model = new DeviceListViewModel();
             Device _device = new Device();
@@ -170,7 +168,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -186,7 +184,7 @@ namespace GeniView.Cloud.Controllers
 
                 if (_device == null)
                 {
-                    return HttpNotFound();
+                    return NotFound();
                 }
 
                 model = new DeviceListViewModel()
@@ -217,7 +215,7 @@ namespace GeniView.Cloud.Controllers
                     ApplicationUser currentUser = new ApplicationUser();
                     using (var identityRepo = new IdentityDataRepository())
                     {
-                        currentUser = identityRepo.GetCurrentUser();
+                        currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                         ViewBag.CurrentUser = currentUser;
                     }
 
@@ -246,7 +244,7 @@ namespace GeniView.Cloud.Controllers
         public ActionResult Graphs(long? id)
         {
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
 
             Device model = new Device();
             try
@@ -254,7 +252,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -281,7 +279,7 @@ namespace GeniView.Cloud.Controllers
                 }
                 if (model == null)
                 {
-                    return HttpNotFound();
+                    return NotFound();
                 }
                 var ListOfBay = new List<SelectListItem>();
                 ListOfBay.Add(new SelectListItem { Text = "All", Value = "-1" });
@@ -323,7 +321,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -353,7 +351,7 @@ namespace GeniView.Cloud.Controllers
 
                     if (model == null)
                     {
-                        return HttpNotFound();
+                        return NotFound();
                     }
 
                     ViewBag.DeviceSerialNumber = model.SerialNumber;
@@ -384,7 +382,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -394,22 +392,22 @@ namespace GeniView.Cloud.Controllers
                 {
                     if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                     {
-                        query.EventList = db.GetDeviceEventHistoryList(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, query, currentUser);
+                        query.EventList = db.GetDeviceEventHistoryList(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, query, currentUser);
                     }
                     else if (User.IsInRole("Community Admin"))
                     {
-                        query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, query, currentUser);
+                        query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, query, currentUser);
                     }
                     else if (User.IsInRole("Community Group Admin"))
                     {
-                        query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, query, currentUser);
+                        query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, query, currentUser);
                     }
                     else if (User.IsInRole("Community User"))
                     {
                         if (currentUser.GroupID != null)
-                            query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, query, currentUser);
+                            query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, query, currentUser);
                         else
-                            query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, query, currentUser);
+                            query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, query, currentUser);
                     }
 
                     var deviceModel = db.FindDeviceByID(id.Value);
@@ -464,14 +462,14 @@ namespace GeniView.Cloud.Controllers
                     }
                     model.Add(device);
                 }
-                var jsonResult = Json(model, JsonRequestBehavior.AllowGet);
-                jsonResult.MaxJsonLength = int.MaxValue;
+                var jsonResult = Json(model);
+                // MaxJsonLength is not available in ASP.NET Core; large responses are unrestricted by default.
                 return jsonResult;
             }
             catch (Exception ex)
             {
                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                return Json(model, JsonRequestBehavior.AllowGet);
+                return Json(model);
             }
         }
 
@@ -490,7 +488,7 @@ namespace GeniView.Cloud.Controllers
             {
                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
             }
-            return Json(model, JsonRequestBehavior.AllowGet);
+            return Json(model);
         }
 
         public ActionResult GetDeviceDetailsData(string ID)
@@ -519,7 +517,7 @@ namespace GeniView.Cloud.Controllers
             {
                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
             }
-            return Json(model, JsonRequestBehavior.AllowGet);
+            return Json(model);
 
         }
 

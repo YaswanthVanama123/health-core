@@ -1,13 +1,11 @@
-﻿using System;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin.Security;
 using GeniView.Cloud.Models;
-using System.Data.Entity;
 using System.Collections.ObjectModel;
 using NLog;
 using GeniView.Cloud.Repository;
@@ -17,8 +15,8 @@ namespace GeniView.Cloud.Controllers
     [Authorize]
     public class ProfileController : Controller
     {
-        private ApplicationSignInManager _signInManager;
-        private ApplicationUserManager _userManager;
+        private dynamic /* TODO Phase 4: ApplicationSignInManager */ _signInManager;
+        private dynamic /* TODO Phase 4: ApplicationUserManager */ _userManager;
         private static Logger _logger = LogManager.GetCurrentClassLogger();
         private UserActivityHistory userAHM = new UserActivityHistory();
 
@@ -27,30 +25,24 @@ namespace GeniView.Cloud.Controllers
         {
         }
 
-        public ProfileController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
+        public ProfileController(dynamic /* TODO Phase 4: ApplicationUserManager */ userManager, dynamic /* TODO Phase 4: ApplicationSignInManager */ signInManager)
         {
             UserManager = userManager;
             SignInManager = signInManager;
         }
 
-        public ApplicationSignInManager SignInManager
+        public dynamic /* TODO Phase 4: ApplicationSignInManager */ SignInManager
         {
-            get
-            {
-                return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
-            }
+            get { throw new NotImplementedException("TODO Phase 4: inject SignInManager via ASP.NET Core Identity"); }
             private set
             {
                 _signInManager = value;
             }
         }
 
-        public ApplicationUserManager UserManager
+        public dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
         {
-            get
-            {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
+            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
             private set
             {
                 _userManager = value;
@@ -62,7 +54,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var model = UserManager.FindById(User.Identity.GetUserId());
+                var model = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                 ViewBag.RoleName = UserManager.GetRoles(model.Id).FirstOrDefault();
                 using (CommunitiesDataRepository comdb = new CommunitiesDataRepository())
                 {
@@ -87,13 +79,13 @@ namespace GeniView.Cloud.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Index(ApplicationUser model, HttpPostedFileBase image)
+        public async Task<ActionResult> Index(ApplicationUser model, IFormFile image)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+                    var user = await UserManager.FindByIdAsync(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                     user.FullName = model.FullName;
                     user.Email = model.Email;
                     user.UserName = model.Email;
@@ -103,8 +95,9 @@ namespace GeniView.Cloud.Controllers
                     if (image != null)
                     {
                         user.ImageMimeType = image.ContentType;
-                        user.ProfilePhoto = new byte[image.ContentLength];
-                        image.InputStream.Read(user.ProfilePhoto, 0, image.ContentLength);
+                        using var ms = new System.IO.MemoryStream();
+                        await image.CopyToAsync(ms);
+                        user.ProfilePhoto = ms.ToArray();
                     }
                     var result = await UserManager.UpdateAsync(user);
                     if (result.Succeeded)
@@ -144,11 +137,11 @@ namespace GeniView.Cloud.Controllers
 
             try
             {
-                var result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+                var result = await UserManager.ChangePasswordAsync(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier), model.OldPassword, model.NewPassword);
 
                 if (result.Succeeded)
                 {
-                    var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+                    var user = await UserManager.FindByIdAsync(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                     if (user != null)
                     {
                         await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
@@ -169,12 +162,12 @@ namespace GeniView.Cloud.Controllers
             return View(model);
         }
 
-        [ChildActionOnly]
+        // [ChildActionOnly] removed — not available in ASP.NET Core. Use ViewComponent or partial view instead.
         public string GetUserInfo()
         {
             try
             {
-                var user = UserManager.FindById(User.Identity.GetUserId());
+                var user = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                 return user.FullName;
             }
             catch (Exception ex)
@@ -188,7 +181,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var user = UserManager.FindById(User.Identity.GetUserId());
+                var user = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                 if (user.ProfilePhoto != null)
                     return File(user.ProfilePhoto, user.ImageMimeType);
                 else

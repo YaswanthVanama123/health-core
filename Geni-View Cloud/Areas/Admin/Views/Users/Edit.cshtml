@@ -1,10 +1,10 @@
-﻿@model GeniView.Cloud.Models.UserViewModel
+@model GeniView.Cloud.Models.UserViewModel
 @{
     ViewBag.Title = "Edit User";
 }
 @section scripts
 {
-    @Scripts.Render("~/bundles/dropdownfilter")
+    <script src="~/js/dropdownfilter.min.js"></script>
 }
 
 @Html.Partial("_UserEditPartial", Model)

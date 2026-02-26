@@ -1,4 +1,4 @@
-﻿@model GeniView.Data.Hardware.Device
+@model GeniView.Data.Hardware.Device
 
 @{
     ViewBag.Title = "Device Graphs";
@@ -11,8 +11,8 @@
 
 @section scripts {
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    @Scripts.Render("~/bundles/devicecharts")
-    @Scripts.Render("~/bundles/datetimescripts")
+    <\!-- TODO Phase 8: bundle ~/js/devicecharts.min.js -->
+    <\!-- TODO Phase 8: bundle ~/js/datetimescripts.min.js -->
 
     <script type="text/javascript">
         google.charts.load('current' , { packages: ['corechart'] });
@@ -165,13 +165,13 @@
                     <div class="panel subcontainer">
                         <div class="panel-body">
                             <div class="form-group">
-                                @Html.Label("Begin Date", htmlAttributes: new { @class = "control-label col-md-12" })
+                                <label class="control-label col-md-12">Begin Date</label>
                                 <div class="col-md-12">
                                     <input type="text" value="" id="BeginDate" class="form-control" /> <br>
                                 </div>
                             </div>
                             <div class="form-group">
-                                @Html.Label("End Date", htmlAttributes: new { @class = "control-label col-md-12" })
+                                <label class="control-label col-md-12">End Date</label>
                                 <div class="col-md-12">
                                     <input type="text" value="" id="EndDate" class="form-control" />
                                 </div>
@@ -183,13 +183,13 @@
                     <div class="panel subcontainer">
                         <div class="panel-body">
                             <div class="form-group">
-                                @Html.Label("Select Bay", htmlAttributes: new { @class = "control-label col-md-12" })
+                                <label class="control-label col-md-12">Select Bay</label>
                                 <div class="col-md-12">
                                     @Html.DropDownList("ListOfBay", null, new { @class = "form-control", @id = "DropDownForBay" }) <br>
                                 </div>
                             </div>
                             <div class="form-group">
-                                @Html.Label("Log Type", htmlAttributes: new { @class = "control-label col-md-12" })
+                                <label class="control-label col-md-12">Log Type</label>
                                 <div class="col-md-12">
                                     <select class="form-control" id="LogType" name="LogType">
                                         <option value="1">Agent Device Log</option>
@@ -204,7 +204,7 @@
                     <div class="panel subcontainer">
                         <div class="panel-body">
                             <div class="form-group">
-                                @Html.Label("Axis Type Option", htmlAttributes: new { @class = "control-label col-md-12" })
+                                <label class="control-label col-md-12">Axis Type Option</label>
                                 <div class="col-md-12">
                                     <ul id="xAxisOption" class="list-inline">
                                         <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyDate" checked="checked" /><label for="xAxisbyDate">By Date</label></li>
@@ -213,7 +213,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                @Html.Label("Refresh", htmlAttributes: new { @class = "control-label col-md-12" })
+                                <label class="control-label col-md-12">Refresh</label>
                                 <div class="col-md-12">
                                     <input type="button" id="applyFilter" class="btn btn-default form-control" value="Apply Filters" />
                                 </div>

@@ -1,12 +1,12 @@
-﻿using GeniView.Cloud.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Areas.Admin.Controllers
 {
@@ -52,12 +52,12 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                         db.Entry(origin).State = EntityState.Modified;
                         db.SaveChanges();
                     }
-                    return Json("Success", JsonRequestBehavior.AllowGet);
+                    return Json("Success");
                 }
                 catch (Exception ex)
                 {
                     _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                    return Json(ex.Message, JsonRequestBehavior.AllowGet);
+                    return Json(ex.Message);
                 }
                 
                 
@@ -77,12 +77,12 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                         db.Entry(origin).State = EntityState.Modified;
                         db.SaveChanges();
                     }
-                    return Json("Success", JsonRequestBehavior.AllowGet);
+                    return Json("Success");
                 }
                 catch (Exception ex)
                 {
                     _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                    return Json(ex.Message, JsonRequestBehavior.AllowGet);
+                    return Json(ex.Message);
                 }
 
 

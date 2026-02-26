@@ -1,16 +1,24 @@
 ﻿using GeniView.Cloud.Common;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Cloud.Models;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware.Event;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Web;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 using NLog;
+using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Web;
 
 namespace GeniView.Cloud.Repository
 {
@@ -99,14 +107,7 @@ namespace GeniView.Cloud.Repository
                     }
                 }
 
-                _dBHelp.UpdateAll(db, db.Devices, devices,
-                    spec => spec.ColumnsToUpdate(
-                        x => x.FirmwareVersion,
-                        x => x.Manufacturer,
-                        x => x.ProductName,
-                        x => x.DeviceType
-
-                        ));
+                _dBHelp.UpdateAll(db, db.Devices, devices);
             }
 
             if (devices.Any() == true)
@@ -155,9 +156,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var mainQuery = (from d in db.Devices
                                              .Include(x => x.AgentDeviceLogCollection)
@@ -253,9 +251,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var mainQuery = (from d in db.Devices.Include(x => x.AgentDeviceLogCollection)  // Load Device Data
                                                      .Include(x => x.DeviceSettingsCollection)  // Load Settings
@@ -294,9 +289,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var query = (from a in db.Devices.Include(x => x.AgentDeviceLogCollection)
                                         .Include(x => x.DeviceSettingsCollection)
@@ -465,9 +457,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var query = (from a in db.Devices.Include(x => x.AgentDeviceLogCollection)
                                         .Include(x => x.DeviceSettingsCollection)
@@ -513,7 +502,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
 
                 Device device = db.Devices.Include(x => x.DeviceSettingsCollection)
                                           .Include(x => x.Community)
@@ -531,7 +519,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
 
                 Device device = db.Devices.Include(x => x.Community)
                                           .Include(x => x.Group)
@@ -552,7 +539,6 @@ namespace GeniView.Cloud.Repository
 
         public IEnumerable<Device> FindBySN(List<string> serialNumber, GeniViewCloudDataRepository db)
         {
-            //db.Configuration.LazyLoadingEnabled = false;
 
             var result = db.Devices.Include(x => x.Community)
                                         .Include(x => x.Group)
@@ -574,9 +560,6 @@ namespace GeniView.Cloud.Repository
         {
             using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 int count = 0;
                 Device device = db.Devices
@@ -595,7 +578,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
 
                 var originaldevice = db.Devices.Include(x => x.Group).Where(x => x.ID == device.ID && x.IsDeactivated == false).FirstOrDefault();
                 if (originaldevice != null)
@@ -615,14 +597,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = (ApplicationUser?)null;
                 }
 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
@@ -678,13 +657,10 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = (ApplicationUser?)null;
                 }
 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
@@ -736,13 +712,10 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = (ApplicationUser?)null;
                 }
 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
@@ -802,13 +775,10 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = (ApplicationUser?)null;
                 }
 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
@@ -861,10 +831,7 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 60;
+                db.Database.SetCommandTimeout(60);
 
                 List<DeviceHistoryViewModel> model = new List<DeviceHistoryViewModel>();
                 
@@ -916,9 +883,6 @@ namespace GeniView.Cloud.Repository
             List<DeviceEvent> model = new List<DeviceEvent>();
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(filter.BeginDate, currentUser);
                 var convertedEndDate = TimeZoneHelper.ConvertToUTC(filter.EndDate, currentUser);
@@ -942,9 +906,6 @@ namespace GeniView.Cloud.Repository
             List<DeviceEvent> model = new List<DeviceEvent>();
             using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(filter.BeginDate, currentUser);
                 var convertedEndDate = TimeZoneHelper.ConvertToUTC(filter.EndDate, currentUser);
@@ -988,7 +949,7 @@ namespace GeniView.Cloud.Repository
 
         public virtual int Clear(GeniViewCloudDataRepository db)
         {
-            int ret = db.Database.ExecuteSqlCommand("TRUNCATE TABLE InternalDeviceLogs");
+            int ret = db.Database.ExecuteSqlRaw("TRUNCATE TABLE InternalDeviceLogs");
             return ret;
         }
         #endregion
@@ -1000,9 +961,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Devices.Include(x => x.Community)
                                              .Where(x => x.Community.ID == communityID)
@@ -1026,8 +984,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 foreach (var item in setList)
                 {
@@ -1047,9 +1003,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Devices.Include(x => x.Community)
                                              .Where(x => x.Community.ID == null)
@@ -1072,8 +1025,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 foreach (var item in setList)
                 {
@@ -1095,9 +1046,6 @@ namespace GeniView.Cloud.Repository
             List<ActivateDeactivatedModel> model = new List<ActivateDeactivatedModel>();
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Devices
                                      .Include(x => x.Community)
@@ -1119,9 +1067,6 @@ namespace GeniView.Cloud.Repository
             List<ActivateDeactivatedModel> model = new List<ActivateDeactivatedModel>();
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Devices
                                      .Include(x => x.Community)
@@ -1148,8 +1093,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 foreach (var item in setList)
                 {

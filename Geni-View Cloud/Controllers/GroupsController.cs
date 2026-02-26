@@ -1,10 +1,9 @@
-﻿using GeniView.Cloud.Areas.Admin.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web.Mvc;
-using Microsoft.AspNet.Identity;
 using GeniView.Cloud.Models;
 using GeniView.Data.Hardware;
 using GeniView.Data.Web;
@@ -30,7 +29,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -68,7 +67,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -86,7 +85,7 @@ namespace GeniView.Cloud.Controllers
                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
                 ModelState.AddModelError("DbFail", ex.Message);
             }
-            return Json(model, JsonRequestBehavior.AllowGet);
+            return Json(model);
         }
 
         public ActionResult Create()
@@ -96,7 +95,7 @@ namespace GeniView.Cloud.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ParentGroupID,CommunityID, Group")] GroupViewModel model)
+        public ActionResult Create([Bind("ParentGroupID,CommunityID,Group")] GroupViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -105,7 +104,7 @@ namespace GeniView.Cloud.Controllers
                     ApplicationUser currentUser = new ApplicationUser();
                     using (var identityRepo = new IdentityDataRepository())
                     {
-                        currentUser = identityRepo.GetCurrentUser();
+                        currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                         ViewBag.CurrentUser = currentUser;
                     }
 
@@ -129,7 +128,7 @@ namespace GeniView.Cloud.Controllers
         public ActionResult Edit(long? id)
         {
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
 
             GroupViewModel model = new GroupViewModel();
 
@@ -138,7 +137,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                 }
 
                 if (User.IsInRole("Community Admin"))
@@ -151,7 +150,7 @@ namespace GeniView.Cloud.Controllers
                 }
 
                 if (model == null)
-                    return HttpNotFound();
+                    return NotFound();
 
                 return View(model);
             }
@@ -172,7 +171,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                 }
 
                 if (ModelState.IsValid)
@@ -207,7 +206,7 @@ namespace GeniView.Cloud.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
             Group model = new Group();
             try
@@ -215,7 +214,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                 }
 
                 if (User.IsInRole("Community Admin"))
@@ -244,7 +243,7 @@ namespace GeniView.Cloud.Controllers
             }
 
             if (model == null)
-                return HttpNotFound();
+                return NotFound();
 
             return View(model);
         }

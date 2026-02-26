@@ -1,4 +1,6 @@
-﻿using GeniView.Cloud.Common;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using GeniView.Cloud.Common;
 using GeniView.Cloud.Common.Queue;
 using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
@@ -6,6 +8,7 @@ using GeniView.Data.Hardware;
 using GeniView.Data.Hardware.Event;
 using Hangfire;
 using MQTTnet.Protocol;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -16,9 +19,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
-using System.Web.Hosting;
-using System.Web.Http;
-using System.Web.Http.Description;
 using static GeniView.Cloud.Common.DataDefine;
 
 namespace GeniView.Cloud.Controllers.API
@@ -37,7 +37,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpGet, Route("api/log/ProcessLog")]
-        public IHttpActionResult ProcessLog()
+        public IActionResult ProcessLog()
         {
             try
             {
@@ -53,7 +53,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpGet, Route("api/ScanDevice/")]
-        public IHttpActionResult ScanDevice(bool enable)
+        public IActionResult ScanDevice(bool enable)
         {
             List<Message> result = new List<Message>();
 
@@ -89,7 +89,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpGet, Route("api/DumpBatteryLog/")]
-        public IHttpActionResult DumpBatteryLog(
+        public IActionResult DumpBatteryLog(
             string bsn = null, string dsn = null, string times = null, string timee = null, long? ids = null, long? ide = null, int? eventcode = null, string eventcodetxt = null, string batterystatus = null
             )
         {
@@ -110,7 +110,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpGet, Route("api/ClearLog/")]
-        public IHttpActionResult ClearLog()
+        public IActionResult ClearLog()
         {
             try
             {
@@ -130,7 +130,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpGet, Route("api/Test/")]
-        public IHttpActionResult Test()
+        public IActionResult Test()
         {
             try
             {
@@ -161,7 +161,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Test/")]
-        public IHttpActionResult TestPost([FromBody] Object para)
+        public IActionResult TestPost([FromBody] Object para)
         {
             try
             {
@@ -231,8 +231,9 @@ namespace GeniView.Cloud.Controllers.API
 
         public void ProcessLogJob(CancellationToken cancellationToken)
         {
-            HostingEnvironment.QueueBackgroundWorkItem(ct =>
+            Task.Run(() =>
             {
+            var ct = cancellationToken;
 
                 if (ct.IsCancellationRequested == true)
                 {
@@ -533,8 +534,9 @@ namespace GeniView.Cloud.Controllers.API
         {
             string result = "";
 
-            HostingEnvironment.QueueBackgroundWorkItem(ct =>
+            Task.Run(() =>
             {
+            var ct = CancellationToken.None;
 
                 for (int i = 0; i < 60; i++)
                 {

@@ -1,4 +1,8 @@
-﻿using GeniView.Cloud.Common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Authorization;
+using GeniView.Cloud.Common;
 using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
 using MQTTnet.Client;
@@ -14,9 +18,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using System.Web.Http.ModelBinding;
 
 namespace GeniView.Cloud.Controllers.API
 {
@@ -52,7 +53,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/SendCommand/")]
-        public IHttpActionResult SendCommand(CmdRequest cmd)
+        public IActionResult SendCommand(CmdRequest cmd)
         {
             try
             {
@@ -83,7 +84,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/ReportFrequencyBatch/")]
-        public async Task<IHttpActionResult> GetReportFrequency(List<string> SerialNumberCode )
+        public async Task<IActionResult> GetReportFrequency(List<string> SerialNumberCode )
         {
             var result = "";
             try
@@ -127,7 +128,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/ReportFrequency/")]
-        public async Task<IHttpActionResult> PostReportFrequency(LogRate logRate, string SerialNumberCode = null)
+        public async Task<IActionResult> PostReportFrequency(LogRate logRate, string SerialNumberCode = null)
         {
             List<object> result = new List<object>();
 
@@ -202,14 +203,14 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/SetOTA/")]
-        public async Task<IHttpActionResult> PostOTA(string SerialNumberCode = null)
+        public async Task<IActionResult> PostOTA(string SerialNumberCode = null)
         {
             List<object> result = new List<object>();
 
             string filePath = $@"{Global._serverPath}{Global._otaPath}";
             
             //If file does'n exist will create folder.
-            if (File.Exists(filePath) == false)
+            if (System.IO.File.Exists(filePath) == false)
             {
                 return BadRequest($"OTA file doesn't exist.");
             }
@@ -290,7 +291,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/GetOTA/")]
-        public async Task<IHttpActionResult> GetOTA(List<string> SerialNumberCode)
+        public async Task<IActionResult> GetOTA(List<string> SerialNumberCode)
         {
             var result = "";
             try
@@ -335,45 +336,26 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/UploadOTAFile/")]
-        public async Task<IHttpActionResult> UploadOTAFile()
+        public async Task<IActionResult> UploadOTAFile(IFormFile file)
         {
-
-            // Check if the request contains multipart/form-data.
-            if (!Request.Content.IsMimeMultipartContent())
+            if (file == null || file.Length == 0)
             {
-                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
+                return StatusCode((int)System.Net.HttpStatusCode.UnsupportedMediaType, "No file uploaded.");
             }
-
-            var provider = new MultipartMemoryStreamProvider();
 
             try
             {
-                // Read the form data.
-                await Request.Content.ReadAsMultipartAsync(provider);
-                //string filePath = $"{Global._otaPath}displayboard.bin";
-                //string fileUrlPath = $"{Request.Headers.Host}/Files/Device/displayboard.bin";
+                string filePath = "{Global._serverPath}{Global._otaPath}";
+                string fileUrlPath = Url.Content("~/" + Global._otaPath);
 
-                string filePath = $@"{Global._serverPath}{Global._otaPath}";
-                string fileUrlPath = Url.Content("~/" + Global._otaPath); ;
-
-                //If file does'n exist will create folder.
-                if (File.Exists(filePath) == false)
+                if (!System.IO.File.Exists(filePath))
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                    System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(filePath));
                 }
 
-                if (provider.Contents.Any() == true && provider.Contents[0].Headers.ContentLength >= 1)
+                using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                 {
-                    var content = provider.Contents[0];
-                    var file = await content.ReadAsByteArrayAsync();//Read the data as byte
-                    using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                    {
-                        await fs.WriteAsync(file, 0, file.Length);
-                    }
-                }
-                else
-                {
-                    return ResponseErrorMessage(HttpStatusCode.BadRequest, "Content file is empty.");
+                    await file.CopyToAsync(fs);
                 }
 
                 return Ok(fileUrlPath);
@@ -387,7 +369,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/SetNTP/")]
-        public async Task<IHttpActionResult> PostNTP(NTP ntp , string SerialNumberCode = null)
+        public async Task<IActionResult> PostNTP(NTP ntp , string SerialNumberCode = null)
         {
             List<object> result = new List<object>();
 
@@ -481,7 +463,7 @@ namespace GeniView.Cloud.Controllers.API
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost, Route("api/Command/GetNTP/")]
-        public async Task<IHttpActionResult> GetNTP(List<string> SerialNumberCode)
+        public async Task<IActionResult> GetNTP(List<string> SerialNumberCode)
         {
             var result = "";
             try

@@ -1,9 +1,6 @@
-﻿@using Microsoft.AspNet.Identity
-@using Microsoft.AspNet.Identity.Owin;
-
-@if (Request.IsAuthenticated)
+﻿@if (User.Identity?.IsAuthenticated == true)
 {
-    using (Html.BeginForm("LogOff", "Account", new { area = "" }, FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
     {
         @Html.AntiForgeryToken()
         
@@ -22,7 +19,7 @@
             <li class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="loginStyle">
                     <span class="fa fa-user-circle profile-icon" aria-hidden="true"></span>
-                    <label class="loginStyleLabel">@Html.Raw(Html.Action("GetUserInfo", "Profile", new { area = "" }))</label>
+                    <label class="loginStyleLabel">@Url.Action("GetUserInfo", "Profile", new { area = "" })</label>
                 </a>
                 <ul class="dropdown-menu col-md-12">
                     <li><a href="@Url.Action("Index","Profile", new { area = ""})"><i class="fa fa-user"></i>Profile</a></li>

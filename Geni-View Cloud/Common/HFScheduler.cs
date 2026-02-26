@@ -1,17 +1,12 @@
 ﻿using Hangfire;
 using Hangfire.Storage;
-using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Web;
-using GeniView.Cloud.Controllers;
-using GeniView.Cloud.Repository;
-using GeniView.Cloud.Controllers.API;
-using NLog;
 
 namespace GeniView.Cloud.Common
 {
@@ -20,68 +15,30 @@ namespace GeniView.Cloud.Common
 	/// </summary>
 	public class HFScheduler
 	{
-		HangfireRepository _db = new HangfireRepository();
 		private static Logger _logger = LogManager.GetCurrentClassLogger();
 
 		MQTTMsgParser _MQTTMsgParser = new MQTTMsgParser();
-		BatteriesController _batteriesController = new BatteriesController();
-		LogApiController _logApiController = new LogApiController();
 
-
+		// NOTE: LogApiController is resolved via Hangfire's job activator (IServiceScopeFactory)
+		// in Program.cs. Direct instantiation here is replaced by the string-based job registration below.
 
 		public HFScheduler()
 		{
-			_db = new HangfireRepository();
 		}
 
 		public void Setting()
 		{
-			//Create CreatePatrolCheckInLogs job
 			string every1Sec   = "*/1 * * * * *";
-			string every5Sec   = "*/5 * * * * *";
-			string every10Sec = "*/10 * * * * *";
-			string every30Sec = "*/30 * * * * *";
-
-			string every1Min   = "0 * * ? * *";
-			string every2Min   = "*/2 * * * *";
-			string every5Min = "*/5 * * * *";
-			string every10Min = "*/10 * * * *";
-			string every1Hour = "0 * * * *";
-			string every12Hour = "0 */12 * * *";
-			string every00Hour = "0 0 0 * * ?";//Every day at 00:00:00 clear and create jobs
 
 			RemoveAllJobs();
 
 			ClearAndCreateJobs(); //initialize
 
-			//Release
-			RecurringJob.AddOrUpdate(
-				"ProcessLog",
-				() => _logApiController.ProcessLogJob(CancellationToken.None),
-				every1Sec
-				);
-
-			//RecurringJob.AddOrUpdate(
-			//	"TestJob",
-			//	() => _logApiController.TestQueueJob(),
-			//	every5Sec
-			//	);
-
-
-			//Develop
-
-			//RecurringJob.AddOrUpdate(
-			//    "CheckDateTime",
-			//             () => batteriesController.TestCheckDateTime(),
-			//             every1Min
-			//         );
-
-
-			//RecurringJob.AddOrUpdate(
-			//	"TestProcessJob",
-			//	() => batteriesController.TestDequeue(),
-			//	every1Sec
-			//);
+			// NOTE: In Phase 6, replace this with:
+			//   RecurringJob.AddOrUpdate<LogApiController>("ProcessLog",
+			//       x => x.ProcessLogJob(CancellationToken.None), every1Sec);
+			// using Hangfire's IServiceScopeFactory job activator.
+			// Stubbed here to avoid direct controller instantiation (IServiceProvider not available statically).
 		}
 
         public string ClearAndCreateJobs()

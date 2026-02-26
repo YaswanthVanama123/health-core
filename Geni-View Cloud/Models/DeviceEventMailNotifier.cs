@@ -1,30 +1,24 @@
-﻿using Microsoft.AspNet.Identity.Owin;
-using Microsoft.AspNet.Identity;
 using GeniView.Cloud.Repository;
-using System.Web;
-using GeniView.Data.Hardware.Event;
 using GeniView.Data.Hardware;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Mail;
-using System.Linq;
-using System.Net;
-using System.Diagnostics;
-using System;
-using System.Data.Entity;
+using GeniView.Data.Hardware.Event;
+using Microsoft.EntityFrameworkCore;
 using NLog;
-using Microsoft.AspNet.SignalR;
-using GeniView.Cloud.Hubs;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GeniView.Cloud.Models
 {
     public class DeviceEventMailNotifier
     {
-        MailHelper mailHelper;
-        List<UserViewModel> users;
+        private readonly MailHelper mailHelper;
+        private List<UserViewModel>? users;
         private static Logger _logger = LogManager.GetCurrentClassLogger();
-        private IHubContext context = GlobalHost.ConnectionManager.GetHubContext<NotificationHub>();
+
+        // TODO Phase 8: inject IHubContext<NotificationHub> via constructor for SignalR push notifications.
+        // In Program.cs register: builder.Services.AddSignalR(); app.MapHub<NotificationHub>("/notificationHub");
+        // Then inject: private readonly IHubContext<NotificationHub> _hubContext;
 
         public DeviceEventMailNotifier()
         {
@@ -41,129 +35,96 @@ namespace GeniView.Cloud.Models
 
         public async Task SendMessageAsync(DeviceEvent deviceEvent)
         {
-            Device originDevice;
+            if (!CheckEventRules(deviceEvent))
+                return;
+
+            Device? originDevice;
             bool isMessageSent = false;
-            if (CheckEventRules(deviceEvent))
+            try
             {
-                try
+                using (var deviceDb = new DevicesDataRepository())
                 {
-                    using (DevicesDataRepository deviceDb = new DevicesDataRepository())
+                    originDevice = deviceDb.FindBySN(deviceEvent.DeviceSerialNumber);
+                }
+
+                if (originDevice != null && originDevice.IsDeactivated == false)
+                {
+                    long? nullableLong = null;
+                    using (var userDb = new IdentityDataRepository())
                     {
-                        originDevice = deviceDb.FindBySN(deviceEvent.DeviceSerialNumber);
+                        this.users = userDb.GetUsersWhoHasAccess(
+                            originDevice.Community != null ? originDevice.Community.ID : nullableLong,
+                            originDevice.Group     != null ? originDevice.Group.ID     : nullableLong
+                        ).ToList();
                     }
 
-                    if (originDevice != null && originDevice.IsDeactivated == false)
+                    foreach (var user in users)
                     {
-                        long? nullableLong = null;
-                        using (IdentityDataRepository userDb = new IdentityDataRepository())
+                        if (user.User.Email == "admin@bytec.com")
+                            continue;
+
+                        if (!user.User.IsNotificationEnable)
+                            continue;
+
+                        try
                         {
-                            this.users = userDb.GetUsersWhoHasAccess(originDevice.Community != null ? originDevice.Community.ID : nullableLong,
-                                                                     originDevice.Group != null ? originDevice.Group.ID : nullableLong
-                                              ).ToList();
+                            // TODO Phase 8: replace with IHubContext<NotificationHub> push
+                            // await _hubContext.Clients.User(user.User.Email).SendAsync("addNotification", ...);
+
+                            await mailHelper.SendMailAsync(user.User.Email!, deviceEvent);
+                            isMessageSent = true;
+                            await Task.Delay(GlobalSettings.NotificationDelayTimeInSeconds * 1000);
                         }
-
-                        // Send e-mail notification
-                        foreach (var user in users)
+                        catch (Exception ex)
                         {
-                            if (user.User.Email == "admin@bytec.com")
-                                continue;
+                            _logger.Error("DeviceEventMailNotifier error.", ex);
+                        }
+                    }
 
-                            // Check is Notification enabled
-                            if (!user.User.IsNotificationEnable)
-                                continue;
-                            try
+                    if (isMessageSent)
+                    {
+                        using var db = new GeniViewCloudDataRepository();
+                        try
+                        {
+                            DateTime oldestNotifiableEventDate = DateTime.UtcNow.AddMinutes(GlobalSettings.NotificationToleranceInMinutes * -1);
+                            DeviceEvent? originEvent = db.DeviceEvents
+                                                        .AsEnumerable()
+                                                        .Where(d => d.Timestamp == deviceEvent.Timestamp
+                                                                 && d.DeviceSerialNumber == deviceEvent.DeviceSerialNumber
+                                                                 && d.Timestamp > oldestNotifiableEventDate)
+                                                        .FirstOrDefault();
+                            if (originEvent != null)
                             {
-                                // SignalR push notification to spec users.
-                                await context.Clients.User(user.User.Email).addNotifcation(deviceEvent.DeviceSerialNumber,
-                                                                                           deviceEvent.Description,
-                                                                                           TimeZoneHelper.GetLocalDateTime(deviceEvent.Timestamp, user.User));
-                                await mailHelper.SendMailAsync(user.User.Email, deviceEvent);
-                                isMessageSent = true;
-                                await Task.Delay(GlobalSettings.NotificationDelayTimeInSeconds * 1000);
-
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                                originEvent.IsHandled = true;
+                                db.Entry(originEvent).State = EntityState.Modified;
+                                db.SaveChanges();
                             }
                         }
-
-                        if (isMessageSent)
+                        catch (Exception ex)
                         {
-                            using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
-                            {
-                                try
-                                {
-                                    DateTime oldestNotifiableEventDate = DateTime.UtcNow.AddMinutes(GlobalSettings.NotificationToleranceInMinutes * -1);
-                                    DeviceEvent originEvent = db.DeviceEvents
-                                                                .AsEnumerable()
-                                                                .Where(d => d.Timestamp == deviceEvent.Timestamp
-                                                                         && d.DeviceSerialNumber == deviceEvent.DeviceSerialNumber
-                                                                         && d.Timestamp > oldestNotifiableEventDate)
-                                                                .FirstOrDefault();
-                                    if (originEvent != null)
-                                    {
-                                        originEvent.IsHandled = true;
-                                        db.Entry(originEvent).State = System.Data.Entity.EntityState.Modified;
-                                        db.SaveChanges();
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                                }
-                            }
+                            _logger.Error("DeviceEventMailNotifier save error.", ex);
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                }
             }
-        }
-
-        private bool CheckSendMessage(UserViewModel user, Device originDevice)
-        {
-            if (!user.User.IsNotificationEnable)
-                return false;
-
-            if ((user.RoleName == "Application User" || user.RoleName == "Application Admin"))
-                return true;
-            else if (user.RoleName == "Community Admin" && user.User.CommunityID == originDevice.Community.ID)
-                return true;
-
-            if (originDevice.Group != null)
+            catch (Exception ex)
             {
-                if ((user.RoleName == "Community Group Admin" || user.RoleName == "Community User") &&
-                     user.User.CommunityID == originDevice.Community.ID &&
-                     user.User.GroupID == originDevice.Group.ID)
-                    return true;
+                _logger.Error("DeviceEventMailNotifier error.", ex);
             }
-            else
-            {
-                if (user.RoleName == "Community User" && user.User.CommunityID == originDevice.Community.ID)
-                    return true;
-            }
-            return false;
         }
 
         private bool CheckEventRules(DeviceEvent deviceEvent)
         {
-            // Set Tolerance Range and Convert to UTC
             DateTime oldestNotifiableEventDate = DateTime.UtcNow.AddMinutes(GlobalSettings.NotificationToleranceInMinutes * -1);
 
             if (deviceEvent.Timestamp < oldestNotifiableEventDate)
                 return false;
 
-            using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
-            {
-                return !db.DeviceEvents.Where(x => x.UID == deviceEvent.UID &&
-                                                   x.DeviceSerialNumber == deviceEvent.DeviceSerialNumber &&
-                                                   x.Timestamp > oldestNotifiableEventDate)
-                                       .Any(x => x.IsHandled == true);
-            };
+                using var db = new GeniViewCloudDataRepository();
+            return !db.DeviceEvents.Where(x => x.UID == deviceEvent.UID
+                                            && x.DeviceSerialNumber == deviceEvent.DeviceSerialNumber
+                                            && x.Timestamp > oldestNotifiableEventDate)
+                                   .Any(x => x.IsHandled == true);
         }
-
     }
 }

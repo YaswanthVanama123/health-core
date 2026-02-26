@@ -1,4 +1,4 @@
-﻿@model GeniView.Cloud.Models.AssignRemoveListModel
+@model GeniView.Cloud.Models.AssignRemoveListModel
 @{
     ViewBag.Title = "Remove Devices";
 }
@@ -40,7 +40,7 @@
             $(this).closest('form').trigger('submit');
         });
     </script>
-    @Scripts.Render("~/bundles/dropdownfilter")
+    <script src="~/js/dropdownfilter.min.js"></script>
 }
 @using (Html.BeginForm())
 {

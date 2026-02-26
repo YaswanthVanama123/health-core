@@ -1,9 +1,10 @@
 ﻿using GeniView.Cloud.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Web;
 
 namespace GeniView.Cloud.Repository
 {
@@ -13,9 +14,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 return db.ApplicationUpdates.ToList();
             }
@@ -25,9 +23,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 ApplicationUpdate originalAppUpdate = db.ApplicationUpdates.Find(model.ID);
 

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Web;
 
 namespace GeniView.Cloud.Models
 {
@@ -54,7 +53,9 @@ namespace GeniView.Cloud.Models
             {
                 try
                 {
-                    ApplicationUser currentUser = db.GetCurrentUser();
+                    // TODO Phase 4: pass currentUser explicitly from the controller (User property)
+                    // GetCurrentUser() was removed; UserActivityHistory cannot resolve HttpContext from a model.
+                    ApplicationUser currentUser = null;
                     var model = new UserActivityHistory()
                     {
                         Timestamp = DateTime.UtcNow,
@@ -106,7 +107,8 @@ namespace GeniView.Cloud.Models
             {
                 try
                 {
-                    ApplicationUser currentUser = db.GetCurrentUser();
+                    // TODO Phase 4: pass currentUser explicitly from the controller (User property)
+                    ApplicationUser currentUser = null;
                     var model = new UserActivityHistory()
                     {
                         Timestamp = DateTime.UtcNow,

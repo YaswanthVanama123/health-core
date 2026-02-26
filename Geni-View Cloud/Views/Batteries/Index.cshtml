@@ -1,4 +1,4 @@
-﻿@model IEnumerable<GeniView.Cloud.Models.BatteriesListViewModel>
+@model IEnumerable<GeniView.Cloud.Models.BatteriesListViewModel>
 @using GeniView.Cloud.Models;
 @{
     ViewBag.Title = "Batteries";
@@ -104,7 +104,7 @@
                         <td>
                             @if (item.LastSeenOn.HasValue)
                             {
-                                @TimeZoneHelper.GetLocalDateTime(item.LastSeenOn.Value)
+                                @TimeZoneHelper.GetLocalDateTime(item.LastSeenOn.Value, null)
                             }
                             else
                             {
@@ -215,7 +215,8 @@
 </div>
 
 @section scripts {
-    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <script type="text/javascript" src="~/Scripts/Custom Scripts/jquery.circliful.min.js"></script>
 
     <script type="text/javascript">

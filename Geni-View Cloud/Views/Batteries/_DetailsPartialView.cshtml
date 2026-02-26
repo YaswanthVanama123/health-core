@@ -50,7 +50,7 @@
     var statusA = FirstToken(Model.LastAgentBatteryLog?.OperatingData?.BatteryOperatingStatus?.StatusAText);
     var statusB = FirstToken(Model.LastAgentBatteryLog?.OperatingData?.BatteryOperatingStatus?.StatusBText);
     var settingsChangedText = settings != null
-        ? TimeZoneHelper.GetLocalDateTime(settings.Timestamp)
+        ? TimeZoneHelper.GetLocalDateTime(settings.Timestamp, null)
         : "Not available";
     var oemIdentifier = SafeString(settings?.OemIdentifier.ToString());
     var bsnNumber = SafeString(settings?.Battery?.SerialNumberCode?.ToString());

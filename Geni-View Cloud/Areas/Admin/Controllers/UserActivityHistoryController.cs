@@ -1,11 +1,12 @@
-﻿using GeniView.Cloud.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Areas.Admin.Controllers
 {
@@ -41,7 +42,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
                 using (var db = new IdentityDataRepository())

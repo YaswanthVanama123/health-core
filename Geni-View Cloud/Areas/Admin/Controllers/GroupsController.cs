@@ -1,10 +1,9 @@
-﻿using System;
-using System.Data.Entity;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Linq;
 using System.Net;
-using System.Web.Mvc;
-using GeniView.Cloud.Areas.Admin.Models;
-using Microsoft.AspNet.Identity;
 using GeniView.Cloud.Repository;
 using GeniView.Data.Hardware;
 using GeniView.Data.Web;
@@ -26,7 +25,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             {
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    ViewBag.CurrentUser = identityRepo.GetCurrentUser();
+                    ViewBag.CurrentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                 }
                 var model = groupRepo.GetGroups();
                 return View(model);
@@ -47,7 +46,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ParentGroupID, CommunityID, Group")] GroupViewModel model)
+        public ActionResult Create([Bind("ParentGroupID,CommunityID,Group")] GroupViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -70,7 +69,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
 
             GroupViewModel model = new GroupViewModel();
@@ -80,7 +79,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                 model = groupRepo.FindGroupByID(id.Value);
 
                 if (model == null)
-                    return HttpNotFound();
+                    return NotFound();
             }
             catch (Exception ex)
             {
@@ -123,7 +122,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
             Group group = new Group();
             try
@@ -139,7 +138,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
             if (group == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
             return View(group);
         }

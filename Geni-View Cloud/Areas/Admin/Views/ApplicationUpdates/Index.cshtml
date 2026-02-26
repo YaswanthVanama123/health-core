@@ -106,7 +106,7 @@
                             <td>
                                 @if (item.ReleaseDate.HasValue)
                                 {
-                                    @TimeZoneHelper.GetLocalDate(item.ReleaseDate.Value)
+                                    @TimeZoneHelper.GetLocalDate(item.ReleaseDate.Value, null)
                                 }
                             </td>
                             <td>

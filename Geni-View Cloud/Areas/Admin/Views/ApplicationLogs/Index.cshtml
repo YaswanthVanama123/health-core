@@ -1,4 +1,4 @@
-﻿@model GeniView.Cloud.Models.ApplicationLogsFilter
+@model GeniView.Cloud.Models.ApplicationLogsFilter
 @using GeniView.Cloud.Models;
 @{
     ViewBag.Title = "Application Logs";
@@ -13,7 +13,7 @@
 </style>
 @section scripts
   {
-    @Scripts.Render("~/bundles/datetimescripts")
+    <\!-- TODO Phase 8: bundle ~/js/datetimescripts.min.js -->
     <script type="text/javascript">
         $(document).ready(function () {
             var oTable = $('#ApplicationLogs').DataTable({
@@ -51,13 +51,13 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            @Html.Label("Begin Date", htmlAttributes: new { @class = "control-label col-md-12" })
+                            <label class="control-label col-md-12">Begin Date</label>
                             <div class="col-md-12">
                                 @Html.EditorFor(model => model.BeginDate, new { htmlAttributes = new { @class = "form-control", @value = Model.BeginDate, @id = "fBeginDate" } })<br>
                             </div>
                         </div>
                         <div class="form-group">
-                            @Html.Label("End Date", htmlAttributes: new { @class = "control-label col-md-12" })
+                            <label class="control-label col-md-12">End Date</label>
                             <div class="col-md-12">
                                 @Html.EditorFor(model => model.EndDate, new { htmlAttributes = new { @class = "form-control", @value = Model.EndDate, @id = "fEndDate" } })
                             </div>
@@ -66,22 +66,22 @@
 
                     <div class="col-md-4">
                         <div class="form-group">
-                            @Html.Label("Events Count", htmlAttributes: new { @class = "control-label col-md-12" })
+                            <label class="control-label col-md-12">Events Count</label>
                             <div class="col-md-12">
                                 @Html.EditorFor(model => model.Count, new { htmlAttributes = new { @class = "form-control", @Value = Model.Count } }) <br>
                             </div>
                         </div>
                         <div class="form-group">
-                            @Html.Label("Log Level", htmlAttributes: new { @class = "control-label col-md-12" })
+                            <label class="control-label col-md-12">Log Level</label>
                             <div class="col-md-12">
-                                @Html.DropDownList("LogLevel",EnumHelper.GetSelectList(typeof(ApplicationLogLevel)),null,new { @class = "form-control" })
+                                @Html.DropDownList("LogLevel", Html.GetEnumSelectList(typeof(ApplicationLogLevel)), null, new { @class = "form-control" })
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="form-group">
-                            @Html.Label("Refresh", htmlAttributes: new { @class = "control-label col-md-12" })
+                            <label class="control-label col-md-12">Refresh</label>
                             <div class="col-md-12">
                                 <input type="submit" value="Apply" class="btn btn-default form-control" />
                             </div>

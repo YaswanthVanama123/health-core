@@ -1,34 +1,26 @@
 ﻿using GeniView.Cloud.Models;
+using Microsoft.Extensions.Configuration;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
-using Newtonsoft.Json;
 using NLog;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace GeniView.Cloud.Common
 {
     public class MQTTHelper : IDisposable
     {
-        private static readonly Lazy<MQTTHelper> _instance = new Lazy<MQTTHelper>(() => new MQTTHelper());
+        private static readonly Lazy<MQTTHelper> _instance = new Lazy<MQTTHelper>(() => new MQTTHelper(null));
         public static MQTTHelper Instance => _instance.Value;
         private static Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private string broker = ConfigurationManager.AppSettings["MQTTBroker"] == null ? "localhost" : ConfigurationManager.AppSettings["MQTTBroker"];
-        //private string broker = "192.168.10.222";
-        private int port = ConfigurationManager.AppSettings["MQTTPort"] == null ? 1883 : int.Parse(ConfigurationManager.AppSettings["MQTTPort"]);
-        private string clientId = ConfigurationManager.AppSettings["MQTTClientId"] == null ? "genicloud" : ConfigurationManager.AppSettings["MQTTClientId"];
-        //private string clientId = "genicloudLocal";
-
-        private string userName = ConfigurationManager.AppSettings["MQTTUser"] == null ? "geniviewuser" : ConfigurationManager.AppSettings["MQTTUser"];
-        private string psw = ConfigurationManager.AppSettings["MQTTPSW"] == null ? "G3niview!@#?" : ConfigurationManager.AppSettings["MQTTPSW"];
+        private string broker;
+        private int port;
+        private string clientId;
+        private string userName;
+        private string psw;
         private bool showDebugMsg = false;
         private bool isDispose = false;
 
@@ -38,8 +30,14 @@ namespace GeniView.Cloud.Common
 
 
         #region public functions
-        public MQTTHelper()
+        public MQTTHelper(IConfiguration? configuration)
         {
+            broker   = configuration?["AppSettings:MQTTBroker"]   ?? "localhost";
+            port     = int.TryParse(configuration?["AppSettings:MQTTPort"], out int p) ? p : 1883;
+            clientId = configuration?["AppSettings:MQTTClientId"] ?? "genicloud";
+            userName = configuration?["AppSettings:MQTTUser"]     ?? "geniviewuser";
+            psw      = configuration?["AppSettings:MQTTPSW"]      ?? "G3niview!@#?";
+
             try
             {
                 // Create a new MQTT client.
@@ -226,32 +224,21 @@ namespace GeniView.Cloud.Common
         }
         private Task mqttClient_MessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
         {
-            //When recycling will stop enqueue.
-            if (WebHost.IsRecycling == false && WebHost.IsRegister == true)
+            string topic = arg.ApplicationMessage.Topic;
+            if (arg.ApplicationMessage.Payload != null)
             {
-                string topic = arg.ApplicationMessage.Topic;
-                if (arg.ApplicationMessage.Payload != null)
-                {
-                    var msg = Encoding.UTF8.GetString(arg.ApplicationMessage.Payload).Replace("\t", "").Replace("\n", "");
+                var msg = Encoding.UTF8.GetString(arg.ApplicationMessage.Payload).Replace("\t", "").Replace("\n", "");
 
-                    if (arg.ApplicationMessage.Retain == true)
-                    {
-                        _logger.Trace($"Client Received Retain Packet : Topic={topic}, Payload={msg}");
-                    }
-                    else
-                    {
-                        _logger.Trace($"Client Received : Topic={topic}, Payload={msg}");
-                        Global._queueHelp.Enqueue(arg.ApplicationMessage);
-                    }
+                if (arg.ApplicationMessage.Retain == true)
+                {
+                    _logger.Trace($"Client Received Retain Packet : Topic={topic}, Payload={msg}");
+                }
+                else
+                {
+                    _logger.Trace($"Client Received : Topic={topic}, Payload={msg}");
+                    Global._queueHelp.Enqueue(arg.ApplicationMessage);
                 }
             }
-            else
-            {
-                arg.ProcessingFailed = true;//Stop return ACK message.
-            }
-            
-            _logger.Trace($"MQTT receive IsRecycling={WebHost.IsRecycling} IsRegister={WebHost.IsRegister} ProcessingFailed={arg.ProcessingFailed}");
-            //Global.DebugPrintf($"MQTT receive IsRecycling={WebHost.IsRecycling} ProcessingFailed={arg.ProcessingFailed}", showDebugMsg);
 
             return Task.CompletedTask;
         }

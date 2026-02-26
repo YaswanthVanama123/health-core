@@ -19,6 +19,13 @@ namespace GeniView.Cloud.Repository
             _dataDb = dataDb;
         }
 
+        // Parameterless constructor for use until DI is fully wired in Phase 3.
+        // TODO Phase 3: remove and inject via IServiceProvider in all callers.
+        public IdentityDataRepository()
+            : this(new ApplicationDbContext(), new GeniViewCloudDataRepository())
+        {
+        }
+
         #region Users
 
         public List<UserViewModel> GetUsers(long? communityID = null, long? groupID = null)
@@ -30,8 +37,8 @@ namespace GeniView.Cloud.Repository
                                    .Where(r => communityID == null || r.CommunityID == communityID)
                                    .ToList();
 
-            var groups = new GroupsDataRepository(_dataDb).GetGroups(communityID, groupID);
-            var communities = new CommunitiesDataRepository(_dataDb).GetCommunities();
+            var groups = new GroupsDataRepository().GetGroups(communityID, groupID);
+            var communities = new CommunitiesDataRepository().GetCommunities();
 
             if (groupID != null)
             {
@@ -80,8 +87,8 @@ namespace GeniView.Cloud.Repository
                          where u.CommunityID == communityID || r.Name!.Contains("Application")
                          select u).ToList();
 
-            var groups = new GroupsDataRepository(_dataDb).GetGroups(communityID, groupID);
-            var communities = new CommunitiesDataRepository(_dataDb).GetCommunities();
+            var groups = new GroupsDataRepository().GetGroups(communityID, groupID);
+            var communities = new CommunitiesDataRepository().GetCommunities();
 
             if (groupID != null)
             {

@@ -41,13 +41,13 @@
                                 <div class="panel-heading">Time Range Settings</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("Online Time, Minutes", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Online Time, Minutes</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.OnlineRangeInMinutes, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        @Html.Label("Offline Time, Days", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Offline Time, Days</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.OfflineRangeInDays, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
@@ -60,13 +60,13 @@
                                 <div class="panel-heading">Temperature Settings</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("Normal <", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Normal &lt;</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.SuccessTemperature, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        @Html.Label("Alert >", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Alert &gt;</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.AlertTemperature, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
@@ -81,19 +81,19 @@
                                 <div class="panel-heading">Charging Level Settings</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("Normal Level >", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Normal Level &gt;</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.SuccessChargingLVL, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        @Html.Label("Alert Level <", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Alert Level &lt;</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.AlertChargingLVL, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        @Html.Label("Ready to Use >", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Ready to Use &gt;</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.IsStateOfChargeReadyToUse, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
@@ -106,7 +106,7 @@
                                 <div class="panel-heading">Color Settings</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("Normal", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Normal</label>
                                         <div class="col-md-8">
                                             <div class="input-group successColor">
                                                 <input type="text" value="@Model.SuccessColor" id="SuccessColor" name="SuccessColor" class="form-control" />
@@ -115,7 +115,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        @Html.Label("Warning", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Warning</label>
                                         <div class="col-md-8">
                                             <div class="input-group warningColor">
                                                 <input type="text" value="@Model.WarningColor" id="WarningColor" name="WarningColor" class="form-control" />
@@ -124,7 +124,7 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        @Html.Label("Alert", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Alert</label>
                                         <div class="col-md-8">
                                             <div class="input-group alertColor">
                                                 <input type="text" value="@Model.AlertColor" id="AlertColor" name="AlertColor" class="form-control" />
@@ -142,7 +142,7 @@
                                 <div class="panel-heading">Static Variables</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("Nominal Voltage", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Nominal Voltage</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.NominalVoltage, new { htmlAttributes = new { @class = "form-control" } })
                                         </div>
@@ -155,7 +155,7 @@
                                 <div class="panel-heading">Bing Map Settings</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("Key", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Key</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.BingMapKey, new { htmlAttributes = new { @class = "form-control", @style = "style='width:400px;'" } })
                                         </div>
@@ -170,13 +170,13 @@
                                 <div class="panel-heading">E-mail Notification Settings</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("Send Interval, Seconds", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Send Interval, Seconds</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.NotificationDelayTimeInSeconds, new { htmlAttributes = new { @class = "form-control", @style = "style='width:400px;'" } })
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        @Html.Label("Relevant Time, Minutes", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">Relevant Time, Minutes</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.NotificationToleranceInMinutes, new { htmlAttributes = new { @class = "form-control", @style = "style='width:400px;'" } })
                                         </div>
@@ -189,7 +189,7 @@
                                 <div class="panel-heading">User Settings</div>
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        @Html.Label("User Lockout, Minutes", htmlAttributes: new { @class = "control-label col-md-4" })
+                                        <label class="control-label col-md-4">User Lockout, Minutes</label>
                                         <div class="col-md-8">
                                             @Html.EditorFor(model => model.UserLockoutTimeInMinutes, new { htmlAttributes = new { @class = "form-control", @style = "style='width:400px;'" } })
                                         </div>

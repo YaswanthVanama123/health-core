@@ -1,11 +1,11 @@
-﻿@model GeniView.Cloud.Models.UserViewModel
+@model GeniView.Cloud.Models.UserViewModel
 @{
     ViewBag.Title = "Create New Account";
 }
 
 @section scripts
 {
-    @Scripts.Render("~/bundles/dropdownfilter")
+    <script src="~/js/dropdownfilter.min.js"></script>
     <script>
         $(document).ready(function () {
             if($("#ActivateUserByEmail").prop('checked')){

@@ -1,142 +1,144 @@
-﻿using System;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
-using System.Linq;
-using System.Web;
-using System.Web.Configuration;
 
 namespace GeniView.Cloud.Models
 {
+    // GlobalSettings reads from appsettings.json via IConfiguration.
+    // Call GlobalSettings.Initialize(configuration) once from Program.cs at startup.
+    // In-memory overrides (via GeneralSettingsController) shadow the config values at runtime.
+    // TODO Phase 3: persist dynamic changes to the GeneralSettings database table instead of in-memory.
     public class GlobalSettings
     {
-        private static T Setting<T>(string configName)
-        {
-            string value = ConfigurationManager.AppSettings[configName];
+        private static IConfiguration? _configuration;
+        private static readonly Dictionary<string, string?> _overrides = new Dictionary<string, string?>();
 
+        public static void Initialize(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        private static string? GetRaw(string configName)
+        {
+            if (_overrides.TryGetValue(configName, out var ov))
+                return ov;
+            return _configuration?[$"AppSettings:{configName}"];
+        }
+
+        private static void SetRaw(string configName, string? value)
+        {
+            _overrides[configName] = value;
+        }
+
+        private static T Get<T>(string configName)
+        {
+            string? value = GetRaw(configName);
             if (value == null)
             {
-                throw new Exception(String.Format("Could not find setting '{0}',", configName));
+                if (_configuration == null)
+                    throw new InvalidOperationException("GlobalSettings.Initialize() has not been called.");
+                throw new Exception($"Could not find setting '{configName}'");
             }
-
             return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
         }
 
-        private static void Setting(string configName, string value)
-        {
-            Configuration config = WebConfigurationManager.OpenWebConfiguration("/");
-            if (config.AppSettings.Settings[configName] != null)
-            {
-                config.AppSettings.Settings[configName].Value = value;
-                config.Save(ConfigurationSaveMode.Modified);
-            }
-        }
-        
         public static DateTime OnlineRangeInMinutes
-        { 
-            get { return DateTime.UtcNow.AddMinutes(-1*Setting<int>("OnlineRangeInMinutes")); }
-        }
+            => DateTime.UtcNow.AddMinutes(-1 * Get<int>("OnlineRangeInMinutes"));
 
         public static int OnlineRangeInMinutesValue
         {
-            get { return Setting<int>("OnlineRangeInMinutes"); }
-            set { Setting("OnlineRangeInMinutes", value.ToString()); }
+            get => Get<int>("OnlineRangeInMinutes");
+            set => SetRaw("OnlineRangeInMinutes", value.ToString());
         }
 
         public static DateTime OfflineRangeInDays
-            {
-                get { return DateTime.UtcNow.AddDays(-1*Setting<int>("OfflineRangeInDays")); }
-            }
+            => DateTime.UtcNow.AddDays(-1 * Get<int>("OfflineRangeInDays"));
+
         public static int OfflineRangeInDaysValue
         {
-            get { return Setting<int>("OfflineRangeInDays"); }
-            set { Setting("OfflineRangeInDays", value.ToString()); }
+            get => Get<int>("OfflineRangeInDays");
+            set => SetRaw("OfflineRangeInDays", value.ToString());
         }
 
-        
         public static string SuccessColor
         {
-            get { return Setting<string>("SuccessColor"); }
-            set { Setting("SuccessColor", value.ToString()); }
+            get => Get<string>("SuccessColor");
+            set => SetRaw("SuccessColor", value);
         }
 
         public static string WarningColor
         {
-            get { return Setting<string>("WarningColor"); }
-            set { Setting("WarningColor", value.ToString()); }
+            get => Get<string>("WarningColor");
+            set => SetRaw("WarningColor", value);
         }
 
         public static string AlertColor
         {
-            get { return Setting<string>("AlertColor"); }
-            set { Setting("AlertColor", value.ToString()); }
+            get => Get<string>("AlertColor");
+            set => SetRaw("AlertColor", value);
         }
-            
-        // Temperature Global Setting
+
         public static int SuccessTemperature
         {
-            get { return Setting<int>("SuccessTemperature"); }
-            set { Setting("SuccessTemperature", value.ToString()); }
+            get => Get<int>("SuccessTemperature");
+            set => SetRaw("SuccessTemperature", value.ToString());
         }
 
         public static int AlertTemperature
         {
-            get { return Setting<int>("AlertTemperature"); }
-            set { Setting("AlertTemperature", value.ToString()); }
+            get => Get<int>("AlertTemperature");
+            set => SetRaw("AlertTemperature", value.ToString());
         }
 
-        // Temperature Global Setting
         public static int SuccessChargingLVL
         {
-            get { return Setting<int>("SuccessChargingLVL"); }
-            set { Setting("SuccessChargingLVL", value.ToString()); }
+            get => Get<int>("SuccessChargingLVL");
+            set => SetRaw("SuccessChargingLVL", value.ToString());
         }
 
         public static int AlertChargingLVL
         {
-            get { return Setting<int>("AlertChargingLVL"); }
-            set { Setting("AlertChargingLVL", value.ToString()); }
+            get => Get<int>("AlertChargingLVL");
+            set => SetRaw("AlertChargingLVL", value.ToString());
         }
 
         public static int IsStateOfChargeReadyToUse
         {
-            get { return Setting<int>("IsStateOfChargeReadyToUse"); }
-            set { Setting("IsStateOfChargeReadyToUse", value.ToString()); }
+            get => Get<int>("IsStateOfChargeReadyToUse");
+            set => SetRaw("IsStateOfChargeReadyToUse", value.ToString());
         }
 
         public static double NominalVoltage
         {
-            get { return Setting<double>("NominalVoltage"); }
-            set { Setting("NominalVoltage", value.ToString()); }
+            get => Get<double>("NominalVoltage");
+            set => SetRaw("NominalVoltage", value.ToString(CultureInfo.InvariantCulture));
         }
+
         public static string BingMapKey
         {
-            get { return Setting<string>("BingMapKey"); }
-            set { Setting("BingMapKey", value.ToString()); }
+            get => Get<string>("BingMapKey");
+            set => SetRaw("BingMapKey", value);
         }
+
         public static int NotificationDelayTimeInSeconds
         {
-            get { return Setting<int>("NotificationDelayTimeInSeconds"); }
-            set { Setting("NotificationDelayTimeInSeconds", value.ToString()); }
+            get => Get<int>("NotificationDelayTimeInSeconds");
+            set => SetRaw("NotificationDelayTimeInSeconds", value.ToString());
         }
 
         public static int NotificationToleranceInMinutes
         {
-            get { return Setting<int>("NotificationToleranceInMinutes"); }
-            set { Setting("NotificationToleranceInMinutes", value.ToString()); }
+            get => Get<int>("NotificationToleranceInMinutes");
+            set => SetRaw("NotificationToleranceInMinutes", value.ToString());
         }
 
         public static int UserLockoutTimeInMinutes
         {
-            get { return Setting<int>("UserLockoutTimeInMinutes"); }
-            set { Setting("UserLockoutTimeInMinutes", value.ToString()); }
+            get => Get<int>("UserLockoutTimeInMinutes");
+            set => SetRaw("UserLockoutTimeInMinutes", value.ToString());
         }
 
-        public static int ScanDeviceDurationMinutes
-        {
-            get { return Setting<int>("ScanDeviceDurationMinutes"); }
-            set { Setting("ScanDeviceDurationMinutes", value.ToString()); }
-        }
+        public static int ScanDeviceDurationMinutes => Get<int>("ScanDeviceDurationMinutes");
     }
-    
 }

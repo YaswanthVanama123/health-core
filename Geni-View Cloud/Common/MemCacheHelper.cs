@@ -1,148 +1,83 @@
-﻿using GeniView.Cloud.Models;
+using GeniView.Cloud.Models;
 using GeniView.Data;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Caching;
-using System.Web;
 
 namespace RenityArtemis.Web.Common
 {
     /// <summary>
-    /// For the Artemis to cache data. 
-    /// User can insert data to cache and set the expired time, default is 5 seconds.
+    /// Wraps IMemoryCache for caching command results.
+    /// IMemoryCache is injected via DI (registered in Program.cs as AddMemoryCache).
     /// </summary>
     public class MemCacheHelper
     {
-        private static ObjectCache _cache = MemoryCache.Default;
+        private readonly IMemoryCache _cache;
+
+        public MemCacheHelper(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
 
         /// <summary>
         /// Set data to cache, default expired time is 5 seconds.
         /// </summary>
-        /// <typeparam name="T">Class name</typeparam>
-        /// <param name="key">key of cache</param>
-        /// <param name="dataObject">data to save in cache</param>
-        /// <param name="expiredSecond">expired time</param>
         public void SetCache<T>(string key, T dataObject, int expiredSecond = 5)
         {
-            var policy = new CacheItemPolicy();
-
-            if (expiredSecond >=0)
+            var options = new MemoryCacheEntryOptions();
+            if (expiredSecond >= 0)
             {
-                policy.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(expiredSecond);
+                options.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(expiredSecond);
             }
-
-            _cache.Set(key, dataObject, policy);
+            _cache.Set(key, dataObject, options);
         }
 
         /// <summary>
-        /// Get the data by key.
+        /// Get data by key. Returns default(T) if not found.
         /// </summary>
-        /// <typeparam name="T">Class name</typeparam>
-        /// <param name="key">key of cache</param>
-        /// <returns></returns>
-        public T GetCache<T>(string key)
+        public T? GetCache<T>(string key)
         {
-            if (_cache.Contains(key) == true)
-            {
-                var data = _cache.Get(key);
-                return (T)data;
-            }
-            else
-            {
-                return default(T);
-            }    
+            _cache.TryGetValue(key, out T? value);
+            return value;
         }
 
         public List<CommandResult> GetLogRateResult(List<string> ids)
         {
-            var ret = GetCache<ConcurrentDictionary<string, CommandResult>>("LogRateResult");
-            var result = new List<CommandResult>();
-
-            if (ids != null || ids.Any() == true)
-            {
-                foreach (var item in ids)
-                {
-                    if (ret != null && ret.TryGetValue(item, out CommandResult log) == true) //Faster than Linq
-                    {
-                        result.Add(log);
-                    }
-                    else
-                    {
-                        //Doesn't exist.
-                        var unknow = new CommandResult(item);
-                        unknow.Guid = Guid.Empty;
-                        unknow.DateTimeUTC = DateTime.MinValue.ToString();
-                        result.Add(unknow);
-                    }
-                }
-            }
-            else
-            {
-                if (ret != null)
-                {
-                    result.AddRange(ret.Values);
-                }
-            }
-
-            return result;
+            return GetResultsFromCache("LogRateResult", ids);
         }
 
         public List<CommandResult> GetOTAResult(List<string> ids)
         {
-            var ret = GetCache<ConcurrentDictionary<string, CommandResult>>("OTAResult");
-            var result = new List<CommandResult>();
-
-            if (ids != null || ids.Any() == true)
-            {
-                foreach (var item in ids)
-                {
-                    if (ret != null && ret.TryGetValue(item, out CommandResult log) == true) //Faster than Linq
-                    {
-                        result.Add(log);
-                    }
-                    else
-                    {
-                        //Doesn't exist.
-                        var unknow = new CommandResult(item);
-                        unknow.Guid        = Guid.Empty;
-                        unknow.DateTimeUTC = DateTime.MinValue.ToString();
-                        result.Add(unknow);
-                    }
-                }
-            }
-            else
-            {
-                if (ret != null)
-                {
-                    result.AddRange(ret.Values);
-                }
-            }
-
-            return result;
+            return GetResultsFromCache("OTAResult", ids);
         }
 
         public List<CommandResult> GetNTPResult(List<string> ids)
         {
-            var ret = GetCache<ConcurrentDictionary<string, CommandResult>>("NTPResult");
+            return GetResultsFromCache("NTPResult", ids);
+        }
+
+        private List<CommandResult> GetResultsFromCache(string cacheKey, List<string> ids)
+        {
+            var ret = GetCache<ConcurrentDictionary<string, CommandResult>>(cacheKey);
             var result = new List<CommandResult>();
 
-            if (ids != null || ids.Any() == true)
+            if (ids != null && ids.Count > 0)
             {
                 foreach (var item in ids)
                 {
-                    if (ret != null && ret.TryGetValue(item, out CommandResult log) == true) //Faster than Linq
+                    if (ret != null && ret.TryGetValue(item, out CommandResult? log))
                     {
                         result.Add(log);
                     }
                     else
                     {
-                        //Doesn't exist.
-                        var unknow = new CommandResult(item);
-                        unknow.Guid = Guid.Empty;
-                        unknow.DateTimeUTC = DateTime.MinValue.ToString();
-                        result.Add(unknow);
+                        var unknown = new CommandResult(item)
+                        {
+                            Guid = Guid.Empty,
+                            DateTimeUTC = DateTime.MinValue.ToString()
+                        };
+                        result.Add(unknown);
                     }
                 }
             }
@@ -156,6 +91,5 @@ namespace RenityArtemis.Web.Common
 
             return result;
         }
-
     }
 }

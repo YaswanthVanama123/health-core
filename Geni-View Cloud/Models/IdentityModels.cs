@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 
 namespace GeniView.Cloud.Models
 {
@@ -14,6 +15,10 @@ namespace GeniView.Cloud.Models
         public string? ImageMimeType { get; set; }
         public string? TimeZoneId { get; set; }
         public bool IsNotificationEnable { get; set; }
+
+        // Navigation property for ASP.NET Core Identity roles via UserRoles join table.
+        public virtual ICollection<IdentityUserRole<string>> Roles { get; set; }
+            = new List<IdentityUserRole<string>>();
     }
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -21,6 +26,23 @@ namespace GeniView.Cloud.Models
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
+        }
+
+        // Parameterless constructor for use until DI is fully wired in Phase 3.
+        public ApplicationDbContext()
+            : base(new DbContextOptionsBuilder<ApplicationDbContext>().Options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            // Map the Roles navigation property to the IdentityUserRole join table.
+            builder.Entity<ApplicationUser>()
+                   .HasMany(u => u.Roles)
+                   .WithOne()
+                   .HasForeignKey(ur => ur.UserId)
+                   .IsRequired();
         }
     }
 }

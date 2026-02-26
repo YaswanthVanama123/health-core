@@ -14,9 +14,12 @@
         </div>
     </div>
     <div class="form-bottom">
-        @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "login-form", role = "form" }))
+        @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "login-form", role = "form" }))
         {
             @Html.AntiForgeryToken()
+            @if (ViewBag.ReturnUrl != null) {
+                <input type="hidden" name="ReturnUrl" value="@ViewBag.ReturnUrl" />
+            }
             <div class="form-group">
                 @Html.LabelFor(m => m.Email, new { @class = "sr-only" })
                 @Html.TextBoxFor(m => m.Email, new { @class = "form-username form-control", @placeholder = "example@sample.com" })

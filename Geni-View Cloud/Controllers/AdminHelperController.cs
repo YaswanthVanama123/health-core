@@ -1,15 +1,15 @@
-﻿using GeniView.Cloud.Areas.Admin.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
 using GeniView.Data.Web;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Controllers
 {
@@ -27,7 +27,7 @@ namespace GeniView.Cloud.Controllers
                 var currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                 }
 
                 if (User.Identity.IsAuthenticated)
@@ -39,22 +39,22 @@ namespace GeniView.Cloud.Controllers
 
                     if (User.IsInRole("Application Admin"))
                     {
-                        return Json(new SelectList(model, "ID", "Name"), JsonRequestBehavior.AllowGet);
+                        return Json(new SelectList(model, "ID", "Name"));
                     }
                     else if (User.IsInRole("Community Admin") || User.IsInRole("Community Group Admin"))
                     {
                         model = model.Where(x => x.ID == currentUser.CommunityID).ToList();
-                        return Json(new SelectList(model, "ID", "Name"), JsonRequestBehavior.AllowGet);
+                        return Json(new SelectList(model, "ID", "Name"));
                     }
-                    return Json(emptyList, JsonRequestBehavior.AllowGet);
+                    return Json(emptyList);
                 }
                 else
-                    return Json(emptyList, JsonRequestBehavior.AllowGet);
+                    return Json(emptyList);
             }
             catch (Exception ex)
             {
                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                return Json(emptyList, JsonRequestBehavior.AllowGet);
+                return Json(emptyList);
             }
         }
 
@@ -68,7 +68,7 @@ namespace GeniView.Cloud.Controllers
                 var currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                 }
 
                 if (User.Identity.IsAuthenticated)
@@ -79,23 +79,23 @@ namespace GeniView.Cloud.Controllers
                         if (User.IsInRole("Application Admin") || User.IsInRole("Community Admin"))
                         {
                             model = db.GetGroups(communityID);
-                            return Json(new SelectList(model, "ID", "Name"), JsonRequestBehavior.AllowGet);
+                            return Json(new SelectList(model, "ID", "Name"));
                         }
                         if (User.IsInRole("Community Group Admin"))
                         {
                             model = db.GetGroups(communityID, currentUser.GroupID);
-                            return Json(new SelectList(model, "ID", "Name"), JsonRequestBehavior.AllowGet);
+                            return Json(new SelectList(model, "ID", "Name"));
                         }
                     }
-                    return Json(emptyList, JsonRequestBehavior.AllowGet);
+                    return Json(emptyList);
                 }
                 else
-                    return Json(emptyList, JsonRequestBehavior.AllowGet);
+                    return Json(emptyList);
             }
             catch (Exception ex)
             {
                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                return Json(emptyList, JsonRequestBehavior.AllowGet);
+                return Json(emptyList);
             }
         }
 
@@ -108,32 +108,32 @@ namespace GeniView.Cloud.Controllers
                 var currentUser = new ApplicationUser();
                 using (var db = new IdentityDataRepository())
                 {
-                    currentUser = db.GetCurrentUser();
+                    currentUser = db.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
 
                     if (User.Identity.IsAuthenticated)
                     {
                         if (User.IsInRole("Application Admin"))
                         {
-                            return Json(new SelectList(db.GetRoles(), "Name", "Name"), JsonRequestBehavior.AllowGet);
+                            return Json(new SelectList(db.GetRoles(), "Name", "Name"));
                         }
                         else if (User.IsInRole("Community Admin"))
                         {
-                            return Json(new SelectList(db.GetRoles().Where(x => x.Name.Contains("Community")), "Name", "Name"), JsonRequestBehavior.AllowGet);
+                            return Json(new SelectList(db.GetRoles().Where(x => x.Name.Contains("Community")), "Name", "Name"));
                         }
                         else if (User.IsInRole("Community Group Admin"))
                         {
-                            return Json(new SelectList(db.GetRoles().Where(x => x.Name.Contains("Community") && !x.Name.Contains("Community Admin")), "Name", "Name"), JsonRequestBehavior.AllowGet);
+                            return Json(new SelectList(db.GetRoles().Where(x => x.Name.Contains("Community") && !x.Name.Contains("Community Admin")), "Name", "Name"));
                         }
-                        return Json(emptyList, JsonRequestBehavior.AllowGet);
+                        return Json(emptyList);
                     }
                     else
-                        return Json(emptyList, JsonRequestBehavior.AllowGet);
+                        return Json(emptyList);
                 }
             }
             catch (Exception ex)
             {
                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                return Json(emptyList, JsonRequestBehavior.AllowGet);
+                return Json(emptyList);
             }
         }
         #endregion
@@ -156,8 +156,7 @@ namespace GeniView.Cloud.Controllers
                     communityID = SessionHelper.CommunityID,
                     groupID = SessionHelper.GroupID,
                     includeAllSubGroups = SessionHelper.IncludeAllSubGroups != null ? SessionHelper.IncludeAllSubGroups : false
-                },
-                JsonRequestBehavior.AllowGet);
+                });
         }
         #endregion
     }

@@ -1,18 +1,15 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Web;
 
 namespace GeniView.Cloud.Models
 {
-    /// <summary>
-    /// Represents application update information. Applications are matched by AppId.
-    /// </summary>
+    [Index(nameof(AppId), IsUnique = true)]
     public class ApplicationUpdate
     {
         public long ID { get; set; }
-        [Index(IsUnique = true)]
         public Guid AppId { get; set; }
         public bool HasUpdate { get; set; }
         public string Name { get; set; }

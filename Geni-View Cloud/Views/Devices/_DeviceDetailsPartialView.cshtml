@@ -20,7 +20,7 @@
     var outputVoltage = powerOutput != null ? $"{powerOutput.Voltage:0.##} V" : "--";
     var outputPowerValue = powerOutput != null ? $"{powerOutput.Power:0.##} W" : "--";
     var settingsChangedText = Model?.LastSettings?.DeviceTime.HasValue == true
-        ? TimeZoneHelper.GetLocalDateTime(Model.LastSettings.DeviceTime.Value)
+        ? TimeZoneHelper.GetLocalDateTime(Model.LastSettings.DeviceTime.Value, null)
         : "Not available";
 }
 

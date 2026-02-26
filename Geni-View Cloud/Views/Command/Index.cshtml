@@ -1,4 +1,4 @@
-﻿@model GeniView.Cloud.Models.GlobalSettingModel
+@model GeniView.Cloud.Models.GlobalSettingModel
 @{
     ViewBag.Title = "Command";
 }
@@ -251,8 +251,9 @@
 
 @section scripts
 {
-    @Scripts.Render("~/bundles/jqueryval")
-    @Scripts.Render("~/bundles/datetimescripts")
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <\!-- TODO Phase 8: bundle ~/js/datetimescripts.min.js -->
 
     <script>
         var g_rfTimeOut;

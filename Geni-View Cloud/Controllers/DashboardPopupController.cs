@@ -1,13 +1,12 @@
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Controllers
 {
@@ -16,9 +15,9 @@ namespace GeniView.Cloud.Controllers
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private ApplicationUserManager UserManager
+        private dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
         {
-            get { return HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>(); }
+            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
         }
 
         [HttpGet]
@@ -26,11 +25,11 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
 
                 long? communityId = null;
                 long? groupId = null;
-                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups;
+                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups ?? true;
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
@@ -78,7 +77,7 @@ namespace GeniView.Cloud.Controllers
 
                         // Must be the number of Battery_IDs for the clicked card (not page size)
                         PowerModulesCount = idSet.Count
-                    }, JsonRequestBehavior.AllowGet);
+                    });
                 }
             }
             catch (Exception ex)
@@ -94,7 +93,7 @@ namespace GeniView.Cloud.Controllers
                     PageNumber = pageNumber,
                     PageSize = pageSize,
                     PowerModulesCount = 0
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
         }
 
@@ -103,11 +102,11 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
 
                 long? communityId = null;
                 long? groupId = null;
-                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups;
+                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups ?? true;
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
@@ -153,7 +152,7 @@ namespace GeniView.Cloud.Controllers
                         PageNumber = pageNumber,
                         PageSize = pageSize,
                         PowerModulesCount = idSet.Count
-                    }, JsonRequestBehavior.AllowGet);
+                    });
                 }
             }
             catch (Exception ex)
@@ -169,7 +168,7 @@ namespace GeniView.Cloud.Controllers
                     PageNumber = pageNumber,
                     PageSize = pageSize,
                     PowerModulesCount = 0
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
         }
 
@@ -178,11 +177,11 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
 
                 long? communityId = null;
                 long? groupId = null;
-                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups;
+                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups ?? true;
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
@@ -228,7 +227,7 @@ namespace GeniView.Cloud.Controllers
                         PageNumber = pageNumber,
                         PageSize = pageSize,
                         PowerModulesCount = idSet.Count
-                    }, JsonRequestBehavior.AllowGet);
+                    });
                 }
             }
             catch (Exception ex)
@@ -244,7 +243,7 @@ namespace GeniView.Cloud.Controllers
                     PageNumber = pageNumber,
                     PageSize = pageSize,
                     PowerModulesCount = 0
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
         }
 
@@ -253,11 +252,11 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
 
                 long? communityId = null;
                 long? groupId = null;
-                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups;
+                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups ?? true;
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
@@ -308,7 +307,7 @@ namespace GeniView.Cloud.Controllers
                         PageNumber = pageNumber,
                         PageSize = pageSize,
                         PowerModulesCount = idSet.Count
-                    }, JsonRequestBehavior.AllowGet);
+                    });
                 }
             }
             catch (Exception ex)
@@ -324,7 +323,7 @@ namespace GeniView.Cloud.Controllers
                     PageNumber = pageNumber,
                     PageSize = pageSize,
                     PowerModulesCount = 0
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
         }
 
@@ -333,11 +332,11 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
 
                 long? communityId = null;
                 long? groupId = null;
-                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups;
+                var includeAllSubGroups = SessionHelper.IncludeAllSubGroups ?? true;
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
@@ -385,7 +384,7 @@ namespace GeniView.Cloud.Controllers
                         PageNumber = pageNumber,
                         PageSize = pageSize,
                         PowerModulesCount = idSet.Count
-                    }, JsonRequestBehavior.AllowGet);
+                    });
                 }
             }
             catch (Exception ex)
@@ -401,7 +400,7 @@ namespace GeniView.Cloud.Controllers
                     PageNumber = pageNumber,
                     PageSize = pageSize,
                     PowerModulesCount = 0
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
         }
     }

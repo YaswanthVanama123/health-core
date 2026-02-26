@@ -1,9 +1,9 @@
-﻿using GeniView.Cloud.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using GeniView.Cloud.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Areas.Admin.Controllers
 {

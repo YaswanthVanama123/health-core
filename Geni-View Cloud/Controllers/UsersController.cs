@@ -1,17 +1,15 @@
-﻿using GeniView.Cloud.Areas.Admin.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Controllers
 {
@@ -21,9 +19,9 @@ namespace GeniView.Cloud.Controllers
         private IdentityDataRepository repository = new IdentityDataRepository();
         private UserActivityHistory userAHM = new UserActivityHistory();
         private static Logger _logger = LogManager.GetCurrentClassLogger();
-        public ApplicationUserManager UserManager
+        public dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
         {
-            get { return HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>(); }
+            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
         }
 
         public ActionResult Index()
@@ -34,7 +32,7 @@ namespace GeniView.Cloud.Controllers
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                     ViewBag.CurrentUser = currentUser;
                 }
 
@@ -82,13 +80,13 @@ namespace GeniView.Cloud.Controllers
                 try
                 {
                     var user = new ApplicationUser();
-                    var PasswordHash = new PasswordHasher();
+                    var PasswordHash = new PasswordHasher<ApplicationUser>();
 
                     user.FullName = model.User.FullName;
                     user.Email = model.User.Email;
                     user.UserName = model.User.Email;
                     user.TimeZoneId = model.User.TimeZoneId;
-                    user.PasswordHash = PasswordHash.HashPassword(model.Password);
+                    user.PasswordHash = PasswordHash.HashPassword(user, model.Password);
                     user.IsNotificationEnable = model.User.IsNotificationEnable;
                     user.LockoutEnabled = true;
 
@@ -153,7 +151,7 @@ namespace GeniView.Cloud.Controllers
                             {
                                 // Generate link to confirm e-mail
                                 string code = UserManager.GenerateEmailConfirmationToken(user.Id);
-                                var callbackUrl = Url.Action("ConfirmEmail", "Account", new { area = "", userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                                var callbackUrl = Url.Action("ConfirmEmail", "Account", new { area = "", userId = user.Id, code = code }, protocol: Request.Scheme);
                                 MailHelper mailhelper = new MailHelper();
                                 await mailhelper.SendMailAsync(user.FullName, user.Email, MessageEnumeration.ConfirmEmail, callbackUrl);
                             }
@@ -191,14 +189,14 @@ namespace GeniView.Cloud.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
             var user = new ApplicationUser();
             var model = new UserViewModel();
 
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                 if (User.IsInRole("Community Admin"))
                 {
                     user = repository.FindUserByID(id, currentUser.CommunityID.Value);
@@ -209,13 +207,13 @@ namespace GeniView.Cloud.Controllers
                 }
 
                 if (user == null)
-                    return HttpNotFound();
+                    return NotFound();
 
                 model = new UserViewModel
                 {
                     User = user,
                     RoleName = UserManager.GetRoles(id).FirstOrDefault(),
-                    isUserLocked = user.LockoutEndDateUtc == null ? false : user.LockoutEndDateUtc.Value > DateTime.UtcNow ? true : false,
+                    isUserLocked = user.LockoutEnd == null ? false : user.LockoutEnd.Value > DateTimeOffset.UtcNow,
                 };
             }
             catch (Exception ex)
@@ -247,11 +245,11 @@ namespace GeniView.Cloud.Controllers
                     user.IsNotificationEnable = model.User.IsNotificationEnable;
                     if (model.isUserLocked)
                     {
-                        user.LockoutEndDateUtc = DateTime.UtcNow.AddMinutes(GlobalSettings.UserLockoutTimeInMinutes);
+                        user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(GlobalSettings.UserLockoutTimeInMinutes);
                     }
                     else
                     {
-                        user.LockoutEndDateUtc = null;
+                        user.LockoutEnd = null;
                     }
 
                     if (model.RoleName == "Community Admin")
@@ -319,14 +317,14 @@ namespace GeniView.Cloud.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
             var user = new ApplicationUser();
             var model = new UserViewModel();
 
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                 if (User.IsInRole("Community Admin"))
                 {
                     user = repository.FindUserByID(id, currentUser.CommunityID.Value);
@@ -338,7 +336,7 @@ namespace GeniView.Cloud.Controllers
 
                 if (user == null)
                 {
-                    return HttpNotFound();
+                    return NotFound();
                 }
 
                 model = new UserViewModel
@@ -393,7 +391,7 @@ namespace GeniView.Cloud.Controllers
                 var user = UserManager.FindById(id);
                 // Generate link to confirm e-mail
                 string code = UserManager.GenerateEmailConfirmationToken(user.Id);
-                var callbackUrl = Url.Action("ConfirmEmail", "Account", new { area = "", userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                var callbackUrl = Url.Action("ConfirmEmail", "Account", new { area = "", userId = user.Id, code = code }, protocol: Request.Scheme);
                 MailHelper mailhelper = new MailHelper();
                 await mailhelper.SendMailAsync(user.FullName, user.Email, MessageEnumeration.ConfirmEmail, callbackUrl);
 
@@ -401,7 +399,7 @@ namespace GeniView.Cloud.Controllers
                 {
                     User = user,
                     RoleName = UserManager.GetRoles(id).FirstOrDefault(),
-                    isUserLocked = user.LockoutEndDateUtc == null ? false : user.LockoutEndDateUtc.Value > DateTime.UtcNow ? true : false,
+                    isUserLocked = user.LockoutEnd == null ? false : user.LockoutEnd.Value > DateTimeOffset.UtcNow,
                 };
             }
             catch (Exception ex)
@@ -419,7 +417,7 @@ namespace GeniView.Cloud.Controllers
         {
             MailHelper mailHelper = new MailHelper();
             var retval = mailHelper.IsMailServerConfigured();
-            return Json(retval, JsonRequestBehavior.AllowGet);
+            return Json(retval);
         }
 
     }

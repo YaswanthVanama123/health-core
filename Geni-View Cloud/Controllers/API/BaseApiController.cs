@@ -1,19 +1,16 @@
-﻿using GeniView.Cloud.Repository;
+using GeniView.Cloud.Repository;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Web.Http;
-using System.Web.Http.Description;
-using System.Web.Http.Results;
 
 namespace GeniView.Cloud.Controllers.API
 {
-    public class BaseApiController : ApiController
+    public class BaseApiController : ControllerBase
     {
         public GeniViewCloudDataRepository _db = new GeniViewCloudDataRepository();
 
@@ -30,32 +27,14 @@ namespace GeniView.Cloud.Controllers.API
             }
         }
 
-        protected ResponseMessageResult ResponseErrorMessage(HttpStatusCode httpStatusCode, string errorMessage)
+        protected IActionResult ResponseErrorMessage(HttpStatusCode httpStatusCode, string errorMessage)
         {
             var jObject = new JObject
             {
                 { "Message", errorMessage }
             };
 
-            var response = Request.CreateResponse(httpStatusCode);
-            response.Content = new StringContent(
-                    JsonConvert.SerializeObject(jObject),
-                    Encoding.UTF8,
-                    "application/json");
-            return ResponseMessage(response);
+            return StatusCode((int)httpStatusCode, JsonConvert.DeserializeObject(JsonConvert.SerializeObject(jObject)));
         }
-
-        [ApiExplorerSettings(IgnoreApi = true)]
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                GC.Collect();
-            }
-            base.Dispose(disposing);
-        }
-
     }
-
-
 }

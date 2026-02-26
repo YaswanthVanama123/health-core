@@ -8,9 +8,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.ServiceModel;
-using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,7 +27,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -77,7 +74,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Battery originalBattery = db.Batteries.FirstOrDefault(b => b.SerialNumberCode == serialNumberCode);
 
@@ -127,7 +124,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -174,7 +171,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Battery originalBattery = db.Batteries.FirstOrDefault(b => b.SerialNumberCode == serialNumberCode);
 
@@ -224,7 +221,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -271,7 +268,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Battery originalBattery = db.Batteries.FirstOrDefault(b => b.SerialNumberCode == serialNumberCode);
 
@@ -321,7 +318,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -374,7 +371,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -415,7 +412,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Battery originalBattery = db.Batteries.FirstOrDefault(b => b.SerialNumberCode == serialNumberCode);
 
@@ -460,7 +457,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -501,7 +498,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Battery originalBattery = db.Batteries.FirstOrDefault(b => b.SerialNumberCode == serialNumberCode);
 
@@ -546,7 +543,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -592,7 +589,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Battery originalBattery = db.Batteries.FirstOrDefault(b => b.SerialNumberCode == serialNumberCode);
 
@@ -637,7 +634,7 @@ namespace GeniView.Cloud.Services
                 using (GeniViewCloudDataRepository db = new GeniViewCloudDataRepository())
                 {
                     // For performance reasons, get only what we need.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
 
                     Device originalDevice = db.Devices.FirstOrDefault(d => d.SerialNumber == serialNumber);
 
@@ -697,11 +694,9 @@ namespace GeniView.Cloud.Services
                 // Update last seen date.
                 agent.Timestamp = DateTime.UtcNow;
 
-                // Obtain and set the IP address of the Agent.
-                OperationContext context = OperationContext.Current;
-                MessageProperties prop = context.IncomingMessageProperties;
-                RemoteEndpointMessageProperty endpoint = prop[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
-                agent.AgentAddress = endpoint.Address;
+                // TODO Phase 7: obtain client IP from HttpContext.Connection.RemoteIpAddress in REST API controller.
+                // OperationContext (WCF) is not available in ASP.NET Core.
+                agent.AgentAddress = "0.0.0.0";
 
                 db.SaveChanges();
             }
@@ -830,9 +825,9 @@ namespace GeniView.Cloud.Services
 
                     // For performance, use explicit loading.
                     // TODO: Check if automatic change detection improves performance for loop inserts.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
                     // This needs to be re-enabled before saving. Should help in loops.
-                    db.Configuration.AutoDetectChangesEnabled = false;
+                    db.ChangeTracker.AutoDetectChangesEnabled = false;
 
                     // Device event mail notification.
                     // Call mail notification after adding events to DB. Mail notifier expects these to be in DB to mark handled.
@@ -961,7 +956,7 @@ namespace GeniView.Cloud.Services
                     }
 
                     // This needs to be re-enabled before saving. Should help in loops.
-                    db.Configuration.AutoDetectChangesEnabled = true;
+                    db.ChangeTracker.AutoDetectChangesEnabled = true;
 
                     // Commit to DB.
                     db.SaveChanges();
@@ -1000,15 +995,15 @@ namespace GeniView.Cloud.Services
 
                     // For performance, use explicit loading.
                     // TODO: Check if automatic change detection improves performance for loop inserts.
-                    db.Configuration.LazyLoadingEnabled = false;
+                    
                     // This needs to be re-enabled before saving. Should help in loops.
-                    db.Configuration.AutoDetectChangesEnabled = false;
+                    db.ChangeTracker.AutoDetectChangesEnabled = false;
 
                     // Add to DB, not saved since we need transaction for other calls.
                     PublishBatteryData(battery, originalAgent, db);
 
                     // This needs to be re-enabled before saving. Should help in loops.
-                    db.Configuration.AutoDetectChangesEnabled = true;
+                    db.ChangeTracker.AutoDetectChangesEnabled = true;
                     db.SaveChanges();
                 }
             }

@@ -1,7 +1,7 @@
-﻿@model GeniView.Data.Hardware.Monitoring.DeviceEvent
+﻿@model GeniView.Data.Hardware.Event.DeviceEvent
 @{
     Layout = null;
-    string baseUrl = Request.Url.Scheme + "://" + Request.Url.Authority + Request.ApplicationPath.TrimEnd('/') + "/";
+    string baseUrl = Context.Request.Scheme + "://" + Context.Request.Host + "/";
 }
 <!DOCTYPE html>
 <html>

@@ -14,6 +14,13 @@ namespace GeniView.Cloud.Repository
         {
         }
 
+        // Parameterless constructor for use in repositories until DI is fully wired in Phase 3.
+        // TODO Phase 3: remove this and inject via IServiceProvider in all callers.
+        public GeniViewCloudDataRepository()
+            : base(new DbContextOptionsBuilder<GeniViewCloudDataRepository>().Options)
+        {
+        }
+
         public virtual DbSet<Agent> Agents { get; set; }
         public virtual DbSet<Battery> Batteries { get; set; }
         public virtual DbSet<AgentBatteryLog> AgentBatteryLog { get; set; }

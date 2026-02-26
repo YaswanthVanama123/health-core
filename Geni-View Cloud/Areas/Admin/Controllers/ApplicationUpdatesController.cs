@@ -1,12 +1,12 @@
-﻿using GeniView.Cloud.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Areas.Admin.Controllers
 {
@@ -28,7 +28,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)System.Net.HttpStatusCode.BadRequest);
             }
 
             try
@@ -45,7 +45,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
             if (model == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
             return View(model);
 

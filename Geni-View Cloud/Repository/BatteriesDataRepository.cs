@@ -1,17 +1,26 @@
 ﻿using GeniView.Cloud.Common;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Cloud.Models;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Web;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
+using Microsoft.EntityFrameworkCore;
 using NLog;
+using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
-using System.Web;
 
 namespace GeniView.Cloud.Repository
 {
@@ -100,16 +109,7 @@ namespace GeniView.Cloud.Repository
                     }
                 }
 
-                _dBHelp.UpdateAll(db, db.Batteries, batteries,
-                    spec => spec.ColumnsToUpdate(
-                        x => x.DesignCapacity,
-                        x => x.DesignVoltage,
-                        x => x.FirmwareVersion,
-                        x => x.BatteryConfiguration,
-                        x => x.BatteryPackFirmwareVersion,
-                        x => x.BatteryChemistry,
-                        x => x.BatteryTechnology
-                        ));
+                _dBHelp.UpdateAll(db, db.Batteries, batteries);
             }
 
             if (batteries.Any() == true)
@@ -166,10 +166,7 @@ namespace GeniView.Cloud.Repository
             using (var db = new GeniViewCloudDataRepository())
             {
 
-                db.Configuration.LazyLoadingEnabled = false;
                 // Query doesn't need to track changes and detect changes, because query is readonly(return list)
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var mainQuery = BuildOptimizedQuery(communityID, db);
 
@@ -245,9 +242,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 // Note : Voltage Calculation max = 25.2 and min = 18; 
                 //      : Used Formula like (dataVoltage - 18 ) * 100 / (25.2 - 18), because we can calculate when min = 0, not min = 18
@@ -285,7 +279,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
 
                 var mainQuery = db.Batteries
                                   .Include(x => x.Community)
@@ -302,7 +295,6 @@ namespace GeniView.Cloud.Repository
 
         public IEnumerable<Battery> FindBySN(List<string> serialNumber, GeniViewCloudDataRepository db)
         {
-            //db.Configuration.LazyLoadingEnabled = false;
 
             var result = db.Batteries.Include(x => x.Community)
                                         .Include(x => x.Group)
@@ -312,7 +304,6 @@ namespace GeniView.Cloud.Repository
 
         public IEnumerable<Battery> FindBySNCode(List<long> serialNumberCode, GeniViewCloudDataRepository db)
         {
-            //db.Configuration.LazyLoadingEnabled = false;
 
             var result = db.Batteries.Include(x => x.Community)
                                         .Include(x => x.Group)
@@ -335,7 +326,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
                 var model = db.Batteries.Include(x => x.Group).AsEnumerable();
                 var originalbattery = model.Where(x => x.ID == battery.ID && x.IsDeactivated == false).FirstOrDefault();
                 if (groupID != null)
@@ -356,14 +346,11 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
                 // Query doesn't need to track changes and detect changes, because query is readonly(return list)
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = (ApplicationUser?)null;
                 }
                 // Convert from Locat to UTC 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
@@ -429,15 +416,12 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
                 // Query doesn't need to track changes and detect changes, because query is readonly(return list)
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 ApplicationUser currentUser = new ApplicationUser();
                 using (var identityRepo = new IdentityDataRepository())
                 {
-                    currentUser = identityRepo.GetCurrentUser();
+                    currentUser = (ApplicationUser?)null;
                 }
                 // Convert from Locat to UTC 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
@@ -496,9 +480,6 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
                 List<InternalBatteryLog> model = new List<InternalBatteryLog>();
 
                 // Convert from Locat to UTC 
@@ -531,9 +512,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Batteries.Include(x => x.Community)
                                                .Where(x => x.Community.ID == communityID)
@@ -558,8 +536,6 @@ namespace GeniView.Cloud.Repository
             }
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
                 foreach (var item in setList)
                 {
                     var battery = db.Batteries.Include(x => x.Community)
@@ -579,9 +555,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Batteries.Include(x => x.Community)
                                                .Where(x => x.Community.ID == null)
@@ -605,8 +578,6 @@ namespace GeniView.Cloud.Repository
             }
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 foreach (var item in setList)
                 {
@@ -628,9 +599,6 @@ namespace GeniView.Cloud.Repository
             List<ActivateDeactivatedModel> model = new List<ActivateDeactivatedModel>();
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Batteries
                                      .Include(x => x.Community)
@@ -654,9 +622,6 @@ namespace GeniView.Cloud.Repository
             List<ActivateDeactivatedModel> model = new List<ActivateDeactivatedModel>();
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
 
                 model = (from m in db.Batteries
                                      .Include(x => x.Community)
@@ -685,8 +650,6 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
 
                 foreach (var item in setList)
                 {

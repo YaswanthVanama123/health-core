@@ -1,14 +1,13 @@
-﻿using System.Data.Entity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Linq;
 using System.Net;
-using System.Web.Mvc;
-using GeniView.Cloud.Areas.Admin.Models;
 using System;
 using GeniView.Cloud.Repository;
 using GeniView.Data.Hardware;
 using GeniView.Data.Web;
 using GeniView.Cloud.Models;
-using Microsoft.AspNet.Identity;
 using NLog;
 
 namespace GeniView.Cloud.Areas.Admin.Controllers
@@ -24,7 +23,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         public ActionResult Index()
         {
             try {
-                ViewBag.CurrentUser = identityRepo.GetCurrentUser();
+                ViewBag.CurrentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
                 return View(communityRepo.GetCommunities());
             }
             catch(Exception ex)
@@ -42,7 +41,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID, Name, Description, isActive")] Community community)
+        public ActionResult Create([Bind("ID,Name,Description,isActive")] Community community)
         {
             if (ModelState.IsValid)
             {
@@ -67,7 +66,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return StatusCode((int)HttpStatusCode.BadRequest);
             }
 
             Community model = new Community();
@@ -82,10 +81,10 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                 ModelState.AddModelError("DbFail", ex.Message);
                 return View(model);
             }
-            
+
             if (model == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
 
             return View(model);

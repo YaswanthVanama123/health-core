@@ -1,11 +1,17 @@
 ﻿using GeniView.Cloud.Common;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware;
+using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware.Event;
+using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Web;
+using Microsoft.EntityFrameworkCore;
 using static GeniView.Cloud.Common.DataDefine;
 
 namespace GeniView.Cloud.Repository
@@ -184,7 +190,7 @@ namespace GeniView.Cloud.Repository
 
         public virtual int Clear(GeniViewCloudDataRepository db)
         {
-            int ret = db.Database.ExecuteSqlCommand("TRUNCATE TABLE InternalBatteryLogs");
+            int ret = db.Database.ExecuteSqlRaw("TRUNCATE TABLE InternalBatteryLogs");
             return ret;
         }
 
@@ -196,7 +202,6 @@ namespace GeniView.Cloud.Repository
             try
             {
                 var ret = db.InternalBatteryLog.AsNoTracking().AsQueryable();
-                db.Configuration.ProxyCreationEnabled = false;
 
                 var startCheck = DateTime.TryParse(startTime, out DateTime start);
                 var endCheck = DateTime.TryParse(endTime, out DateTime end);

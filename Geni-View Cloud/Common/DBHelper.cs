@@ -16,6 +16,11 @@ namespace GeniView.Cloud.Common
             set { _db = value; }
         }
 
+        public DBHelper()
+        {
+            _db = new GeniViewCloudDataRepository();
+        }
+
         public DBHelper(GeniViewCloudDataRepository db)
         {
             _db = db;

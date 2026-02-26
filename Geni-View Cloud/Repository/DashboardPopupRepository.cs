@@ -1,6 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using GeniView.Cloud.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace GeniView.Cloud.Repository
@@ -22,10 +26,7 @@ namespace GeniView.Cloud.Repository
 
             using (var db = new GeniViewCloudDataRepository())
             {
-                db.Configuration.LazyLoadingEnabled = false;
-                db.Configuration.AutoDetectChangesEnabled = false;
-                db.Configuration.ProxyCreationEnabled = false;
-                db.Database.CommandTimeout = 500;
+                db.Database.SetCommandTimeout(500);
 
                 var sql = @"
 CREATE TABLE #PopupDashboard
@@ -64,7 +65,7 @@ DROP TABLE #PopupDashboard;
 ";
 
                 var allScopeRows = db.Database
-                    .SqlQuery<DashboardPopupRowModel>(sql)
+                    .SqlQueryRaw<DashboardPopupRowModel>(sql)
                     .ToList();
 
                 IEnumerable<DashboardPopupRowModel> filtered = allScopeRows

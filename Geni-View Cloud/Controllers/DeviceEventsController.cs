@@ -1,13 +1,12 @@
-﻿using GeniView.Cloud.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
 using GeniView.Data.Hardware.Event;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Web;
-using System.Web.Mvc;
 
 namespace GeniView.Cloud.Controllers
 {
@@ -17,9 +16,9 @@ namespace GeniView.Cloud.Controllers
         private static Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly DeviceEventsDataRepository _db = new DeviceEventsDataRepository();
 
-        public ApplicationUserManager UserManager
+        public dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
         {
-            get { return HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>(); }
+            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
         }
 
         // GET: DeviceEvents
@@ -33,7 +32,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.Identity.GetUserId());
+                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
                 ViewBag.CurrentUser = currentUser;
 
                 var count = 50;
@@ -42,25 +41,25 @@ namespace GeniView.Cloud.Controllers
 
                 if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
                 {
-                    model = _db.GetLatestDeviceEvents(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, count);
+                    model = _db.GetLatestDeviceEvents(SessionHelper.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, count);
                 }
                 else if (User.IsInRole("Community Admin"))
                 {
-                    model = _db.GetLatestDeviceEvents(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, count);
+                    model = _db.GetLatestDeviceEvents(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, count);
                 }
                 else if (User.IsInRole("Community Group Admin"))
                 {
-                    model = _db.GetLatestDeviceEvents(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, count);
+                    model = _db.GetLatestDeviceEvents(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, count);
                 }
                 else if (User.IsInRole("Community User"))
                 {
                     if (currentUser.GroupID != null)
                     {
-                        model = _db.GetLatestDeviceEvents(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups, count);
+                        model = _db.GetLatestDeviceEvents(currentUser.CommunityID, currentUser.GroupID, SessionHelper.IncludeAllSubGroups ?? true, count);
                     }
                     else
                     {
-                        model = _db.GetLatestDeviceEvents(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups, count);
+                        model = _db.GetLatestDeviceEvents(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, count);
                     }
                 }
                 else
@@ -73,7 +72,7 @@ namespace GeniView.Cloud.Controllers
             catch (Exception ex)
             {
                 _logger.Error(ex, "GetDeviceEventHistory failed.");
-                return new HttpStatusCodeResult(500, ex.GetBaseException().Message);
+                return StatusCode((int)500, ex.GetBaseException().Message);
             }
         }
 

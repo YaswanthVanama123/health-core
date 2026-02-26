@@ -1,11 +1,10 @@
-﻿using System;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
-using System.Web.Mvc;
 using GeniView.Cloud.Models;
 using GeniView.Cloud.Repository;
 using System.Net.Mail;
@@ -50,7 +49,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                     {
                         if (db.MailServer.Count() > 0)
                         {
-                            db.Entry(mailServer).State = System.Data.Entity.EntityState.Modified;
+                            db.Entry(mailServer).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                         }
                         else
                         {
@@ -79,7 +78,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             MailHelper mailHelper = new MailHelper();
             using (var identityRepo = new IdentityDataRepository())
             {
-              currentUser = identityRepo.GetCurrentUser();
+              currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
             }
 
             if (mailHelper.IsMailServerConfigured())
