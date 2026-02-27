@@ -6,7 +6,7 @@
         
         <ul class="nav navbar-nav navbar-right">
             <li class="dropdown" id="notifyIconbtn">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                <a class="dropdown-toggle" id="gv-notify-toggle" href="#" role="button">
                     <span class="fa-2x"><i class="far fa-bell notification"></i></span>
                 </a>
                 <ul class="dropdown-menu form-notification" id="discussion" role="menu">
@@ -16,10 +16,10 @@
                     </div>
                 </ul>
             </li>
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="loginStyle">
+            <li class="dropdown" id="gv-profile-dropdown">
+                <a class="dropdown-toggle" id="loginStyle" href="#">
                     <span class="fa fa-user-circle profile-icon" aria-hidden="true"></span>
-                    <label class="loginStyleLabel">@Url.Action("GetUserInfo", "Profile", new { area = "" })</label>
+                    <label class="loginStyleLabel">@User.Identity?.Name</label>
                 </a>
                 <ul class="dropdown-menu col-md-12">
                     <li><a href="@Url.Action("Index","Profile", new { area = ""})"><i class="fa fa-user"></i>Profile</a></li>

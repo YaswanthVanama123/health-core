@@ -20,6 +20,7 @@
   border-radius: 0 !important;
   box-sizing: border-box;
   width: 100%;
+  z-index: 10000;
 }
 
 .global-nav__header {
@@ -242,6 +243,7 @@
 }
 
 .global-nav__user .dropdown-menu {
+  display: none !important;
   min-width: 210px;
   border-radius: 14px;
   border: 1px solid rgba(17, 24, 39, 0.1);
@@ -249,6 +251,12 @@
   padding: 8px;
   margin-top: 10px;
   background: #ffffff !important;
+  position: absolute;
+  z-index: 10001;
+}
+
+.global-nav__user .dropdown.open > .dropdown-menu {
+  display: block !important;
 }
 
 .global-nav__user .dropdown-menu > li {
@@ -286,6 +294,22 @@
 
 /* Responsive adjustments for sidebar states */
 @media (min-width: 1200px) {
+  /* Fix global-nav to top, right of the sidebar — mirrors .navbar rule in main.css */
+  .global-nav {
+    position: fixed;
+    top: 0;
+    left: var(--gv-sidebar-expanded-width);
+    width: calc(100% - var(--gv-sidebar-expanded-width));
+    -webkit-transition: left 0.5s ease, width 0.5s ease;
+    -moz-transition: left 0.5s ease, width 0.5s ease;
+    transition: left 0.5s ease, width 0.5s ease;
+  }
+
+  body:not(.admin-area) #wrapper.toggled.sidebar-collapsed .global-nav {
+    left: var(--gv-sidebar-collapsed-width);
+    width: calc(100% - var(--gv-sidebar-collapsed-width));
+  }
+
   /* When sidebar is expanded - reduce filter widths */
   body:not(.admin-area) .global-nav__header {
     padding-right: 10px;

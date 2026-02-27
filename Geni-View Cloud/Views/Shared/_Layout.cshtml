@@ -8,6 +8,7 @@
     <title>@ViewBag.Title - Geni-View Cloud Application</title>
     <!-- Phase 8: individual files until 'dotnet restore' downloads WebOptimizer.
          After restore, replace these 4 links with: <link href="~/bundles/main.css" rel="stylesheet" /> -->
+    <link href="~/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="~/css/main.css" rel="stylesheet" type="text/css" />
     <link href="~/css/global-nav.css" rel="stylesheet" type="text/css" />
     <link href="~/css/dataTables.min.css" rel="stylesheet" type="text/css" />
@@ -34,7 +35,9 @@
 
         <div id="page-content-wrapper">
             <div id="go-top-button"></div>
-            @RenderBody()
+            <div class="page-body-content">
+                @RenderBody()
+            </div>
             <footer>
                 <p class="pull-right">
                     Copyright &copy; @DateTime.UtcNow.Year Bytec Group. All Rights Reserved.
@@ -60,6 +63,36 @@
     <script type="text/javascript">
         $(document).ready(function () {
             LoadCommunities();
+
+            // ── Global nav dropdowns ──────────────────────────────────────
+            // Bootstrap 3 data-toggle="dropdown" is broken with jQuery 3.7.
+            // We handle it manually here where jQuery is already loaded.
+            function closeNavDropdowns() {
+                $('.global-nav__user .dropdown').removeClass('open');
+            }
+
+            $('#gv-notify-toggle').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $li = $('#notifyIconbtn');
+                var wasOpen = $li.hasClass('open');
+                closeNavDropdowns();
+                if (!wasOpen) $li.addClass('open');
+            });
+
+            $('#loginStyle').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $li = $('#gv-profile-dropdown');
+                var wasOpen = $li.hasClass('open');
+                closeNavDropdowns();
+                if (!wasOpen) $li.addClass('open');
+            });
+
+            $(document).on('click', function () {
+                closeNavDropdowns();
+            });
+            // ─────────────────────────────────────────────────────────────
         });
     </script>
 

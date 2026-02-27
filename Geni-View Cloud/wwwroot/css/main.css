@@ -30,11 +30,14 @@ body {
 
 /* Prevent all containers from causing horizontal scroll */
 #wrapper,
-#page-content-wrapper,
 .container,
 .container-fluid,
 .row {
   overflow-x: hidden;
+  max-width: 100%;
+}
+
+#page-content-wrapper {
   max-width: 100%;
 }
 
@@ -45,7 +48,7 @@ body {
 :root {
   --gv-sidebar-expanded-width: 250px;
   --gv-sidebar-collapsed-width: 64px;
-  --gv-navbar-height: 60px;
+  --gv-navbar-height: 80px;
 }
 
 .divider-with-btn {
@@ -88,10 +91,6 @@ li:hover .sidebar-icon {
 }
 
 /* Only apply collapsed styling when sidebar is actually shown - NOT IN ADMIN AREA */
-body:not(.admin-area) #wrapper.toggled.sidebar-collapsed {
-  padding-left: var(--gv-sidebar-collapsed-width);
-}
-
 body:not(.admin-area) #wrapper.toggled.sidebar-collapsed #sidebar-wrapper {
   width: var(--gv-sidebar-collapsed-width);
 }
@@ -168,12 +167,32 @@ body:not(.admin-area) #wrapper.toggled.sidebar-collapsed #sidebar-wrapper {
 /* Page content - Fills remaining space (EXPANDED STATE) */
 #page-content-wrapper {
   min-height: calc(100vh - var(--gv-navbar-height) - 10px);
-  padding: 20px 30px;
+  padding-top: var(--gv-navbar-height);
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
   box-sizing: border-box;
   -webkit-transition: all 0.5s ease;
   -moz-transition: all 0.5s ease;
   -o-transition: all 0.5s ease;
   transition: all 0.5s ease;
+}
+
+/* Inner page body padding so content doesn't touch the wrapper edges.
+   !important ensures Bootstrap row negative margins cannot override the outer padding. */
+.page-body-content {
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+  padding-left: 30px !important;
+  padding-right: 30px !important;
+  min-width: 0;
+  overflow: visible;
+}
+
+/* Re-allow .row inside page-body-content to extend to natural Bootstrap gutter */
+.page-body-content > .row,
+.page-body-content .row {
+  overflow: visible;
 }
 
 /* Footer inside content area */
@@ -2184,7 +2203,6 @@ iframe {
     position: relative;
     width: 100%;
     min-height: 100vh;
-    padding-left: var(--gv-sidebar-expanded-width);
   }
 
   /* Navbar positioning - EXPANDED state by default */
@@ -2218,9 +2236,20 @@ iframe {
 
   /* Page content - EXPANDED state by default */
   #page-content-wrapper {
+    margin-left: var(--gv-sidebar-expanded-width);
+    width: calc(100% - var(--gv-sidebar-expanded-width));
     min-height: calc(100vh - var(--gv-navbar-height));
-    padding: 20px;
+    padding-top: var(--gv-navbar-height);
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
     box-sizing: border-box;
+  }
+
+  /* Page content - COLLAPSED state */
+  body:not(.admin-area) #wrapper.toggled.sidebar-collapsed #page-content-wrapper {
+    margin-left: var(--gv-sidebar-collapsed-width);
+    width: calc(100% - var(--gv-sidebar-collapsed-width));
   }
 
   /* Loading overlay - EXPANDED state */
