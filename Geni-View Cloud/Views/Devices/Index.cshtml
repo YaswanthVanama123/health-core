@@ -6,7 +6,7 @@
 }
 
 @section styles {
-    <link href="~/Content/devices-batteries.css" rel="stylesheet" type="text/css" />
+    <link href="~/css/devices-batteries.css" rel="stylesheet" type="text/css" />
     <style>
         #DeviceTable_wrapper .dataTables_paginate,
         #DeviceTable_wrapper .dataTables_info {
@@ -35,7 +35,7 @@
 
 <div class="table-container table-loading" id="devicesTableContainer">
     <div class="loader-overlay">
-        <img src="@Url.Content("~/Content/Img/loader.svg")" alt="Loading..." class="loader-svg" />
+        <img src="~/css/img/loader.svg" alt="Loading..." class="loader-svg" />
     </div>
     <table class="devices-batteries-table" id="DeviceTable">
         <thead>
@@ -180,7 +180,7 @@
 @section scripts {
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script type="text/javascript" src="~/Scripts/Custom Scripts/jquery.circliful.min.js"></script>
+    <script type="text/javascript" src="~/js/Custom Scripts/jquery.circliful.min.js"></script>
     <script type="text/javascript">
         var table;
 

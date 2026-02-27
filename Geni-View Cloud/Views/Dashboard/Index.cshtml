@@ -4,7 +4,7 @@
 }
 
 @section styles {
-    <link href="@Url.Content("~/Content/dashboard-popup.css")" rel="stylesheet" type="text/css" />
+    <link href="~/css/dashboard-popup.css" rel="stylesheet" type="text/css" />
 
     <style>
         #dashboard-canvas.dashboard-v2 .dashboard-v2__grid {
@@ -1187,7 +1187,7 @@
 
 <!-- Full Page Dashboard Loader -->
 <div id="dashboardPageLoader" class="loader-overlay fixed" style="z-index: 9999;">
-    <img src="@Url.Content("~/Content/Img/loader.svg")" alt="Loading..." class="loader-svg" />
+    <img src="~/css/img/loader.svg" alt="Loading..." class="loader-svg" />
 </div>
 
 <div class="row">
@@ -1221,16 +1221,16 @@
 @section scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/state-of-charge.js")"></script>
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/cycle-status.js")"></script>
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/effective-rotation.js")"></script>
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/temperature.js")"></script>
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/battery-efficiency.js")"></script>
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/battery-activity-history.js")"></script>
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/device-activity-history.js")"></script>
-    <script src="@Url.Content("~/Scripts/dashboard/widgets/battery-status.js")"></script>
+    <script src="~/js/dashboard/widgets/state-of-charge.js"></script>
+    <script src="~/js/dashboard/widgets/cycle-status.js"></script>
+    <script src="~/js/dashboard/widgets/effective-rotation.js"></script>
+    <script src="~/js/dashboard/widgets/temperature.js"></script>
+    <script src="~/js/dashboard/widgets/battery-efficiency.js"></script>
+    <script src="~/js/dashboard/widgets/battery-activity-history.js"></script>
+    <script src="~/js/dashboard/widgets/device-activity-history.js"></script>
+    <script src="~/js/dashboard/widgets/battery-status.js"></script>
 
-    <script src="@Url.Content("~/Scripts/dashboard/dashboard-popup.js")"></script>
+    <script src="~/js/dashboard/dashboard-popup.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {

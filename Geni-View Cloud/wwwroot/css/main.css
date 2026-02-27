@@ -790,7 +790,7 @@ body:not(.admin-area) #wrapper.toggled.sidebar-collapsed .sidebar-nav {
   left: 0;
   width: 100%;
   z-index: 1000;
-  background: url("../Resources/loader.gif") center no-repeat #fff;
+  background: url("../images/loader.gif") center no-repeat #fff;
 }
 
 /* Modern SVG Loader Styles */
@@ -1278,7 +1278,7 @@ body:not(.admin-area) #wrapper.toggled.sidebar-collapsed .sidebar-nav {
 }
 
 .light-theme .logo-img {
-  content: url("../Resources/gvc_logo2.png");
+  content: url("../images/gvc_logo2.png");
 }
 
 .light-theme .checkbox-label {
