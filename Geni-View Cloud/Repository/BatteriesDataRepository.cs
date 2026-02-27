@@ -1,25 +1,15 @@
 ﻿using GeniView.Cloud.Common;
-using Microsoft.EntityFrameworkCore;
 using GeniView.Cloud.Models;
-using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Hardware;
-using Microsoft.EntityFrameworkCore;
 using GeniView.Data.Web;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
-using Microsoft.EntityFrameworkCore;
 using NLog;
-using Microsoft.EntityFrameworkCore;
 using System;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
 using System.Text;
 
 namespace GeniView.Cloud.Repository
@@ -671,17 +661,31 @@ namespace GeniView.Cloud.Repository
         public IQueryable<BatteriesListViewModel> BuildOptimizedQuery(long? communityID, GeniViewCloudDataRepository db)
         {
             var offlineThreshold = DateTime.UtcNow.AddMinutes(-6);
-            //Get FirstSeen, LastSeen, LastLogID
-            var logAgg = from l in db.AgentBatteryLog
-                         group l by l.Battery_ID into g
+
+            // EF Core 8 cannot translate FirstOrDefault() inside a grouped subquery.
+            // Solution: get the max timestamp per battery, then join back to get the full log row.
+            var lastLogTimestamps = from l in db.AgentBatteryLog
+                                    group l by l.Battery_ID into g
+                                    select new
+                                    {
+                                        BatteryID  = g.Key,
+                                        FirstSeenOn = g.Min(x => x.Timestamp),
+                                        LastSeenOn  = g.Max(x => x.Timestamp),
+                                        LastLogTs   = g.Max(x => x.Timestamp)
+                                    };
+
+            var logAgg = from agg in lastLogTimestamps
+                         join l in db.AgentBatteryLog
+                             on new { agg.BatteryID, agg.LastLogTs }
+                             equals new { BatteryID = l.Battery_ID, LastLogTs = l.Timestamp }
                          select new
                          {
-                             BatteryID = g.Key,
-                             FirstSeenOn = g.Min(x => x.Timestamp),
-                             LastSeenOn = g.Max(x => x.Timestamp),
-                             LastLog = g.OrderByDescending(x => x.Timestamp).FirstOrDefault(),
+                             agg.BatteryID,
+                             agg.FirstSeenOn,
+                             agg.LastSeenOn,
+                             LastLog = l
                          };
-            //Query and join the data
+
             var query = from b in db.Batteries
                         join agg in logAgg on b.ID equals agg.BatteryID
                         where !b.IsDeactivated
@@ -719,9 +723,8 @@ namespace GeniView.Cloud.Repository
                             Community = b.Community,
                             FirstSeenOn = agg.FirstSeenOn,
                             LastSeenOn = agg.LastSeenOn,
-                            LastAgentBatteryLog = agg.LastLog, //Last log
+                            LastAgentBatteryLog = agg.LastLog,
 
-                            //Status from last log
                             isOnline = (agg.LastSeenOn != null && agg.LastSeenOn >= offlineThreshold),
 
                             Status =

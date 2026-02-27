@@ -10,6 +10,7 @@ using System.Linq;
 
 namespace GeniView.Cloud.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class UserActivityHistoryController : Controller
     {
         private static Logger _logger = LogManager.GetCurrentClassLogger();

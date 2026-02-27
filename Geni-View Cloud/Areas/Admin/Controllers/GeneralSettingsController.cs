@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace GeniView.Cloud.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     [Authorize(Roles = "Application Admin")]
     public class GeneralSettingsController : Controller
     {
