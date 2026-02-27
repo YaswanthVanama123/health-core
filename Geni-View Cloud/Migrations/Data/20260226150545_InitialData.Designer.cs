@@ -1350,7 +1350,7 @@ namespace GeniView.Cloud.Migrations.Data
                     b.HasOne("GeniView.Data.Web.Group", "Group")
                         .WithMany("Batteries")
                         .HasForeignKey("GroupID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Community");
@@ -1388,7 +1388,7 @@ namespace GeniView.Cloud.Migrations.Data
                     b.HasOne("GeniView.Data.Web.Group", "Group")
                         .WithMany("Devices")
                         .HasForeignKey("GroupID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Community");

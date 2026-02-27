@@ -217,7 +217,7 @@ namespace GeniView.Cloud.Migrations.Data
                         column: x => x.GroupID,
                         principalTable: "Groups",
                         principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -249,7 +249,7 @@ namespace GeniView.Cloud.Migrations.Data
                         column: x => x.GroupID,
                         principalTable: "Groups",
                         principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(

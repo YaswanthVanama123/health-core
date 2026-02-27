@@ -1,6 +1,6 @@
 ﻿<div class="text-center logo-container">
-    <img class="img-rounded logo-img gv-logo-expanded" src="~/Resources/gvc_logo.svg" alt="GeniView Logo" />
-    <img class="img-rounded logo-img gv-logo-collapsed" src="~/Resources/gvc_logo_icon.svg" alt="GeniView Logo" style="display: none;" />
+    <img class="img-rounded logo-img gv-logo-expanded" src="~/images/gvc_logo.svg" alt="GeniView Logo" />
+    <img class="img-rounded logo-img gv-logo-collapsed" src="~/images/gvc_logo_icon.svg" alt="GeniView Logo" style="display: none;" />
 </div>
 <div class="divider-with-btn">
 <hr/>
@@ -17,7 +17,7 @@
     <li class="@(ViewContext.RouteData.Values["controller"].ToString() == "Dashboard" && ViewContext.RouteData.Values["action"].ToString() == "Index" ? "active" : "")">
         <a href="@Url.Action("Index","Dashboard")" title="Dashboard">
             <span class="fa-stack fa-lg">
-                <img src="~/Resources/dashboard.svg" alt="Dashboard" class="sidebar-icon" />
+                <img src="~/images/dashboard.svg" alt="Dashboard" class="sidebar-icon" />
             </span>
             <span class="gv-nav-text">Dashboard</span>
         </a>
@@ -26,7 +26,7 @@
     <li class="@(ViewContext.RouteData.Values["controller"].ToString() == "Devices" ? "active" : "")">
         <a href="@Url.Action("Index","Devices")" title="Devices">
             <span class="fa-stack fa-lg">
-                <img src="~/Resources/devices.svg" alt="Devices" class="sidebar-icon" />
+                <img src="~/images/devices.svg" alt="Devices" class="sidebar-icon" />
             </span>
             <span class="gv-nav-text">Devices</span>
         </a>
@@ -35,7 +35,7 @@
     <li class="@(ViewContext.RouteData.Values["controller"].ToString() == "DeviceEvents" ? "active" : "")">
         <a href="@Url.Action("Index","DeviceEvents")" title="Device History">
             <span class="fa-stack fa-lg">
-                <img src="~/Resources/dev_his.svg" alt="Device History" class="sidebar-icon" />
+                <img src="~/images/dev_his.svg" alt="Device History" class="sidebar-icon" />
             </span>
             <span class="gv-nav-text">Device History</span>
         </a>
@@ -44,7 +44,7 @@
     <li class="@(ViewContext.RouteData.Values["controller"].ToString() == "Batteries" ? "active" : "")">
         <a href="@Url.Action("Index","Batteries")" title="Batteries">
             <span class="fa-stack fa-lg">
-                <img src="~/Resources/batteries.svg" alt="Batteries" class="sidebar-icon" />
+                <img src="~/images/batteries.svg" alt="Batteries" class="sidebar-icon" />
             </span>
             <span class="gv-nav-text">Batteries</span>
         </a>
@@ -53,7 +53,7 @@
     <li class="@(ViewContext.RouteData.Values["controller"].ToString() == "Command" ? "active" : "")">
         <a href="@Url.Action("Index","Command")" title="Command">
             <span class="fa-stack fa-lg">
-                <img src="~/Resources/command.svg" alt="Command" class="sidebar-icon" />
+                <img src="~/images/command.svg" alt="Command" class="sidebar-icon" />
             </span>
             <span class="gv-nav-text">Command</span>
         </a>

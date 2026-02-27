@@ -4,6 +4,8 @@ using GeniView.Data.Hardware;
 using GeniView.Data.Hardware.Event;
 using GeniView.Data.Web;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace GeniView.Cloud.Repository
 {
@@ -37,6 +39,18 @@ namespace GeniView.Cloud.Repository
         public virtual DbSet<ApplicationUpdate> ApplicationUpdates { get; set; }
         public virtual DbSet<ApplicationLog> ApplicationLogs { get; set; }
         public virtual DbSet<UserActivityHistory> UserActivityHistory { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                var config = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+                optionsBuilder.UseSqlServer(config.GetConnectionString("GeniViewCloudDataRepository"));
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

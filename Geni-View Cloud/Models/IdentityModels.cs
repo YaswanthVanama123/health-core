@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace GeniView.Cloud.Models
 {
@@ -32,6 +34,18 @@ namespace GeniView.Cloud.Models
         public ApplicationDbContext()
             : base(new DbContextOptionsBuilder<ApplicationDbContext>().Options)
         {
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                var config = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+                optionsBuilder.UseSqlServer(config.GetConnectionString("GeniViewCloudIdentityRepository"));
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
