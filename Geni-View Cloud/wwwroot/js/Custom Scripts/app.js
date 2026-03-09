@@ -1,6 +1,15 @@
-﻿/* swap open/close side menu icons */
-$('[data-toggle=collapse]').click(function () {
-    $(this).find("i").toggleClass("fa-chevron-down fa-stack-1x fa-chevron-right fa-stack-1x");
+﻿/* Sidebar sub-menu collapse toggle */
+$('[data-toggle=collapse]').on('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation(); // prevent Bootstrap data-API double-firing
+    var $target = $($(this).data('target'));
+    var isOpen = $target.hasClass('in');
+    if (isOpen) {
+        $target.slideUp(300, function () { $target.removeClass('in'); });
+    } else {
+        $target.addClass('in').slideDown(300);
+    }
+    $(this).find('i.fa-chevron-down, i.fa-chevron-right').toggleClass('fa-chevron-down fa-chevron-right');
 });
 
 $(function () {

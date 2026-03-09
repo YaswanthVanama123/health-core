@@ -1,28 +1,490 @@
-@model GeniView.Data.Hardware.Device
+﻿@model GeniView.Data.Hardware.Device
 
 @{
     ViewBag.Title = "Device Graphs";
-    ViewBag.SerialNumber = "Current Device Serial Number : " + Model.SerialNumber;
+    ViewBag.SerialNumber = "Current Device Serial Number : " + (Model != null ? Model.SerialNumber : "");
 
 }
-<link rel="stylesheet" type="text/css" href="~/css/jquery.datetimepicker.min.css" />
-<label id="DeviceID" hidden="hidden">@Model.ID</label>
-<label id="SerialNumber" hidden="hidden">@Model.SerialNumber</label>
+<link rel="stylesheet" type="text/css" href="~/Content/jquery.datetimepicker.min.css" />
+<label id="DeviceID" hidden="hidden">@(Model != null ? Model.ID.ToString() : "")</label>
+<label id="SerialNumber" hidden="hidden">@(Model != null ? Model.SerialNumber : "")</label>
+
+<style>
+    /* Page-scoped UX styling for Graphs (kept local to avoid impacting other pages) */
+    .gv-graphs {
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    }
+
+        /* 3) Full-width alignment for all cards on this page */
+        .gv-graphs .gv-fullwidth {
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        /* Ensure nested panels also stretch full width */
+        .gv-graphs .panel.maincontainer,
+        .gv-graphs .panel.subcontainer,
+        .gv-graphs .gv-card,
+        .gv-graphs .gv-master-card {
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        /* Avoid Bootstrap inline-list spacing artifacts */
+        .gv-graphs ul {
+            max-width: 100%;
+        }
+
+        /* ---------------- Top serial bar ---------------- */
+        .gv-graphs .gv-top-serial {
+            width: 100%;
+            background: rgba(211, 215, 245, 0.78);
+            border: 1px solid #d9ddff;
+            border-radius: 10px;
+            padding: 10px 14px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 0 14px 0;
+        }
+
+        .gv-graphs .gv-top-serial__label {
+            font-weight: 400;
+            font-size: 14px;
+            /* 1) Serial bar label color */
+            color: rgba(62, 76, 193, 1);
+            white-space: nowrap;
+        }
+
+        .gv-graphs .gv-top-serial__value {
+            font-weight: 700;
+            font-size: 14px;
+            color: rgba(62, 76, 193, 1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .gv-graphs .gv-top-serial__spacer {
+            margin-left: auto;
+        }
+
+        /* Refresh button */
+        .gv-graphs .gv-refresh {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(62, 76, 193, 1);
+            text-decoration: none !important;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+            .gv-graphs .gv-refresh:hover {
+                text-decoration: underline !important;
+            }
+
+        .gv-graphs .gv-refresh__icon {
+            width: 14px;
+            height: 14px;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        /* ---------------- Filters card ---------------- */
+        .gv-graphs .gv-card {
+            background: #fff;
+            border: 1px solid #e6e9ef;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(16, 24, 40, 0.14);
+        }
+
+        .gv-graphs .gv-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef1f6;
+            cursor: pointer;
+            user-select: none;
+            background: #fff;
+        }
+
+        .gv-graphs .gv-card__title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .gv-graphs .gv-icon {
+            width: 14px;
+            height: 14px;
+            vertical-align: middle;
+        }
+
+        .gv-graphs .gv-card__chevron {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: transparent;
+            border: 0;
+            color: #111827;
+            flex: 0 0 auto;
+            overflow: hidden;
+        }
+
+            .gv-graphs .gv-card__chevron img {
+                width: 14px;
+                height: 14px;
+                display: block;
+                transition: transform 0.15s ease;
+            }
+
+        .gv-graphs .gv-card__body {
+            padding: 14px 16px 16px 16px;
+            box-sizing: border-box;
+        }
+
+        .gv-graphs .gv-card.is-collapsed .gv-card__body {
+            display: none;
+        }
+
+        .gv-graphs .gv-card.is-collapsed .gv-card__chevron img {
+            transform: rotate(180deg);
+        }
+
+        .gv-graphs .gv-filters-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin: 4px 0 12px 0;
+        }
+
+        .gv-graphs .gv-axis-options {
+            display: flex;
+            gap: 26px;
+            align-items: center;
+            margin: 4px 0 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .gv-graphs .gv-radio {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+            .gv-graphs .gv-radio input[type="radio"] {
+                width: 14px;
+                height: 14px;
+                margin: 0;
+                appearance: auto;
+            }
+
+        .gv-graphs .gv-filters-grid {
+            display: grid;
+            grid-template-columns: 236px 236px 236px 236px;
+            gap: 24px;
+            align-items: end;
+            justify-content: space-between;
+        }
+
+        .gv-graphs .gv-field label {
+            display: block;
+            margin: 0 0 10px 0;
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 100%;
+            color: #374151;
+        }
+
+        .gv-graphs .gv-input,
+        .gv-graphs .gv-select {
+            width: 236px;
+            height: 38px;
+            border: 1px solid #d5dbe7;
+            border-radius: 7px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #111827;
+            outline: none;
+            box-sizing: border-box;
+            background: #fff;
+            max-width: 100%;
+        }
+
+        .gv-graphs .gv-select {
+            padding: 8px 10px;
+        }
+
+            .gv-graphs .gv-input:focus,
+            .gv-graphs .gv-select:focus {
+                border-color: #3e4cc1;
+                box-shadow: 0 0 0 3px rgba(62, 76, 193, 0.15);
+            }
+
+        .gv-graphs .gv-input--date {
+            padding-right: 40px;
+        }
+
+        .gv-graphs .gv-input-icon {
+            position: relative;
+            width: 236px;
+            max-width: 100%;
+        }
+
+        .gv-graphs .gv-input-icon__suffix {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+            .gv-graphs .gv-input-icon__suffix img {
+                width: 14px;
+                height: 14px;
+                display: block;
+            }
+
+        .gv-graphs .gv-filters-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 14px;
+        }
+
+        .gv-graphs .gv-btn {
+            border: 1px solid transparent;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        .gv-graphs .gv-btn--primary {
+            width: 118px;
+            height: 32px;
+            border-radius: 7px;
+            padding: 8px 14px;
+            background: #3e4cc1;
+            border-color: #3e4cc1;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+            .gv-graphs .gv-btn--primary:hover {
+                background: #3541b0;
+                border-color: #3541b0;
+            }
+
+        /* ---------------- Device Master Chart ---------------- */
+        .gv-graphs .gv-master-card {
+            border-radius: 10px;
+            border: 1px solid #bfc7ff;
+            background: #ffffff;
+            overflow: hidden;
+            margin-top: 14px;
+            box-shadow: 0 1px 4px rgba(16, 24, 40, 0.08);
+        }
+
+        .gv-graphs .gv-master-card__header {
+            height: 42px;
+            background: rgba(180, 191, 255, 0.65);
+            border-bottom: 1px solid rgba(62, 76, 193, 0.55);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        .gv-graphs .gv-master-card__title {
+            font-weight: 700;
+            font-size: 15px;
+            color: rgba(62, 76, 193, 1);
+        }
+
+        .gv-graphs .gv-master-card__body {
+            padding: 14px 16px 16px 16px;
+            box-sizing: border-box;
+        }
+
+        /* 2) Remove "green bars": force native checkbox visuals only */
+        .gv-graphs #series.gv-master-series {
+            margin: 0 0 12px 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px 18px;
+            align-items: center;
+        }
+
+            .gv-graphs #series.gv-master-series > li {
+                list-style: none;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: inline-flex;
+                align-items: center;
+                column-gap: 2px; /* ensure 2px between checkbox+text even if other CSS adds spacing */
+                background: transparent !important;
+                border: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .gv-graphs #series.gv-master-series input[type="checkbox"] {
+                appearance: checkbox !important;
+                -webkit-appearance: checkbox !important;
+                -moz-appearance: checkbox !important;
+                position: static !important;
+                opacity: 1 !important;
+                width: 14px !important;
+                height: 14px !important;
+                margin: 0 !important; /* margin handled by li column-gap */
+                background: transparent !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            .gv-graphs #series.gv-master-series label {
+                margin: 0 !important;
+                padding: 0 !important;
+                font-weight: 600;
+                font-size: 13px;
+                color: #374151;
+                cursor: pointer;
+            }
+
+                .gv-graphs #series.gv-master-series input[type="checkbox"]::before,
+                .gv-graphs #series.gv-master-series input[type="checkbox"]::after,
+                .gv-graphs #series.gv-master-series label::before,
+                .gv-graphs #series.gv-master-series label::after {
+                    content: none !important;
+                    display: none !important;
+                }
+
+    /* Device Master Chart legend (right-side series indicators) */
+    .gv-graphs #DeviceDiv svg text {
+        font-weight: 700 !important;
+        line-height: 26px !important; /* increases spacing between legend lines (effective for some browsers/SVG renderers) */
+    }
+
+    @@media (max-width: 1200px) {
+        .gv-graphs .gv-filters-grid {
+            grid-template-columns: 1fr 1fr;
+            justify-content: start;
+        }
+
+        .gv-graphs .gv-input,
+        .gv-graphs .gv-select,
+        .gv-graphs .gv-input-icon {
+            width: 100%;
+        }
+    }
+
+    /* Match all chart blue bars (Bootstrap panel headings) to the Device Master Chart by Index header styling */
+    .gv-graphs .panel.maincontainer > .panel-heading {
+        background: rgba(180, 191, 255, 0.65) !important;
+        border-bottom: 1px solid rgba(62, 76, 193, 0.55) !important;
+        color: rgba(62, 76, 193, 1) !important;
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    /* 1) Serial bar label color */
+    .gv-graphs .gv-top-serial__label {
+        color: rgba(62, 76, 193, 1);
+    }
+
+    /* 2) Refresh button inside serial bar as plain text (no box) */
+    .gv-graphs .gv-top-serial .refresh-btn {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        line-height: 1 !important;
+    }
+
+    .gv-graphs .gv-top-serial .refresh-btn,
+    .gv-graphs .gv-top-serial .refresh-btn span,
+    .gv-graphs .gv-top-serial .refresh-btn .refresh-icon {
+        color: rgba(62, 76, 193, 1) !important;
+    }
+
+    .gv-graphs .gv-top-serial .refresh-btn:hover {
+        text-decoration: underline;
+    }
+
+    /* 3) Gap between master chart card and the first chart panel below it */
+    .gv-graphs .gv-master-card + .panel.maincontainer {
+        margin-top: 14px;
+    }
+</style>
 
 @section scripts {
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <\!-- TODO Phase 8: bundle ~/js/devicecharts.min.js -->
-    <\!-- TODO Phase 8: bundle ~/js/datetimescripts.min.js -->
+    <script src="~/js/ChartScripts/Device/masterchart.js"></script>
+    <script src="~/js/ChartScripts/Device/detailschart.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/date.format.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/datetime.picker.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/z.datetime.init.js"></script>
 
     <script type="text/javascript">
-        google.charts.load('current' , { packages: ['corechart'] });
+        google.charts.load('current', { packages: ['corechart'] });
+
+        function gvFormatMasterLegend() {
+            var $texts = $('#DeviceDiv svg text');
+            if (!$texts.length) return;
+
+            var $legend = $texts.filter(function () {
+                var t = ($(this).text() || '').trim();
+                return t.indexOf('BAY') === 0 || t.indexOf('Device') === 0;
+            });
+
+            var minGapPx = 10;
+            var lastY = null;
+
+            $legend.each(function () {
+                var $t = $(this);
+                var y = parseFloat($t.attr('y'));
+                if (isNaN(y)) return;
+
+                if (lastY !== null && (y - lastY) < minGapPx) {
+                    y = lastY + minGapPx;
+                    $t.attr('y', y);
+                }
+
+                lastY = y;
+            });
+        }
 
         function drawDeviceMasterChart(deviceData) {
             var id = parseInt($('#DeviceID').text());
             var serialNumber = $('#SerialNumber').text();
             var bayNo = parseInt($('#DropDownForBay').val());
             var beginDate = $('#BeginDate').val();
-            var endDate = $('#EndDate').val()
+            var endDate = $('#EndDate').val();
             var logtype = $('#LogType').val();
             $.ajax({
                 type: 'GET',
@@ -36,32 +498,36 @@
                 success: function (JData) {
                     CreateNewDeviceMasterChart(JData, bayNo, deviceData);
                     $('#series').find(':checkbox').change();
+
+                    gvFormatMasterLegend();
+                    setTimeout(gvFormatMasterLegend, 0);
+                    setTimeout(gvFormatMasterLegend, 50);
                 },
                 error: function () {
                     alertify.error('Can not access to database, please try again.');
-                    $("#divLoading").hide();
                 },
                 complete: function () {
                     $("#divLoading").hide();
                 }
             });
         }
+
         function drawDeviceDetailChart() {
             var id = parseInt($('#DeviceID').text());
             var beginDate = $('#BeginDate').val();
-            var endDate = $('#EndDate').val()
+            var endDate = $('#EndDate').val();
             var logtype = $('#LogType').val();
             $.ajax({
                 type: 'GET',
                 dataType: 'json',
                 contentType: 'application/json;  charset=utf-8',
                 url: '@Url.Action("GetDeviceChartData")',
-                data: { 'ID': id,'logType' : logtype,  'beginDate': beginDate, 'endDate': endDate },
+                data: { 'ID': id, 'logType': logtype, 'beginDate': beginDate, 'endDate': endDate },
                 beforeSend: function () {
                     $("#divLoading").show();
                 },
                 success: function (JData) {
-                    if (JData.length != 0) {
+                    if (JData && JData.length) {
                         drawDeviceMasterChart(JData);
                         CreateNewDeviceDetailChartbyDate(JData, 'Voltage Output (V)', 'Voltage Output', 'VoltageOutputdiv', 'PowerVoltageOutput', '#ff6633');
                         CreateNewDeviceDetailChartDbyIndex(JData, 'Voltage Output (V) by Index', 'Voltage Output', 'VoltageOutputLogdiv', 'PowerVoltageOutput', '#ff6633');
@@ -71,6 +537,7 @@
 
                         CreateNewDeviceDetailChartbyDate(JData, 'Power Output (W)', 'Power Output', 'PowerOutputdiv', 'PowerOutput', 'blue');
                         CreateNewDeviceDetailChartDbyIndex(JData, 'Power Output (W) by Index', 'Power Input', 'PowerOutputLogdiv', 'PowerOutput', 'blue');
+
                         if (logtype == 1) {
                             CreateNewDeviceDetailChartbyDate(JData, 'Voltage Input (V)', 'Voltage Input', 'VoltageInputdiv', 'PowerVoltageInput', 'red');
                             CreateNewDeviceDetailChartDbyIndex(JData, 'Voltage Input (V) by Index', 'Voltage Input', 'VoltageInputLogdiv', 'PowerVoltageInput', 'red');
@@ -81,32 +548,33 @@
                             CreateNewDeviceDetailChartbyDate(JData, 'Power Input (W)', 'Power Input', 'PowerInputdiv', 'PowerInput', 'blue');
                             CreateNewDeviceDetailChartDbyIndex(JData, 'Power Input (W) by Index', 'Power Input', 'PowerInputLogdiv', 'PowerInput', 'blue');
                         }
+
                         CreateNewDeviceDetailChartbyDate(JData, 'Device Temperature (C)', 'Temperature', 'TemperatureOutputdiv', 'PowerTemperatureOutput', '#66ffcc');
                         CreateNewDeviceDetailChartDbyIndex(JData, 'Device Temperature (C) by Index', 'Temperature', 'TemperatureOutputLogdiv', 'PowerTemperatureOutput', '#66ffcc');
                     } else {
                         alertify.alert('Geni-View Cloud', 'No data found matching the given filter criteria');
-                        $("#divLoading").hide();
                         clearChartContent();
                     }
                 },
                 error: function () {
                     alertify.error('Can not access to database, please try again.');
+                },
+                complete: function () {
                     $("#divLoading").hide();
                 }
             });
         }
-        
+
         function setDefaultDatesAndLoad() {
             var now = new Date();
             var twoHoursAgo = new Date(now.getTime() - (2 * 60 * 60 * 1000));
-            
+
             var endDateStr = formatDateTime(now);
             var beginDateStr = formatDateTime(twoHoursAgo);
-            
+
             $('#EndDate').val(endDateStr);
             $('#BeginDate').val(beginDateStr);
-            
-            drawDeviceDetailChart();
+
             var logtype = $('#LogType').val();
             if (logtype == '1') {
                 $("#InputVoltage").show();
@@ -119,7 +587,7 @@
                 $("#InputPower").hide();
             }
         }
-        
+
         function formatDateTime(date) {
             var year = date.getFullYear();
             var month = ('0' + (date.getMonth() + 1)).slice(-2);
@@ -128,121 +596,230 @@
             var minutes = ('0' + date.getMinutes()).slice(-2);
             return year + '/' + month + '/' + day + ' ' + hours + ':' + minutes;
         }
-    </script>
-    <script type="text/javascript">
+
+        function gvUpdateDeviceMasterChartHeader() {
+            var isByDate = $('#gvAxisByDate').is(':checked');
+            var headerText = isByDate ? 'Device Master Chart by Date' : 'Device Master Chart by Index';
+            $('#gvDeviceMasterChartHeaderTitle').text(headerText);
+        }
+
+        function gvSetFiltersCollapsed(isCollapsed) {
+            var $card = $('#gvFiltersCard');
+            if (!$card.length) return;
+
+            $card.toggleClass('is-collapsed', !!isCollapsed);
+
+            try {
+                if (window.sessionStorage) {
+                    sessionStorage.setItem('gvGraphsFiltersCollapsed', (!!isCollapsed).toString());
+                }
+            } catch (e) { }
+        }
+
+        function gvRestoreFiltersCollapsed() {
+            var v = null;
+            try {
+                if (window.sessionStorage) {
+                    v = sessionStorage.getItem('gvGraphsFiltersCollapsed');
+                }
+            } catch (e) { }
+
+            if (v === 'true') {
+                gvSetFiltersCollapsed(true);
+            }
+        }
+
         $(document).ready(function () {
             setDefaultDatesAndLoad();
-        });
-        
-        $('#applyFilter').click(function () {
-            drawDeviceDetailChart();
-            var logtype = $('#LogType').val();
-            if (logtype == '1') {
-                $("#InputVoltage").show();
-                $("#InputCurrent").show();
-                $("#InputPower").show();
-            }
-            else {
-                $("#InputVoltage").hide();
-                $("#InputCurrent").hide();
-                $("#InputPower").hide();
-            }
-        });
+            gvRestoreFiltersCollapsed();
 
+            // Filters collapse/expand toggle
+            $('#gvFiltersHeader').off('click.gv').on('click.gv', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $card = $('#gvFiltersCard');
+                gvSetFiltersCollapsed(!$card.hasClass('is-collapsed'));
+            });
+
+            // Keep axis radios in sync (do not change header here)
+            $('#gvAxisByDate').off('change.gv').on('change.gv', function () {
+                $('#xAxisbyDate').prop('checked', true);
+            });
+            $('#gvAxisByIndex').off('change.gv').on('change.gv', function () {
+                $('#xAxisbyLog').prop('checked', true);
+            });
+
+            // Initial header matches default axis
+            gvUpdateDeviceMasterChartHeader();
+
+            // Apply Filters
+            $('#applyFilter').off('click.gv').on('click.gv', function (e) {
+                e.preventDefault();
+
+                gvUpdateDeviceMasterChartHeader();
+                drawDeviceDetailChart();
+
+                var logtype = $('#LogType').val();
+                if (logtype == '1') {
+                    $("#InputVoltage").show();
+                    $("#InputCurrent").show();
+                    $("#InputPower").show();
+                }
+                else {
+                    $("#InputVoltage").hide();
+                    $("#InputCurrent").hide();
+                    $("#InputPower").hide();
+                }
+            });
+
+            // Refresh button
+            $('#gvGraphsRefresh').off('click.gv').on('click.gv', function (e) {
+                e.preventDefault();
+                window.location.reload();
+            });
+
+            // Auto-load graphs once
+            try {
+                if (!window.sessionStorage || sessionStorage.getItem('gvDeviceGraphsAutoLoaded') !== 'true') {
+                    if (window.sessionStorage) {
+                        sessionStorage.setItem('gvDeviceGraphsAutoLoaded', 'true');
+                    }
+                    setTimeout(function () {
+                        $('#applyFilter').trigger('click');
+                    }, 0);
+                }
+            } catch (e) {
+                // If sessionStorage unavailable, still auto-load
+                setTimeout(function () {
+                    $('#applyFilter').trigger('click');
+                }, 0);
+            }
+        });
     </script>
 }
-<div id="divLoading">
-    <div id="loadingContent">
-        <img src="~/images/loader.gif">
+
+<!-- HTML below remains unchanged -->
+<div class="gv-graphs">
+    <div id="divLoading">
+        <div id="loadingContent">
+            <img src="~/Resources/loader.gif">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 gv-fullwidth">
+            <div class="gv-top-serial" role="region" aria-label="Current Device Serial Number">
+                <div class="gv-top-serial__label">Current Device Serial Number :</div>
+                <div class="gv-top-serial__value">@Model.SerialNumber</div>
+                <div class="gv-top-serial__spacer"></div>
+
+                <button type="button" id="gvGraphsRefresh" class="refresh-btn" title="Refresh">
+                    <i class="fa fa-sync refresh-icon"></i>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="col-md-12 gv-fullwidth">
+            <div class="gv-card" id="gvFiltersCard">
+                <div class="gv-card__header" id="gvFiltersHeader" role="button" aria-controls="gvFiltersBody" aria-expanded="true">
+                    <div class="gv-card__title">
+                        <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Filters.svg")" alt="Filters" />
+                        <span>Filters</span>
+                    </div>
+
+                    <span class="gv-card__chevron" aria-hidden="true">
+                        <img src="@Url.Content("~/Content/Img/widgets/poly.svg")" alt="" />
+                    </span>
+                </div>
+
+                <div class="gv-card__body" id="gvFiltersBody">
+                    <div class="gv-filters-section-title">Axis Type Options</div>
+                    <div class="gv-axis-options" role="radiogroup" aria-label="Axis Type Options">
+                        <label class="gv-radio">
+                            <input type="radio" name="gvAxisType" id="gvAxisByDate" checked="checked" />
+                            <span>By Date</span>
+                        </label>
+                        <label class="gv-radio">
+                            <input type="radio" name="gvAxisType" id="gvAxisByIndex" />
+                            <span>By Index</span>
+                        </label>
+                    </div>
+
+                    <div class="gv-filters-grid">
+                        <div class="gv-field">
+                            <label for="BeginDate">Begin Date</label>
+                            <div class="gv-input-icon">
+                                <input type="text" value="" id="BeginDate" class="gv-input gv-input--date" placeholder="DD/MM/YYYY" />
+                                <span class="gv-input-icon__suffix" aria-hidden="true">
+                                    <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Date.svg")" alt="" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="gv-field">
+                            <label for="EndDate">End Date</label>
+                            <div class="gv-input-icon">
+                                <input type="text" value="" id="EndDate" class="gv-input gv-input--date" placeholder="DD/MM/YYYY" />
+                                <span class="gv-input-icon__suffix" aria-hidden="true">
+                                    <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Date.svg")" alt="" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="gv-field">
+                            <label for="DropDownForBay">Select Bay</label>
+                            @Html.DropDownList("ListOfBay", null, new { @class = "gv-select", @id = "DropDownForBay" })
+                        </div>
+
+                        <div class="gv-field">
+                            <label for="LogType">Log Type</label>
+                            <select class="gv-select" id="LogType" name="LogType">
+                                <option value="1">Agent Device Log</option>
+                                <option value="2">Internal Device Log</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="gv-filters-actions">
+                        <button type="button" id="applyFilter" class="gv-btn gv-btn--primary">Apply Filters</button>
+                    </div>
+
+                    <div style="display:none;">
+                        <ul id="xAxisOption" class="list-inline">
+                            <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyDate" checked="checked" /><label for="xAxisbyDate">By Date</label></li>
+                            <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyLog" /><label for="xAxisbyLog">By Index</label></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Master Chart container: make header title dynamic -->
+<div class="col-md-12 gv-fullwidth">
+    <div class="gv-master-card" role="region" aria-label="Device Master Chart">
+        <div class="gv-master-card__header">
+            <div class="gv-master-card__title" id="gvDeviceMasterChartHeaderTitle">Device Master Chart</div>
+        </div>
+        <div class="gv-master-card__body">
+            <ul id="series" class="gv-master-series">
+                <li><input type="checkbox" class="checkbox" id="checkboxV" name="series" value="1" checked="checked" /><label for="checkboxV">Voltage</label></li>
+                <li><input type="checkbox" class="checkbox" id="checkboxC" name="series" value="2" checked="checked" /><label for="checkboxC">Current</label></li>
+                <li><input type="checkbox" class="checkbox" id="checkboxT" name="series" value="3" checked="checked" /><label for="checkboxT">Temperature</label></li>
+                <li><input type="checkbox" class="checkbox" id="checkboxR" name="series" value="4" checked="checked" /><label for="checkboxR">Remaining Capacity</label></li>
+                <li><input type="checkbox" class="checkbox" id="checkboxP" name="series" value="5" checked="checked" /><label for="checkboxP">Power</label></li>
+                <li><input type="checkbox" class="checkbox" id="checkboxS" name="series" value="6" checked="checked" /><label for="checkboxS">State of Charge</label></li>
+                <li><input type="checkbox" class="checkbox" id="checkboxD" name="series" value="7" checked="checked" /><label for="checkboxD">Device Temperature</label></li>
+                <li><input type="checkbox" class="checkbox" id="checkboxDOP" name="series" value="8" checked="checked" /><label for="checkboxDOP">Device Output Power</label></li>
+            </ul>
+
+            <div class="panel-body charts gv-fullwidth" id="DeviceDiv"></div>
+        </div>
     </div>
 </div>
-<div class="row">
-    <div class="panel maincontainer">
-        <div class="panel-heading">@ViewBag.SerialNumber</div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="panel subcontainer">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Begin Date</label>
-                                <div class="col-md-12">
-                                    <input type="text" value="" id="BeginDate" class="form-control" /> <br>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label col-md-12">End Date</label>
-                                <div class="col-md-12">
-                                    <input type="text" value="" id="EndDate" class="form-control" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="panel subcontainer">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Select Bay</label>
-                                <div class="col-md-12">
-                                    @Html.DropDownList("ListOfBay", null, new { @class = "form-control", @id = "DropDownForBay" }) <br>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Log Type</label>
-                                <div class="col-md-12">
-                                    <select class="form-control" id="LogType" name="LogType">
-                                        <option value="1">Agent Device Log</option>
-                                        <option value="2">Internal Device Log</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="panel subcontainer">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Axis Type Option</label>
-                                <div class="col-md-12">
-                                    <ul id="xAxisOption" class="list-inline">
-                                        <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyDate" checked="checked" /><label for="xAxisbyDate">By Date</label></li>
-                                        <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyLog" /><label for="xAxisbyLog">By Index</label> </li>
-                                    </ul><br>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Refresh</label>
-                                <div class="col-md-12">
-                                    <input type="button" id="applyFilter" class="btn btn-default form-control" value="Apply Filters" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="panel maincontainer">
-                <div class="panel-heading">
-                    <ul id="series" class="list-inline">
-                        <li><input type="checkbox" class="checkbox" id="checkboxV" name="series" value="1" checked="checked" /><label for="checkboxV">Voltage</label></li>
-                        <li><input type="checkbox" class="checkbox" id="checkboxC" name="series" value="2" checked="checked" /><label for="checkboxC">Current</label></li>
-                        <li><input type="checkbox" class="checkbox" id="checkboxT" name="series" value="3" checked="checked" /><label for="checkboxT">Temperature</label></li>
-                        <li><input type="checkbox" class="checkbox" id="checkboxR" name="series" value="4" checked="checked" /><label for="checkboxR">Remaining Capacity</label></li>
-                        <li><input type="checkbox" class="checkbox" id="checkboxP" name="series" value="5" checked="checked" /><label for="checkboxP">Power</label></li>
-                        <li><input type="checkbox" class="checkbox" id="checkboxS" name="series" value="6" checked="checked" /><label for="checkboxS">State of Charge</label></li>
-                        <li><input type="checkbox" class="checkbox" id="checkboxD" name="series" value="7" checked="checked" /><label for="checkboxD">Device Temperature</label></li>
-                        <li><input type="checkbox" class="checkbox" id="checkboxDOP" name="series" value="8" checked="checked" /><label for="checkboxDOP">Device Output Power</label></li>
-                    </ul>
-                </div>
-                <div class="panel-body charts" id="DeviceDiv"></div>
-            </div>
-        </div>
-        <div class="col-md-12">
+
+        <!-- Remaining cards unchanged; only force width to full page -->
+        <div class="col-md-12 gv-fullwidth">
             <div class="panel maincontainer">
                 <div class="panel-heading">Voltage Output Chart</div>
                 <div class="panel-body">
@@ -252,6 +829,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Current Output Chart</div>
                 <div class="panel-body">
@@ -261,6 +839,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Power Output Chart</div>
                 <div class="panel-body">
@@ -270,6 +849,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer" id="InputVoltage">
                 <div class="panel-heading">Voltage Input Chart</div>
                 <div class="panel-body">
@@ -279,6 +859,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer" id="InputCurrent">
                 <div class="panel-heading">Current Input Chart</div>
                 <div class="panel-body">
@@ -288,6 +869,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer" id="InputPower">
                 <div class="panel-heading">Power Input Chart</div>
                 <div class="panel-body">
@@ -297,6 +879,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Temperature Chart</div>
                 <div class="panel-body">

@@ -431,6 +431,12 @@ namespace GeniView.Cloud.Controllers
             int pointCount = 500;
             try
             {
+                ApplicationUser currentUser = new ApplicationUser();
+                using (var identityRepo = new IdentityDataRepository())
+                {
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
+                }
+
                 // BayNo = -1 get all Devices
                 if (bayNo < 0)
                 {
@@ -441,11 +447,11 @@ namespace GeniView.Cloud.Controllers
                     {
                         if (LogType == 1) // Device Log
                         {
-                            device = db.GetDeviceMasterChartModel(SerialNumber, i + 1, beginDate, endDate, pointCount);
+                            device = db.GetDeviceMasterChartModel(SerialNumber, i + 1, beginDate, endDate, currentUser, pointCount);
                         }
                         else
                         {
-                            device = db.GetDeviceMasterChartModelByLog(SerialNumber, i + 1, beginDate, endDate);
+                            device = db.GetDeviceMasterChartModelByLog(SerialNumber, i + 1, beginDate, endDate, currentUser);
                         }
                         model.Add(device);
                     }
@@ -454,11 +460,11 @@ namespace GeniView.Cloud.Controllers
                 {
                     if (LogType == 1) // Device Log
                     {
-                        device = db.GetDeviceMasterChartModel(SerialNumber, bayNo, beginDate, endDate, pointCount);
+                        device = db.GetDeviceMasterChartModel(SerialNumber, bayNo, beginDate, endDate, currentUser, pointCount);
                     }
                     else
                     {
-                        device = db.GetDeviceMasterChartModelByLog(SerialNumber, bayNo, beginDate, endDate);
+                        device = db.GetDeviceMasterChartModelByLog(SerialNumber, bayNo, beginDate, endDate, currentUser);
                     }
                     model.Add(device);
                 }
@@ -479,10 +485,16 @@ namespace GeniView.Cloud.Controllers
             IEnumerable<DeviceModel> model = Enumerable.Empty<DeviceModel>();
             try
             {
+                ApplicationUser currentUser = new ApplicationUser();
+                using (var identityRepo = new IdentityDataRepository())
+                {
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
+                }
+
                 if (logType == 1)
-                    model = db.GetDeviceChartModel(ID, beginDate, endDate, pointCount);
+                    model = db.GetDeviceChartModel(ID, beginDate, endDate, currentUser, pointCount);
                 else
-                    model = db.GetDeviceChartModelByLog(ID, beginDate, endDate);
+                    model = db.GetDeviceChartModelByLog(ID, beginDate, endDate, currentUser);
             }
             catch (Exception ex)
             {

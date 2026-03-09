@@ -100,24 +100,37 @@
 }
 
 .sidebar-nav li {
-  text-indent: 15px;
-  line-height: 40px;
+  line-height: 1;
 }
 
 .sidebar-nav .subnav li a {
-  display: block;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
   text-decoration: none;
   border: none;
   border-bottom: rgba(255, 225, 225, 0.08) 1px solid;
   color: #999999;
-  padding-left: 30px;
+  padding: 10px 10px 10px 30px;
+  min-height: 40px;
 }
 
 .sidebar-nav li a {
-  display: block;
-  margin-top: 5px;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 8px 12px;
   text-decoration: none;
   color: #999999;
+  min-height: 40px;
+}
+
+/* Remove float from fa-stack icons inside sidebar — flex handles layout */
+.sidebar-nav li a .fa-stack.pull-left,
+.sidebar-nav li a .fa-stack {
+  float: none !important;
+  flex-shrink: 0;
 }
 
 /*Active menu or hover effect*/

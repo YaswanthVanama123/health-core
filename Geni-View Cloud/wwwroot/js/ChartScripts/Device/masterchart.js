@@ -10,7 +10,7 @@ function CreateNewDeviceMasterChart(JData, bayNo, deviceData) {
 
     // Structure of MasterDevice
     var joinedTable = new google.visualization.DataTable();
-    
+
     if (drawMasterChartByIndex)
         joinedTable.addColumn('number', 'LogIndex');
     else
@@ -34,7 +34,7 @@ function CreateNewDeviceMasterChart(JData, bayNo, deviceData) {
             dataTable.addColumn('number', 'LogIndex');
         else
             dataTable.addColumn('datetime', 'LogDate');
-        
+
         dataTable.addColumn('number', 'BAY' + index + ' - Voltage');
         dataTable.addColumn('number', 'BAY' + index + ' - Current');
         dataTable.addColumn('number', 'BAY' + index + ' - Temperature');
@@ -50,14 +50,14 @@ function CreateNewDeviceMasterChart(JData, bayNo, deviceData) {
                 xAxisValue = new Date(JData[i][j].LogDate)
 
             dataTable.addRow([
-                                xAxisValue,
-                                JData[i][j].Voltage,
-                                JData[i][j].Current,
-                                JData[i][j].Temperature,
-                                JData[i][j].RemainingCapacity,
-                                JData[i][j].Power,
-                                JData[i][j].RelativeStateofCharge,
-                            ]);
+                xAxisValue,
+                JData[i][j].Voltage,
+                JData[i][j].Current,
+                JData[i][j].Temperature,
+                JData[i][j].RemainingCapacity,
+                JData[i][j].Power,
+                JData[i][j].RelativeStateofCharge,
+            ]);
         }
 
         if (JData[i].length > 0) {
@@ -77,7 +77,7 @@ function CreateNewDeviceMasterChart(JData, bayNo, deviceData) {
             temperatureDataTable.addColumn('number', 'LogIndex');
         else
             temperatureDataTable.addColumn('datetime', 'LogDate');
-        
+
         temperatureDataTable.addColumn('number', 'Device Temperature');
         temperatureDataTable.addColumn('number', 'Device Output Power');
         for (var i = 0; i < deviceData.length; i++) {
@@ -87,48 +87,83 @@ function CreateNewDeviceMasterChart(JData, bayNo, deviceData) {
                 xAxisValue = new Date(deviceData[i].LogDate)
 
             temperatureDataTable.addRow([
-                                           xAxisValue,
-                                           deviceData[i].PowerTemperatureOutput,
-                                           deviceData[i].PowerOutput
+                xAxisValue,
+                deviceData[i].PowerTemperatureOutput,
+                deviceData[i].PowerOutput
             ]);
         }
 
         joinedTable = google.visualization.data.join(joinedTable, temperatureDataTable, 'full', [[0, 0]], joinedTableColCount, [1, 2]);
     }
+
+    var container = document.getElementById('DeviceDiv');
+    var containerWidth = (container && container.clientWidth) ? container.clientWidth : 1000;
+    var rowCount = joinedTable.getNumberOfRows();
+
+    // Keep tick generation conservative for master chart; let Google auto-pick most labels.
+    // Use ticks only for very dense datasets.
+    var desiredLabelCount = Math.max(2, Math.floor(containerWidth / 110));
+    var skip = Math.max(1, Math.ceil(rowCount / desiredLabelCount));
+
+    var hAxisFontSize = 10;
+    if (skip > 35) hAxisFontSize = 7;
+    else if (skip > 22) hAxisFontSize = 8;
+    else if (skip > 14) hAxisFontSize = 9;
+
+    var dateTicks = null;
+    var useAutoTicks = true;
+    if (!drawMasterChartByIndex && rowCount > 0) {
+        // Use explicit ticks only when data is very dense.
+        if (rowCount > desiredLabelCount * 2) {
+            useAutoTicks = false;
+            dateTicks = [];
+            for (var t = 0; t < rowCount; t += skip) {
+                dateTicks.push(joinedTable.getValue(t, 0));
+            }
+            var last = joinedTable.getValue(rowCount - 1, 0);
+            if (dateTicks.length && dateTicks[dateTicks.length - 1] !== last) {
+                dateTicks.push(last);
+            }
+        }
+    }
+
+    // If horizontal labels don't fit, angle them slightly to ensure visibility.
+    var useSlanted = (!drawMasterChartByIndex) && (skip > 10);
+
     var options = {
-        'title': chartTitle,
+        'title': null,
         'width': '100%',
         'height': 600,
         'interpolateNulls': true,
-        'chartArea': { left: '10%', width: '70%' },
+        // Reserve space for angled/horizontal labels
+        'chartArea': { left: '10%', width: '70%', bottom: useSlanted ? 90 : 70 },
         focusTarget: 'category',
         explorer: {
             axis: 'horizontal',
             maxZoomIn: 30 /*Max zoom In*/
         },
         vAxis: {
-            gridlines: { count: 10 }
+            gridlines: { count: 10 },
+            textStyle: { fontSize: 10 }
         },
-        hAxis: {
-            gridlines: {
-                count: -1,
-                units: {
-                    days: { format: ['MMM dd'] },
-                    hours: { format: ['HH:mm', 'ha'] },
-                }
-            },
-            minorGridlines: {
-                units: {
-                    hours: { format: ['hh:mm:ss a', 'ha'] },
-                    minutes: { format: ['HH:mm a Z', ':mm'] },
-                }
-            }
+        hAxis: drawMasterChartByIndex ? {
+            gridlines: { count: -1 },
+            textStyle: { fontSize: 10 }
+        } : {
+            format: 'dd/MM/yyyy',
+            slantedText: true,
+            slantedTextAngle: 45,
+            textStyle: { fontSize: hAxisFontSize },
+            // Keep Google's auto tick selection so labels appear at appropriate points
+            ticks: undefined,
+            gridlines: { count: -1, color: 'none' },
+            minorGridlines: { color: 'none' }
         },
         legend: { position: 'right', textStyle: { fontSize: 12 } }
     };
 
     var view = new google.visualization.DataView(joinedTable);
-    var chart = new google.visualization.LineChart(document.getElementById('DeviceDiv'));
+    var chart = new google.visualization.LineChart(container);
     chart.draw(view, options);
 
     function resizeChart() {

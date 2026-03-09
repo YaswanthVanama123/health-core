@@ -593,16 +593,10 @@ namespace GeniView.Cloud.Repository
             }
         }
 
-        public IEnumerable<BatteryModel> GetDeviceMasterChartModel(string serialNumber, int? bayNo, DateTime beginDate, DateTime endDate, int pointCount = 500)
+        public IEnumerable<BatteryModel> GetDeviceMasterChartModel(string serialNumber, int? bayNo, DateTime beginDate, DateTime endDate, ApplicationUser currentUser, int pointCount = 500)
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-
-                ApplicationUser currentUser = new ApplicationUser();
-                using (var identityRepo = new IdentityDataRepository())
-                {
-                    currentUser = (ApplicationUser?)null;
-                }
 
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
                 var convertedEndDate = TimeZoneHelper.ConvertToUTC(endDate, currentUser);
@@ -653,16 +647,10 @@ namespace GeniView.Cloud.Repository
             }
         }
 
-        public IEnumerable<BatteryModel> GetDeviceMasterChartModelByLog(string serialNumber, int? bayNo, DateTime beginDate, DateTime endDate, int pointCount = 500)
+        public IEnumerable<BatteryModel> GetDeviceMasterChartModelByLog(string serialNumber, int? bayNo, DateTime beginDate, DateTime endDate, ApplicationUser currentUser, int pointCount = 500)
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                ApplicationUser currentUser = new ApplicationUser();
-                using (var identityRepo = new IdentityDataRepository())
-                {
-                    currentUser = (ApplicationUser?)null;
-                }
-
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
                 var convertedEndDate = TimeZoneHelper.ConvertToUTC(endDate, currentUser);
                 var query = db.InternalBatteryLog
@@ -708,16 +696,10 @@ namespace GeniView.Cloud.Repository
             }
         }
 
-        public IEnumerable<DeviceModel> GetDeviceChartModel(long deviceID, DateTime beginDate, DateTime endDate, int pointCount = 500)
+        public IEnumerable<DeviceModel> GetDeviceChartModel(long deviceID, DateTime beginDate, DateTime endDate, ApplicationUser currentUser, int pointCount = 500)
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                ApplicationUser currentUser = new ApplicationUser();
-                using (var identityRepo = new IdentityDataRepository())
-                {
-                    currentUser = (ApplicationUser?)null;
-                }
-
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
                 var convertedEndDate = TimeZoneHelper.ConvertToUTC(endDate, currentUser);
 
@@ -771,16 +753,10 @@ namespace GeniView.Cloud.Repository
             }
         }
 
-        public IEnumerable<DeviceModel> GetDeviceChartModelByLog(long deviceID, DateTime beginDate, DateTime endDate, int pointCount = 500)
+        public IEnumerable<DeviceModel> GetDeviceChartModelByLog(long deviceID, DateTime beginDate, DateTime endDate, ApplicationUser currentUser, int pointCount = 500)
         {
             using (var db = new GeniViewCloudDataRepository())
             {
-                ApplicationUser currentUser = new ApplicationUser();
-                using (var identityRepo = new IdentityDataRepository())
-                {
-                    currentUser = (ApplicationUser?)null;
-                }
-
                 var convertedBeginDate = TimeZoneHelper.ConvertToUTC(beginDate, currentUser);
                 var convertedEndDate = TimeZoneHelper.ConvertToUTC(endDate, currentUser);
 

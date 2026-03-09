@@ -3,11 +3,9 @@
     // Toggle x Axis By Date and LogIndex Properties
     var drawMasterChartByIndex = $("input[id=xAxisbyDate]:checked").val() ? false : true;
     var xAxisValue;
-    var chartTitle = drawMasterChartByIndex ? "Master Chart by Index" : "Master Chart by Date";
 
     // Structure of MasterBattery
     var joinedTable = new google.visualization.DataTable();
-    //  Check drawing Master chart Option
     if (drawMasterChartByIndex)
         joinedTable.addColumn('number', 'LogIndex');
     else
@@ -22,12 +20,10 @@
     joinedTable.addColumn('number', 'CalculatedCapacity');
     joinedTable.addColumn('number', 'CycleCount');
 
-
     for (var i = 0; i < JData.length; i++) {
         index = i + 1;
         var dataTable = new google.visualization.DataTable();
-        // Add Data Columns
-        // Check drawing Master Chart option
+
         if (drawMasterChartByIndex)
             dataTable.addColumn('number', 'LogIndex');
         else
@@ -44,66 +40,85 @@
 
         for (var j = 0; j < JData[i].length; j++) {
             if (drawMasterChartByIndex)
-                xAxisValue = JData[i][j].LogIndex
+                xAxisValue = JData[i][j].LogIndex;
             else
-                xAxisValue = new Date(JData[i][j].LogDate)
+                xAxisValue = new Date(JData[i][j].LogDate);
 
             dataTable.addRow([
-                                xAxisValue,
-                                JData[i][j].Voltage,
-                                JData[i][j].Current,
-                                JData[i][j].Temperature,
-                                JData[i][j].RemainingCapacity,
-                                JData[i][j].Power,
-                                JData[i][j].RelativeStateofCharge,
-                                JData[i][j].CalculatedCapacity,
-                                JData[i][j].CycleCount,
+                xAxisValue,
+                JData[i][j].Voltage,
+                JData[i][j].Current,
+                JData[i][j].Temperature,
+                JData[i][j].RemainingCapacity,
+                JData[i][j].Power,
+                JData[i][j].RelativeStateofCharge,
+                JData[i][j].CalculatedCapacity,
+                JData[i][j].CycleCount,
             ]);
         }
-        if (JData[i].length > 0)
-            joinedTable = google.visualization.data.join(dataTable, joinedTable, 'full', [[0, 0]], [1, 2, 3, 4, 5, 6,7,8], [1, 2, 3, 4, 5, 6,7,8]);
+
+        if (JData[i].length > 0) {
+            joinedTable = google.visualization.data.join(
+                dataTable,
+                joinedTable,
+                'full',
+                [[0, 0]],
+                [1, 2, 3, 4, 5, 6, 7, 8],
+                [1, 2, 3, 4, 5, 6, 7, 8]
+            );
+        }
     }
 
+    var container = document.getElementById('MasterChartdiv');
+    var containerWidth = (container && container.clientWidth) ? container.clientWidth : 1000;
+    var rowCount = joinedTable.getNumberOfRows();
+
+    // Use Google auto ticks for master chart; just adapt font + slant for visibility.
+    var desiredLabelCount = Math.max(2, Math.floor(containerWidth / 110));
+    var skip = Math.max(1, Math.ceil(rowCount / desiredLabelCount));
+
+    var hAxisFontSize = 10;
+    if (skip > 35) hAxisFontSize = 7;
+    else if (skip > 22) hAxisFontSize = 8;
+    else if (skip > 14) hAxisFontSize = 9;
+
+    var useSlanted = (!drawMasterChartByIndex) && (skip > 10);
+
     var options = {
-        'title': chartTitle,
+        'title': null,
         'width': '100%',
         'height': 600,
         'interpolateNulls': true,
-        'chartArea': { left: '10%', width: '70%' },
+        'chartArea': { left: '10%', width: '70%', bottom: useSlanted ? 90 : 70 },
         focusTarget: 'category',
-        // Note : source https://developers.google.com/chart/interactive/docs/points#fullhtml
         explorer: {
             axis: 'horizontal',
-            maxZoomIn: 20 /*Max zoom In*/
+            maxZoomIn: 20
         },
         vAxis: {
             gridlines: { count: 10 }
         },
-        hAxis: {
-            gridlines: {
-                count: -1,
-                units: {
-                    days: { format: ['MMM dd'] },
-                    hours: { format: ['HH:mm', 'ha'] },
-                }
-            },
-            minorGridlines: {
-                units: {
-                    hours: { format: ['hh:mm:ss a', 'ha'] },
-                    minutes: { format: ['HH:mm a Z', ':mm'] },
-                }
-            }
+        hAxis: drawMasterChartByIndex ? {
+            gridlines: { count: -1 }
+        } : {
+            format: 'dd/MM/yyyy',
+            slantedText: true,
+            slantedTextAngle: 45,
+            textStyle: { fontSize: hAxisFontSize },
+            gridlines: { count: -1, color: 'none' },
+            minorGridlines: { color: 'none' }
         },
         legend: { position: 'right', textStyle: { fontSize: 12 } }
     };
 
     var view = new google.visualization.DataView(joinedTable);
-
-    var chart = new google.visualization.LineChart(document.getElementById('MasterChartdiv'));
+    var chart = new google.visualization.LineChart(container);
     chart.draw(view, options);
+
     function resizeChart() {
         chart.draw(view, options);
     }
+
     if (document.addEventListener) {
         window.addEventListener('resize', resizeChart);
     }
@@ -113,6 +128,7 @@
     else {
         window.resize = resizeChart;
     }
+
     if (view.getNumberOfRows() > 0) {
         google.visualization.errors.removeAll(document.getElementById('MasterChartdiv'));
         $('#series').find(':checkbox').change(function () {

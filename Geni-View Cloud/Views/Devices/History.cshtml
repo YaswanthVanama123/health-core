@@ -1,19 +1,533 @@
-@model GeniView.Cloud.Models.DeviceHistoryLogFilter
+﻿@model GeniView.Cloud.Models.DeviceHistoryLogFilter
 @using GeniView.Cloud.Models;
 @{
     ViewBag.Title = "Device Log History";
 }
-<link rel="stylesheet" type="text/css" href="~/css/jquery.datetimepicker.min.css" />
+<link rel="stylesheet" type="text/css" href="~/Content/jquery.datetimepicker.min.css" />
+
 <style>
-    .dataTables_wrapper .dt-buttons {
-        float: right;
-        margin-left: 10px;
-        margin-top: -5px;
+    /* Page-scoped UX styling (kept local to avoid impacting other pages) */
+    .gv-device-history {
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    }
+
+    /* Filters container sizing */
+    .gv-device-history .gv-card {
+        background: #fff;
+        border: 1px solid #e6e9ef;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(16, 24, 40, 0.14);
+        max-width: 1266px;
+        width: 100%;
+    }
+
+    .gv-device-history .gv-card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #eef1f6;
+        cursor: pointer; /* collapse/expand click target */
+        user-select: none;
+    }
+
+    .gv-device-history .gv-card__title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .gv-device-history .gv-card__chevron {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid #e6e9ef;
+        background: #fff;
+        color: #111827;
+        flex: 0 0 auto;
+        overflow: hidden;
+    }
+
+    .gv-device-history .gv-card__chevron img {
+        width: 14px;
+        height: 14px;
+        display: block;
+        transition: transform 0.15s ease;
+    }
+
+    .gv-device-history .gv-icon {
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+    }
+
+    /* Filters body */
+    .gv-device-history .gv-card__body {
+        padding: 14px 16px 16px 16px;
+        min-height: 200px;
+    }
+
+    /* Collapsed state */
+    .gv-device-history .gv-card.is-collapsed .gv-card__body {
+        display: none;
+    }
+
+    .gv-device-history .gv-card.is-collapsed .gv-card__chevron img {
+        transform: rotate(180deg);
+    }
+
+    .gv-device-history .gv-filters-grid {
+        display: grid;
+        grid-template-columns: 236px 236px 236px 138px;
+        gap: 24px;
+        align-items: end;
+        justify-content: space-between;
+    }
+
+    .gv-device-history .gv-field label {
+        display: block;
+        margin: 0 0 10px 0;
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        font-weight: 500;
+        font-size: 13px;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #374151;
+    }
+
+    .gv-device-history .gv-input {
+        width: 236px;
+        border: 1px solid #d5dbe7;
+        border-radius: 7px;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #111827;
+        outline: none;
+        box-sizing: border-box;
+        background: #fff;
+        max-width: 100%;
+    }
+
+    .gv-device-history .gv-input--date {
+        height: 42px;
+        padding-right: 44px;
+    }
+
+    .gv-device-history .gv-input--count {
+        height: 50px;
+    }
+
+    .gv-device-history .gv-input:focus {
+        border-color: #3e4cc1;
+        box-shadow: 0 0 0 3px rgba(62, 76, 193, 0.15);
+    }
+
+    .gv-device-history .gv-input-icon {
+        position: relative;
+        width: 236px;
+        max-width: 100%;
+    }
+
+    .gv-device-history .gv-input-icon__suffix {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        pointer-events: none;
+        opacity: 0.9;
+    }
+
+    .gv-device-history .gv-input-icon__suffix img {
+        width: 16px;
+        height: 16px;
+        display: block;
+    }
+
+    /* Checkbox visibility fix */
+    .gv-device-history .gv-toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 22px;
+    }
+
+    .gv-device-history .gv-toggle-row input[type="checkbox"] {
+        position: static !important;
+        opacity: 1 !important;
+        width: 16px !important;
+        height: 16px !important;
+        margin: 0 !important;
+        appearance: auto;
+        -webkit-appearance: checkbox;
+    }
+
+    .gv-device-history .gv-toggle-row label {
+        margin: 0;
+        width: 251px;
+        height: 17px;
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #374151;
+    }
+
+    .gv-device-history .gv-btn {
+        border: 1px solid transparent;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        white-space: nowrap;
+    }
+
+    .gv-device-history .gv-btn--primary {
+        width: 138px;
+        height: 42px;
+        border-radius: 7px;
+        padding: 10px 18px;
+        gap: 10px;
+        background: #3e4cc1;
+        border-color: #3e4cc1;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .gv-device-history .gv-btn--primary:hover {
+        background: #3541b0;
+        border-color: #3541b0;
+    }
+
+    /* Serial number bar */
+    .gv-device-history .gv-serial-bar {
+        margin-top: 14px;
+        max-width: 1280px;
+        width: 100%;
+        height: 63px;
+        background: rgba(211, 215, 245, 0.78);
+        border: 1px solid #d9ddff;
+        border-radius: 10px;
+        padding: 9px 14px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        box-sizing: border-box;
+    }
+
+    /* 2) Reduce serial text size */
+    .gv-device-history .gv-serial-bar__left {
+        width: 344px;
+        height: 29px;
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        font-weight: 700;
+        font-size: 20px; /* reduced from 24px */
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: rgba(62, 76, 193, 1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 0 0 auto;
+    }
+
+    /* 2) Increase search bar width */
+    .gv-device-history .gv-search {
+        position: relative;
+        width: 640px; /* increased from 553px */
+        height: 45px;
+        flex: 0 0 auto;
+    }
+
+    .gv-device-history .gv-search .fa {
+        position: absolute;
+        left: 19px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    .gv-device-history .gv-search input {
+        width: 640px; /* keep in sync */
+        height: 45px;
+        border-radius: 8px;
+        padding: 10px 12px 10px 42px;
+        border: 1px solid #d5dbe7;
+        box-sizing: border-box;
+        font-size: 13px;
+    }
+
+    .gv-device-history .gv-search input::placeholder {
+        font-size: 13px;
+        line-height: 17px;
+    }
+
+    .gv-device-history .gv-search input:focus {
+        border-color: #3e4cc1;
+        box-shadow: 0 0 0 3px rgba(62, 76, 193, 0.15);
+        outline: none;
+    }
+
+    .gv-device-history #gvDeviceLogDownload.gv-btn--primary {
+        width: 146px;
+        height: 37px;
+        border-radius: 7px;
+        padding: 10px 18px;
+        gap: 10px;
+        line-height: normal;
+        margin-left: auto;
+        flex: 0 0 auto;
+    }
+
+    /* Table: enable horizontal scrolling when needed */
+    .gv-device-history .gv-table-scroll {
+        max-height: none;          /* remove vertical scrolling region */
+        overflow-y: visible;       /* no vertical scroll */
+        overflow-x: auto;          /* keep horizontal scroll */
+        border-radius: 10px;
+    }
+
+    /* Allow table to grow wider than container based on content */
+    .gv-device-history table.gv-table {
+        width: max-content;        /* grow to fit content */
+        min-width: 100%;           /* but never smaller than container */
+        border-collapse: separate; /* keep padding/border behavior stable */
+        border-spacing: 0;
+        table-layout: auto;        /* auto-size columns based on content */
+    }
+
+    /* Keep header text single-line and centered */
+    .gv-device-history table.gv-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.2;
+        color: #111827;
+        padding: 12px 14px;
+        border-bottom: 1px solid #eef1f6;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap; /* single-line headers */
+    }
+
+    /* Keep body values single-line and centered with consistent row height */
+    .gv-device-history table.gv-table tbody td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #f1f3f8;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 1.35;
+        white-space: nowrap; /* single-line values */
+    }
+
+    .gv-device-history table.gv-table tbody td.text-right { text-align: right; }
+    .gv-device-history table.gv-table tbody td.text-center { text-align: center; }
+
+    /* Center timestamp inline content within its cell */
+    .gv-device-history .gv-cell-inline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    /* Temperature cell stays centered */
+    .gv-device-history .gv-temp-cell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    /* Center "Show" button cell */
+    .gv-device-history table.gv-table tbody td:last-child {
+        text-align: center;
+    }
+
+    /* Raw Data "Show" button styling */
+    .gv-device-history .gv-btn-show {
+        border: 1px solid rgba(62, 76, 193, 0.35);
+        background: rgba(1, 27, 255, 0.14);
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-weight: 700;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .gv-device-history .gv-btn-show > span {
+        background: linear-gradient(180deg, #4F60F4 0%, #3E4CC1 50%, #2E388E 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        display: inline-block;
+    }
+
+    /* Pagination footer */
+    .gv-device-history .gv-dt-info {
+        width: 198px;
+        height: 20px;
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 100%;
+        letter-spacing: 0%;
+        color: #6b7280;
+        white-space: nowrap;
+    }
+
+    /* 3) Perfect centering: use flex with a 'spacer' so pager is always dead center */
+    .gv-device-history #gvDeviceLogPagerHost .gv-dt-footer {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 0 0 0;
+        background: transparent;
+        border: 0;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .gv-dt-info {
+        flex: 0 0 auto;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .gv-dt-pager {
+        flex: 1 1 auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .gv-dt-spacer {
+        flex: 0 0 0;
+        width: 0;
+        height: 1px;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .dataTables_paginate.paging_simple_numbers {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: transparent;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .paginate_button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #d5dbe7;
+        background: #fff;
+        color: #111827;
+        text-decoration: none !important;
+        user-select: none;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .paginate_button.previous {
+        width: 112px;
+        height: 36px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 4px;
+        margin-right: 12px;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .paginate_button.next {
+        width: 82px;
+        height: 36px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 4px;
+        margin-left: 12px;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .paginate_button:not(.previous):not(.next) {
+        width: 32px;
+        height: 38px;
+        border-radius: 2px;
+        border-width: 1px;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .paginate_button.current {
+        background: #3e4cc1;
+        color: #fff !important;
+        border-color: #3e4cc1;
+    }
+
+    .gv-device-history #gvDeviceLogPagerHost .paginate_button.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    /* External pager host: ensure visible as separate footer */
+    .gv-device-history #gvDeviceLogPagerHost {
+        width: 100%;
+        max-width: 1280px;
+        box-sizing: border-box;
+        margin-top: 14px;
+        overflow: visible;
+    }
+
+    body:not(.admin-area) #wrapper.toggled.sidebar-expanded .gv-device-history #gvDeviceLogPagerHost,
+    body:not(.admin-area) #wrapper.toggled.sidebar-collapsed .gv-device-history #gvDeviceLogPagerHost {
+        max-width: none;
+    }
+
+    @@media (max-width: 992px) {
+        .gv-device-history .gv-search,
+        .gv-device-history .gv-search input {
+            width: 100%;
+        }
+
+        .gv-device-history #gvDeviceLogPagerHost .gv-dt-footer {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .gv-device-history #gvDeviceLogPagerHost .gv-dt-spacer {
+            display: none;
+        }
+
+        .gv-device-history .gv-dt-info {
+            width: auto;
+        }
+
+        .gv-device-history #gvDeviceLogPagerHost .gv-dt-pager {
+            justify-content: flex-start;
+            width: 100%;
+        }
     }
 </style>
+
 @section scripts
-  {
-    <\!-- TODO Phase 8: bundle ~/js/datetimescripts.min.js -->
+{
+    <script src="~/js/ChartScripts/DateTimeUIScripts/date.format.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/datetime.picker.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/z.datetime.init.js"></script>
     <script type="text/javascript">
         function gvFormatDateTime(date) {
             var year = date.getFullYear();
@@ -24,30 +538,6 @@
             return year + '/' + month + '/' + day + ' ' + hours + ':' + minutes;
         }
 
-        function gvEnsureDefaultHistoryDates() {
-            var $begin = $('#fBeginDate');
-            var $end = $('#fEndDate');
-            if (!$begin.length || !$end.length) return;
-
-            var now = new Date();
-            var twoHoursAgo = new Date(now.getTime() - (2 * 60 * 60 * 1000));
-
-            var endStr = gvFormatDateTime(now);
-            var beginStr = gvFormatDateTime(twoHoursAgo);
-
-            $end.val(endStr);
-            $begin.val(beginStr);
-
-            try {
-                if ($end.data('xdsoft_datetimepicker')) {
-                    $end.datetimepicker({ value: endStr });
-                }
-                if ($begin.data('xdsoft_datetimepicker')) {
-                    $begin.datetimepicker({ value: beginStr });
-                }
-            } catch (e) { }
-        }
-
         function gvEnsurePeriodicTriggerChecked() {
             var $cb = $('#isPeriodicDataTriggerIncluded');
             if ($cb.length) {
@@ -55,216 +545,410 @@
             }
         }
 
-        $(document).ready(function () {
-            gvEnsureDefaultHistoryDates();
-            gvEnsurePeriodicTriggerChecked();
+        function gvSetFiltersCollapsed(isCollapsed) {
+            var $card = $('#gvFiltersCard');
+            if (!$card.length) return;
 
-            var oTable = $('#DeviceLogHistory').DataTable({
-                dom: '<"col-md-6"l><"col-md-6"Bf>tip',
+            $card.toggleClass('is-collapsed', !!isCollapsed);
+
+            try {
+                if (window.sessionStorage) {
+                    sessionStorage.setItem('gvDeviceLogFiltersCollapsed', (!!isCollapsed).toString());
+                }
+            } catch (e) { }
+        }
+
+        function gvToggleFilters() {
+            var $card = $('#gvFiltersCard');
+            if (!$card.length) return;
+
+            gvSetFiltersCollapsed(!$card.hasClass('is-collapsed'));
+        }
+
+        function gvRestoreFiltersCollapsed() {
+            var v = null;
+            try {
+                if (window.sessionStorage) {
+                    v = sessionStorage.getItem('gvDeviceLogFiltersCollapsed');
+                }
+            } catch (e) { }
+
+            if (v === 'true') {
+                gvSetFiltersCollapsed(true);
+            }
+        }
+
+        function gvRenderExternalPager(api) {
+            var $pagerHost = $('#gvDeviceLogPagerHost');
+            if (!$pagerHost.length) return;
+
+            var pageInfo = api.page.info();
+            var currentPage = pageInfo.page;
+            var totalPages = pageInfo.pages;
+
+            $pagerHost.empty();
+
+            var $footer = $('<div class="gv-dt-footer"></div>');
+
+            var infoText =
+                'Showing ' + (pageInfo.recordsTotal ? (pageInfo.start + 1) : 0) +
+                ' to ' + (pageInfo.recordsTotal ? pageInfo.end : 0) +
+                ' of ' + pageInfo.recordsTotal +
+                ' entries';
+
+            var $infoBox = $('<div class="gv-dt-info"></div>').text(infoText);
+
+            var $pager = $('<div class="gv-dt-pager"></div>');
+            var $paginate = $('<div class="dataTables_paginate paging_simple_numbers"></div>');
+
+            var $prev = $('<a href="#" class="paginate_button previous">&lt; Previous</a>');
+            $prev.toggleClass('disabled', currentPage === 0);
+            $prev.on('click', function (e) {
+                e.preventDefault();
+                if (currentPage === 0) return;
+                api.page('previous').draw('page');
+            });
+
+            var $next = $('<a href="#" class="paginate_button next">Next &gt;</a>');
+            $next.toggleClass('disabled', currentPage >= totalPages - 1);
+            $next.on('click', function (e) {
+                e.preventDefault();
+                if (currentPage >= totalPages - 1) return;
+                api.page('next').draw('page');
+            });
+
+            var maxButtons = 4;
+            var startPage = Math.max(0, currentPage - Math.floor(maxButtons / 2));
+            var endPage = Math.min(totalPages - 1, startPage + maxButtons - 1);
+
+            if ((endPage - startPage) < (maxButtons - 1)) {
+                startPage = Math.max(0, endPage - maxButtons + 1);
+            }
+
+            $paginate.append($prev);
+
+            for (var i = startPage; i <= endPage; i++) {
+                (function (pageIndex) {
+                    var $btn = $('<a href="#" class="paginate_button"></a>');
+                    $btn.text(pageIndex + 1);
+
+                    if (pageIndex === currentPage) {
+                        $btn.addClass('current');
+                    }
+
+                    $btn.on('click', function (e) {
+                        e.preventDefault();
+                        api.page(pageIndex).draw('page');
+                    });
+
+                    $paginate.append($btn);
+                })(i);
+            }
+
+            $paginate.append($next);
+            $pager.append($paginate);
+
+            var $spacer = $('<div class="gv-dt-spacer" aria-hidden="true"></div>');
+
+            $footer.append($infoBox).append($pager).append($spacer);
+            $pagerHost.append($footer);
+        }
+
+        function gvRenderTemperatureCells() {
+            // no-op placeholder (keeps callsite safe; table already displays numeric value)
+        }
+
+        // Ensures Apply runs only once on first load
+        function gvAutoApplyOnce() {
+            try {
+                if (!window.sessionStorage) return;
+
+                var key = 'gvDeviceHistoryAutoAppliedV2';
+                if (sessionStorage.getItem(key) === 'true') return;
+
+                sessionStorage.setItem(key, 'true');
+
+                // mark this post as auto-applied (used to suppress server-side popup)
+                $('<input/>', { type: 'hidden', name: 'gvAutoApplied', value: 'true' }).appendTo('form');
+
+                setTimeout(function () {
+                    $('#gvApplyFilters').trigger('click');
+                }, 0);
+            } catch (e) { }
+        }
+
+        $(document).ready(function () {
+            // Initialize datetimepickers with server-provided values
+            // (Server already sets BeginDate to 2 hours ago in the controller)
+            $('#fBeginDate').datetimepicker({
+                mask: '9999/19/39 29:59',
+                dayOfWeekStart: 1,
+                lang: 'en',
+                value: $('#fBeginDate').val(),
+                step: 5
+            });
+
+            $('#fEndDate').datetimepicker({
+                mask: '9999/19/39 29:59',
+                dayOfWeekStart: 1,
+                lang: 'en',
+                value: $('#fEndDate').val(),
+                step: 5
+            });
+
+            gvEnsurePeriodicTriggerChecked();
+            gvRestoreFiltersCollapsed();
+
+            // collapse/expand filters header click
+            $('#gvFiltersHeader').on('click', function () {
+                gvToggleFilters();
+            });
+
+            gvAutoApplyOnce();
+
+            if ($.fn.DataTable.isDataTable('#DeviceLogHistory')) {
+                $('#DeviceLogHistory').DataTable().destroy();
+            }
+
+            // Clear external pager host before init
+            $('#gvDeviceLogPagerHost').empty();
+
+            var table = $('#DeviceLogHistory').DataTable({
+                dom: 't',
+                paging: true,
+                pageLength: 10,
+                lengthChange: false,
+                searching: true,
+                ordering: false,
+                info: false,
+                autoWidth: false,
+                search: {
+                    smart: true,
+                    regex: false,
+                    caseInsensitive: true
+                },
+                scrollX: false,
+                scrollCollapse: false,
+                drawCallback: function () {
+                    gvRenderExternalPager(this.api());
+                    gvRenderTemperatureCells();
+                }
+            });
+
+            gvRenderExternalPager(table);
+
+            // Search: use the same table.search().draw() approach as Battery/History,
+            // but bind defensively (covers cases where input is replaced by partial reloads).
+            $(document)
+                .off('input.gvDeviceHistorySearch keyup.gvDeviceHistorySearch', '#gvDeviceLogSearch')
+                .on('input.gvDeviceHistorySearch keyup.gvDeviceHistorySearch', '#gvDeviceLogSearch', function () {
+                    table.search(this.value).draw();
+                });
+
+            $('#gvDeviceLogDownload').on('click', function (e) {
+                e.preventDefault();
+                if (!table || !table.button) return;
+                if (!table.buttons || !table.buttons().count()) return;
+                table.button(0).trigger();
+            });
+
+            new $.fn.dataTable.Buttons(table, {
                 buttons: [
                     {
-                        extend: 'excelHtml5',//extend: 'csv',
+                        extend: 'excelHtml5',
                         text: 'Download (*.xlsx)',
                         filename: 'Device Log History',
                         exportOptions: {
                             columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
                         }
                     }
-                ],
-                order: [1, 'desc'],
-                columnDefs: [{ type: "date", targets: 1 }],
-                "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
+                ]
             });
-        })
+        });
     </script>
+
+    @if (Model == null || Model.LogList == null || !Model.LogList.Any())
+    {
+        // Suppress server-side popup if this was an auto-apply post; JS will handle once.
+        if (Context.Request.Query["gvAutoApplied"] != "true")
+        {
+            <script type="text/javascript">
+                $(function () {
+                    alertify.alert('Geni-View Cloud', 'No data found matching the given filter criteria');
+                });
+            </script>
+        }
+    }
 }
-@using (Html.BeginForm())
-{
-    @Html.AntiForgeryToken()
-    <div class="row">
-        <div class="panel maincontainer">
-            <div class="panel-heading">Filters</div>
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="control-label col-md-12">Begin Date</label>
-                            <div class="col-md-12">
-                                @Html.EditorFor(model => model.BeginDate, new { htmlAttributes = new { @class = "form-control", @value = Model.BeginDate, @id="fBeginDate"} })<br>
-                            </div>
+
+<div class="gv-device-history">
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="gv-card" id="gvFiltersCard">
+                    <div class="gv-card__header" id="gvFiltersHeader" role="button" aria-controls="gvFiltersBody" aria-expanded="true">
+                        <div class="gv-card__title">
+                            <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Filters.svg")" alt="Filters" />
+                            <span>Filters</span>
                         </div>
-                        <div class="form-group">
-                            <label class="control-label col-md-12">End Date</label>
-                            <div class="col-md-12">
-                                @Html.EditorFor(model => model.EndDate, new { htmlAttributes = new { @class = "form-control", @value = Model.EndDate, @id="fEndDate" } })
-                            </div>
-                        </div>
+
+                        <span class="gv-card__chevron" aria-hidden="true">
+                            <img src="@Url.Content("~/Content/Img/widgets/poly.svg")" alt="" />
+                        </span>
                     </div>
 
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="control-label col-md-12">Log Count</label>
-                            <div class="col-md-12">
-                                @Html.EditorFor(model => model.Count, new { htmlAttributes = new { @class = "form-control", @Value = Model.Count } }) <br>
-                            </div>
+                    <div class="gv-card__body" id="gvFiltersBody">
+                        <div class="gv-toggle-row">
+                            @Html.CheckBoxFor(model => model.isPeriodicDataTriggerIncluded, new { @class = "checkbox", @id = "isPeriodicDataTriggerIncluded" })
+                            <label for="isPeriodicDataTriggerIncluded">Includes Periodic Data Logging Trigger</label>
                         </div>
-                        <div class="form-group">
-                            <label class="control-label col-md-12">Event Code</label>
-                            <div class="col-md-12">
-                                @Html.CheckBoxFor(model => model.isPeriodicDataTriggerIncluded, new { htmlAttributes = new { @class = "checkbox", @id = "isPeriodicDataTriggerIncluded" } })  <label for="isPeriodicDataTriggerIncluded">Include Periodic Data Logging Trigger</label>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label class="control-label col-md-12">Refresh</label>
-                            <div class="col-md-12">
-                                <input type="submit" value="Apply" class="btn btn-default form-control" />
+                        <div class="gv-filters-grid">
+                            <div class="gv-field">
+                                <label for="fBeginDate">Begin Date</label>
+                                <div class="gv-input-icon">
+                                    <input type="text" class="gv-input gv-input--date" id="fBeginDate" name="BeginDate" value="@(Model != null && Model.BeginDate != DateTime.MinValue ? Model.BeginDate.ToString("yyyy/MM/dd HH:mm") : "")" />
+                                    <span class="gv-input-icon__suffix" aria-hidden="true">
+                                        <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Date.svg")" alt="" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="gv-field">
+                                <label for="fEndDate">End Date</label>
+                                <div class="gv-input-icon">
+                                    <input type="text" class="gv-input gv-input--date" id="fEndDate" name="EndDate" value="@(Model != null && Model.EndDate != DateTime.MinValue ? Model.EndDate.ToString("yyyy/MM/dd HH:mm") : "")" />
+                                    <span class="gv-input-icon__suffix" aria-hidden="true">
+                                        <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Date.svg")" alt="" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="gv-field">
+                                <label for="Count">Log Count</label>
+                                @Html.EditorFor(model => model.Count, new { htmlAttributes = new { @class = "gv-input gv-input--count", @Value = Model.Count } })
+                            </div>
+
+                            <div class="gv-field">
+                                <label>&nbsp;</label>
+                                <button type="submit" id="gvApplyFilters" class="gv-btn gv-btn--primary">Apply Filters</button>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
+
+                <div class="gv-serial-bar" role="region" aria-label="Device serial and search">
+                    <div class="gv-serial-bar__left">
+                        Serial Number : @ViewBag.DeviceSerialNumber
+                    </div>
+
+                    <div class="gv-search">
+                        <i class="fa fa-search" aria-hidden="true"></i>
+                        <input id="gvDeviceLogSearch"
+                               type="text"
+                               placeholder="Search by Serial Number........"
+                               aria-label="Search by Serial Number" />
+                    </div>
+
+                    <a id="gvDeviceLogDownload" href="#" class="gv-btn gv-btn--primary">Download(*.xlsx)</a>
+                </div>
+
+                <div class="gv-card gv-table-card" style="max-width:none;">
+                    <div class="gv-card__body gv-table-wrap">
+                        <div class="gv-table-scroll">
+                            <table class="gv-table" id="DeviceLogHistory">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">@Html.DisplayName("Index")</th>
+                                        <th class="text-center">@Html.DisplayName("Timestamp")</th>
+                                        <th class="text-center">@Html.DisplayName("Code")</th>
+                                        <th class="text-center">@Html.DisplayName("Description")</th>
+                                        <th class="text-center">@Html.DisplayName("Batteries")</th>
+                                        <th class="text-center">@Html.DisplayName("OEM ID")</th>
+                                        <th class="text-center">@Html.DisplayName("Batteries Present")</th>
+                                        <th class="text-center">@Html.DisplayName("Batteries Discharging")</th>
+                                        <th class="text-center">@Html.DisplayName("Batteries Charging")</th>
+                                        <th class="text-center">@Html.DisplayName("Status")</th>
+                                        <th class="text-center">@Html.DisplayName("Output Voltage")</th>
+                                        <th class="text-center">@Html.DisplayName("Output Current")</th>
+                                        <th class="text-center">@Html.DisplayName("Temperature")</th>
+                                        <th hidden="hidden">@Html.DisplayName("Raw Data")</th>
+                                        <th class="text-center">@Html.DisplayName("Raw Data")</th>
+                                    </tr>
+                                </thead>
+
+                                @if (Model.LogList != null)
+                                {
+                                    <tbody>
+                                        @foreach (var item in Model.LogList)
+                                        {
+                                            <tr>
+                                                <td class="text-center">@item.InternalDeviceLog.LogIndex</td>
+                                                <td class="text-right gv-col-ts">
+                                                    <span class="gv-cell-inline">
+                                                        <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Date.svg")" alt="" aria-hidden="true" />
+                                                        <span>@TimeZoneHelper.GetLocalDateTime(item.InternalDeviceLog.Timestamp, ViewBag.CurrentUser)</span>
+                                                    </span>
+                                                </td>
+                                                <td class="text-right">
+                                                    @{ string b = item.InternalDeviceLog.EventCodeRaw / 10 == 0 ? "0" : ""; }
+                                                    @("EV" + b + item.InternalDeviceLog.EventCodeRaw)
+                                                </td>
+                                                <td class="text-center">@item.InternalDeviceLog.EventCodeText</td>
+                                                <td class="text-center">
+                                                    @foreach (var battery in item.Batteries)
+                                                    {
+                                                        @battery.SerialNumber;<br />
+                                                    }
+                                                </td>
+                                                <td class="text-center">
+                                                    @foreach (var oemId in item.OemIds)
+                                                    {
+                                                        @oemId.ToString("X");<br />
+                                                    }
+                                                </td>
+                                                <td class="text-center">@item.InternalDeviceLog.BatteriesPresentText</td>
+                                                <td class="text-center">@item.InternalDeviceLog.BatteriesPoweringSystemText</td>
+                                                <td class="text-center">@item.InternalDeviceLog.BatteriesChargingText</td>
+                                                <td class="text-center">@item.InternalDeviceLog.Status.StatusText</td>
+                                                <td class="text-right">@item.InternalDeviceLog.PowerOutput.Voltage</td>
+                                                <td class="text-right">@item.InternalDeviceLog.PowerOutput.Current</td>
+                                                <td class="text-right gv-col-temp">@item.InternalDeviceLog.Status.Temperature</td>
+                                                <td class="text-right" hidden="hidden">@item.InternalDeviceLog.RawData</td>
+                                                <td class="text-right">
+                                                    <button type="button" class="gv-btn-show" data-toggle="modal" data-target="#@("modal" + item.InternalDeviceLog.LogIndex)"><span>Show</span></button>
+                                                    <div class="modal fade" id="@("modal" + item.InternalDeviceLog.LogIndex)" role="dialog">
+                                                        <div class="vertical-alignment-helper">
+                                                            <div class="modal-dialog vertical-align-center">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header clearfix">
+                                                                        <button type="button" class="close pull-right" data-dismiss="modal">&times;</button>
+                                                                        <h4 class="modal-title pull-left">Log Index: @item.InternalDeviceLog.LogIndex</h4>
+                                                                    </div>
+                                                                    <div class="modal-body oneline-text">
+                                                                        <p>@item.InternalDeviceLog.RawData</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="gvDeviceLogPagerHost"></div>
             </div>
         </div>
-    </div>
-}
-<div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
-<div class="row">
-    <div class="panel maincontainer">
-        <div class="panel-heading">Device Serial Number : @ViewBag.DeviceSerialNumber</div>
-        <div class="panel-body" style="overflow-x: scroll;">
-            <table class="table borderless" id="DeviceLogHistory" style="width:100%">
-                <thead>
-                    <tr>
-                        <th class="text-center">
-                            @Html.DisplayName("Index")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Timestamp")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Code")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Description")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Batteries")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("OEM ID")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Batteries Present")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Batteries Discharging")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Batteries Charging")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Status")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Output Voltage")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Output Current")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Temperature")
-                        </th>
-                        <th hidden="hidden">
-                            @Html.DisplayName("Raw Data")
-                        </th>
-                        <th class="text-center">
-                            @Html.DisplayName("Raw Data")
-                        </th>
-                    </tr>
-                </thead>
-                @if (Model.LogList != null)
-                {
-                    <tbody>
-                        @foreach (var item in Model.LogList)
-                        {
-                            <tr>
-                                <td class="text-center">
-                                    @item.InternalDeviceLog.LogIndex
-                                </td>
-                                <td class="text-right">
-                                    @TimeZoneHelper.GetLocalDateTime(item.InternalDeviceLog.Timestamp, ViewBag.CurrentUser)
-                                </td>
-                                <td class="text-right">
-                                    @{ string b = item.InternalDeviceLog.EventCodeRaw / 10 == 0 ? "0" : ""; }
-                                    @("EV" + b + item.InternalDeviceLog.EventCodeRaw)
-                                </td>
-                                <td class="text-center">
-                                    @item.InternalDeviceLog.EventCodeText
-                                </td>
-                                <td class="text-center">
-                                    @foreach (var battery in item.Batteries)
-                                    {
-                                        @battery.SerialNumber; <br />
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    @foreach (var oemId in item.OemIds)
-                                    {
-                                        @oemId.ToString("X"); <br />
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    @item.InternalDeviceLog.BatteriesPresentText
-                                </td>
-                                <td class="text-center">
-                                    @item.InternalDeviceLog.BatteriesPoweringSystemText
-                                </td>
-                                <td class="text-center">
-                                    @item.InternalDeviceLog.BatteriesChargingText
-                                </td>
-                                <td class="text-center">
-                                    @item.InternalDeviceLog.Status.StatusText
-                                </td>
-                                <td class="text-right">
-                                    @item.InternalDeviceLog.PowerOutput.Voltage
-                                </td>
-                                <td class="text-right">
-                                    @item.InternalDeviceLog.PowerOutput.Current
-                                </td>
-                                <td class="text-right">
-                                    @item.InternalDeviceLog.Status.Temperature
-                                </td>
-                                <td class="text-right" hidden="hidden">
-                                    @item.InternalDeviceLog.RawData
-                                </td>
-                                <td class="text-right">
-                                    <!-- Trigger the modal with a button -->
-                                    <button type="button" class="btn btn-info btn-xs" data-toggle="modal" data-target="#@("modal" + item.InternalDeviceLog.LogIndex)">Show</button>
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="@("modal" + item.InternalDeviceLog.LogIndex)" role="dialog">
-                                        <div class="vertical-alignment-helper">
-                                            <div class="modal-dialog vertical-align-center">
-                                                <!-- Modal content-->
-                                                <div class="modal-content">
-                                                    <div class="modal-header clearfix">
-                                                        <button type="button" class="close pull-right" data-dismiss="modal">&times;</button>
-                                                        <h4 class="modal-title pull-left">Log Index: @item.InternalDeviceLog.LogIndex</h4>
-                                                    </div>
-                                                    <div class="modal-body oneline-text">
-                                                        <p>@item.InternalDeviceLog.RawData</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                                        }
-                    </tbody>
-                                        }
-            </table>
-        </div>
-    </div>
+    }
 </div>

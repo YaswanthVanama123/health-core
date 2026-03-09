@@ -1,24 +1,422 @@
-@model GeniView.Data.Hardware.Battery
+﻿@model GeniView.Data.Hardware.Battery
 
 @{
     ViewBag.Title = "Battery Graphs";
-    ViewBag.SerialNumber = "Current Battery Serial Number : " + Model.SerialNumber;
+    ViewBag.SerialNumber = "Current Battery Serial Number : " + (Model != null ? Model.SerialNumber : "");
 }
-<link rel="stylesheet" type="text/css" href="~/css/jquery.datetimepicker.min.css" />
-<label id="BatteryID" hidden="hidden">@Model.ID</label>
+<link rel="stylesheet" type="text/css" href="~/Content/jquery.datetimepicker.min.css" />
+<label id="BatteryID" hidden="hidden">@(Model != null ? Model.ID.ToString() : "")</label>
+
+<style>
+    /* Page-scoped UX styling for Graphs (kept local to avoid impacting other pages) */
+    .gv-battery-graphs {
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    }
+
+        .gv-battery-graphs .gv-fullwidth {
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        .gv-battery-graphs .panel.maincontainer,
+        .gv-battery-graphs .panel.subcontainer,
+        .gv-battery-graphs .gv-card,
+        .gv-battery-graphs .gv-master-card {
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        .gv-battery-graphs ul {
+            max-width: 100%;
+        }
+
+        /* ---------------- Top serial bar ---------------- */
+        .gv-battery-graphs .gv-top-serial {
+            width: 100%;
+            background: rgba(211, 215, 245, 0.78);
+            border: 1px solid #d9ddff;
+            border-radius: 10px;
+            padding: 10px 14px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 0 14px 0;
+        }
+
+        .gv-battery-graphs .gv-top-serial__label {
+            font-weight: 400;
+            font-size: 14px;
+            color: rgba(62, 76, 193, 1);
+            white-space: nowrap;
+        }
+
+        .gv-battery-graphs .gv-top-serial__value {
+            font-weight: 700;
+            font-size: 14px;
+            color: rgba(62, 76, 193, 1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .gv-battery-graphs .gv-top-serial__spacer {
+            margin-left: auto;
+        }
+
+        /* Refresh button (plain text) */
+        .gv-battery-graphs .gv-top-serial .refresh-btn {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            line-height: 1 !important;
+        }
+
+        .gv-battery-graphs .gv-top-serial .refresh-btn,
+        .gv-battery-graphs .gv-top-serial .refresh-btn span,
+        .gv-battery-graphs .gv-top-serial .refresh-btn .refresh-icon {
+            color: rgba(62, 76, 193, 1) !important;
+        }
+
+        .gv-battery-graphs .gv-top-serial .refresh-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* ---------------- Filters card ---------------- */
+        /* ---------------- Filters card ---------------- */
+        .gv-battery-graphs .gv-card {
+            background: #fff;
+            border: 1px solid #e6e9ef;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(16, 24, 40, 0.14);
+        }
+
+        .gv-battery-graphs .gv-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef1f6;
+            cursor: pointer;
+            user-select: none;
+            background: #fff;
+        }
+
+        .gv-battery-graphs .gv-card__title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .gv-battery-graphs .gv-icon {
+            width: 14px;
+            height: 14px;
+            vertical-align: middle;
+        }
+
+        .gv-battery-graphs .gv-card__chevron {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: transparent;
+            border: 0;
+            color: #111827;
+            flex: 0 0 auto;
+            overflow: hidden;
+        }
+
+            .gv-battery-graphs .gv-card__chevron img {
+                width: 14px;
+                height: 14px;
+                display: block;
+                transition: transform 0.15s ease;
+            }
+
+        .gv-battery-graphs .gv-card__body {
+            padding: 14px 16px 16px 16px;
+            box-sizing: border-box;
+        }
+
+        .gv-battery-graphs .gv-card.is-collapsed .gv-card__body {
+            display: none;
+        }
+
+        .gv-battery-graphs .gv-card.is-collapsed .gv-card__chevron img {
+            transform: rotate(180deg);
+        }
+
+        .gv-battery-graphs .gv-filters-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin: 4px 0 12px 0;
+        }
+
+        .gv-battery-graphs .gv-axis-options {
+            display: flex;
+            gap: 26px;
+            align-items: center;
+            margin: 4px 0 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .gv-battery-graphs .gv-radio {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+            .gv-battery-graphs .gv-radio input[type="radio"] {
+                width: 14px;
+                height: 14px;
+                margin: 0;
+                appearance: auto;
+            }
+
+        .gv-battery-graphs .gv-filters-grid {
+            display: grid;
+            grid-template-columns: 236px 236px 236px 236px;
+            gap: 24px;
+            align-items: end;
+            justify-content: space-between;
+        }
+
+        .gv-battery-graphs .gv-field label {
+            display: block;
+            margin: 0 0 10px 0;
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 100%;
+            color: #374151;
+        }
+
+        .gv-battery-graphs .gv-input,
+        .gv-battery-graphs .gv-select {
+            width: 236px;
+            height: 38px;
+            border: 1px solid #d5dbe7;
+            border-radius: 7px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #111827;
+            outline: none;
+            box-sizing: border-box;
+            background: #fff;
+            max-width: 100%;
+        }
+
+        .gv-battery-graphs .gv-select {
+            padding: 8px 10px;
+        }
+
+            .gv-battery-graphs .gv-input:focus,
+            .gv-battery-graphs .gv-select:focus {
+                border-color: #3e4cc1;
+                box-shadow: 0 0 0 3px rgba(62, 76, 193, 0.15);
+            }
+
+        .gv-battery-graphs .gv-input--date {
+            padding-right: 40px;
+        }
+
+        .gv-battery-graphs .gv-input-icon {
+            position: relative;
+            width: 236px;
+            max-width: 100%;
+        }
+
+        .gv-battery-graphs .gv-input-icon__suffix {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+            .gv-battery-graphs .gv-input-icon__suffix img {
+                width: 14px;
+                height: 14px;
+                display: block;
+            }
+
+        .gv-battery-graphs .gv-filters-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 14px;
+        }
+
+        .gv-battery-graphs .gv-btn {
+            border: 1px solid transparent;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        .gv-battery-graphs .gv-btn--primary {
+            width: 118px;
+            height: 32px;
+            border-radius: 7px;
+            padding: 8px 14px;
+            background: #3e4cc1;
+            border-color: #3e4cc1;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+            .gv-battery-graphs .gv-btn--primary:hover {
+                background: #3541b0;
+                border-color: #3541b0;
+            }
+
+        /* ---------------- Battery Master Chart ---------------- */
+        .gv-battery-graphs .gv-master-card {
+            border-radius: 10px;
+            border: 1px solid #bfc7ff;
+            background: #ffffff;
+            overflow: hidden;
+            margin-top: 14px;
+            box-shadow: 0 1px 4px rgba(16, 24, 40, 0.08);
+        }
+
+        .gv-battery-graphs .gv-master-card__header {
+            height: 42px;
+            background: rgba(180, 191, 255, 0.65);
+            border-bottom: 1px solid rgba(62, 76, 193, 0.55);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        .gv-battery-graphs .gv-master-card__title {
+            font-weight: 700;
+            font-size: 15px;
+            color: rgba(62, 76, 193, 1);
+        }
+
+        .gv-battery-graphs .gv-master-card__body {
+            padding: 14px 16px 16px 16px;
+            box-sizing: border-box;
+        }
+
+        /* match checkboxes list styling (remove custom green bars) */
+        .gv-battery-graphs #series.gv-master-series {
+            margin: 0 0 12px 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px 18px;
+            align-items: center;
+        }
+
+            .gv-battery-graphs #series.gv-master-series > li {
+                list-style: none;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: inline-flex;
+                align-items: center;
+                column-gap: 2px;
+                background: transparent !important;
+                border: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .gv-battery-graphs #series.gv-master-series input[type="checkbox"] {
+                appearance: checkbox !important;
+                -webkit-appearance: checkbox !important;
+                -moz-appearance: checkbox !important;
+                position: static !important;
+                opacity: 1 !important;
+                width: 14px !important;
+                height: 14px !important;
+                margin: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            .gv-battery-graphs #series.gv-master-series label {
+                margin: 0 !important;
+                padding: 0 !important;
+                font-weight: 600;
+                font-size: 13px;
+                color: #374151;
+                cursor: pointer;
+            }
+
+                .gv-battery-graphs #series.gv-master-series input[type="checkbox"]::before,
+                .gv-battery-graphs #series.gv-master-series input[type="checkbox"]::after,
+                .gv-battery-graphs #series.gv-master-series label::before,
+                .gv-battery-graphs #series.gv-master-series label::after {
+                    content: none !important;
+                    display: none !important;
+                }
+
+        /* Match chart panel headings to master header styling */
+        .gv-battery-graphs .panel.maincontainer > .panel-heading {
+            background: rgba(180, 191, 255, 0.65) !important;
+            border-bottom: 1px solid rgba(62, 76, 193, 0.55) !important;
+            color: rgba(62, 76, 193, 1) !important;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* Gap between master card and the first chart panel below it */
+        .gv-battery-graphs .gv-master-card + .panel.maincontainer {
+            margin-top: 14px;
+        }
+
+    @@media (max-width: 1200px) {
+        .gv-battery-graphs .gv-filters-grid {
+            grid-template-columns: 1fr 1fr;
+            justify-content: start;
+        }
+
+        .gv-battery-graphs .gv-input,
+        .gv-battery-graphs .gv-select,
+        .gv-battery-graphs .gv-input-icon {
+            width: 100%;
+        }
+    }
+</style>
 
 @section scripts {
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <\!-- TODO Phase 8: bundle ~/js/batterycharts.min.js -->
-    <\!-- TODO Phase 8: bundle ~/js/datetimescripts.min.js -->
+    <script src="~/js/ChartScripts/Battery/masterchart.js"></script>
+    <script src="~/js/ChartScripts/Battery/detailschart.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/date.format.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/datetime.picker.js"></script>
+    <script src="~/js/ChartScripts/DateTimeUIScripts/z.datetime.init.js"></script>
     <script type="text/javascript">
         google.charts.load('current', { packages: ['corechart'] });
+
         function drawMasterChart() {
-            var IDs = new Array()
+            var IDs = new Array();
             IDs[0] = parseInt($('#BatteryID').text());
             IDs[1] = parseInt($('#DropDownBattery').val());
             var beginDate = $('#BeginDate').val();
-            var endDate = $('#EndDate').val()
+            var endDate = $('#EndDate').val();
             var logType = $('#LogType').val();
             $.ajax({
                 type: 'POST',
@@ -35,23 +433,24 @@
                     $("#divLoading").show();
                 },
                 success: function (JData) {
-                    if (JData[0].length != 0) {
+                    if (JData && JData[0] && JData[0].length != 0) {
                         CreateNewBatteryMasterChart(JData);
                         drawDetailChart();
                         $('#series').find(':checkbox').change();
                     } else {
                         alertify.alert('Geni-View Cloud', 'No data found matching the given filter criteria');
                         $('#series').find(':checkbox').change();
-                        $("#divLoading").hide();
                         clearChartContent();
                     }
                 },
                 error: function () {
                     alertify.error('Can not access to database, please try again.');
-                    $("#divLoading").hide();
                 },
+                complete: function () {
+                    $("#divLoading").hide();
+                }
             });
-        };
+        }
 
         function drawDetailChart() {
             var id = parseInt($('#BatteryID').text());
@@ -68,7 +467,7 @@
                     $("#divLoading").show();
                 },
                 success: function (JData) {
-                    if (JData.length != 0) {
+                    if (JData && JData.length != 0) {
                         CreateNewBatteryDetailChartbyDate(JData, 'Voltage (V)', 'Voltage', 'Voltagediv', 'Voltage', 'line', 'red');
                         CreateNewBatteryDetailChartbyIndex(JData, 'Voltage (V) by Index', 'Voltage', 'VoltageLogdiv', 'Voltage', 'line', 'red');
                         CreateNewBatteryDetailChartbyDate(JData, 'Average Current (A)', 'Average Current', 'AverageCurrentdiv', 'AverageCurrent', 'line', '#ff6633');
@@ -85,33 +484,29 @@
                         CreateNewBatteryDetailChartbyIndex(JData, 'Relative State of Charge (%) by Index', 'RelativeStateofCharge', 'RelativeStateofChargeLogdiv', 'RelativeStateofCharge', 'line', '#097138', 0, 100);
                     } else {
                         alertify.alert('Geni-View Cloud', 'No data found matching the given filter criteria');
-                        $("#divLoading").hide();
                         clearChartContent();
                     }
                 },
                 error: function () {
                     alertify.error('Can not access to database, please try again.');
-                    $("#divLoading").hide();
                 },
                 complete: function () {
                     $("#divLoading").hide();
                 }
             });
-        };
-        
+        }
+
         function setDefaultDatesAndLoad() {
             var now = new Date();
             var twoHoursAgo = new Date(now.getTime() - (2 * 60 * 60 * 1000));
-            
+
             var endDateStr = formatDateTime(now);
             var beginDateStr = formatDateTime(twoHoursAgo);
-            
+
             $('#EndDate').val(endDateStr);
             $('#BeginDate').val(beginDateStr);
-            
-            drawMasterChart();
         }
-        
+
         function formatDateTime(date) {
             var year = date.getFullYear();
             var month = ('0' + (date.getMonth() + 1)).slice(-2);
@@ -120,95 +515,198 @@
             var minutes = ('0' + date.getMinutes()).slice(-2);
             return year + '/' + month + '/' + day + ' ' + hours + ':' + minutes;
         }
-    </script>
-    <script type="text/javascript">
+
+        function gvUpdateBatteryMasterChartHeader() {
+            var isByDate = $('#gvBatteryAxisByDate').is(':checked');
+            var headerText = isByDate ? 'Battery Master Chart by Date' : 'Battery Master Chart by Index';
+            $('#gvBatteryMasterChartHeaderTitle').text(headerText);
+        }
+
+        function gvSetBatteryFiltersCollapsed(isCollapsed) {
+            var $card = $('#gvBatteryFiltersCard');
+            if (!$card.length) return;
+
+            $card.toggleClass('is-collapsed', !!isCollapsed);
+
+            try {
+                if (window.sessionStorage) {
+                    sessionStorage.setItem('gvBatteryGraphsFiltersCollapsed', (!!isCollapsed).toString());
+                }
+            } catch (e) { }
+        }
+
+        function gvRestoreBatteryFiltersCollapsed() {
+            var v = null;
+            try {
+                if (window.sessionStorage) {
+                    v = sessionStorage.getItem('gvBatteryGraphsFiltersCollapsed');
+                }
+            } catch (e) { }
+
+            if (v === 'true') {
+                gvSetBatteryFiltersCollapsed(true);
+            }
+        }
+
         $(document).ready(function () {
             setDefaultDatesAndLoad();
-        });
-        
-        $('#applyFilter').click(function () {
-            drawMasterChart();
+            gvRestoreBatteryFiltersCollapsed();
+
+            // Filters collapse/expand toggle
+            $('#gvBatteryFiltersHeader').off('click.gv').on('click.gv', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $card = $('#gvBatteryFiltersCard');
+                gvSetBatteryFiltersCollapsed(!$card.hasClass('is-collapsed'));
+            });
+
+            // Keep axis radios in sync (do not update header on toggle)
+            $('#gvBatteryAxisByDate').off('change.gv').on('change.gv', function () {
+                $('#xAxisbyDate').prop('checked', true);
+            });
+            $('#gvBatteryAxisByIndex').off('change.gv').on('change.gv', function () {
+                $('#xAxisbyLog').prop('checked', true);
+            });
+
+            // Initial header matches default axis
+            gvUpdateBatteryMasterChartHeader();
+
+            // Apply Filters
+            $('#applyFilter').off('click.gv').on('click.gv', function (e) {
+                e.preventDefault();
+
+                gvUpdateBatteryMasterChartHeader();
+                drawMasterChart();
+            });
+
+            // Refresh button
+            $('#gvBatteryGraphsRefresh').off('click.gv').on('click.gv', function (e) {
+                e.preventDefault();
+                window.location.reload();
+            });
+
+            // Auto-load graphs once
+            try {
+                if (!window.sessionStorage || sessionStorage.getItem('gvBatteryGraphsAutoLoaded') !== 'true') {
+                    if (window.sessionStorage) {
+                        sessionStorage.setItem('gvBatteryGraphsAutoLoaded', 'true');
+                    }
+                    setTimeout(function () {
+                        $('#applyFilter').trigger('click');
+                    }, 0);
+                }
+            } catch (e) {
+                setTimeout(function () {
+                    $('#applyFilter').trigger('click');
+                }, 0);
+            }
         });
     </script>
 }
-<div id="divLoading">
-    <div id="loadingContent">
-        <img src="~/images/loader.gif">
+
+<div class="gv-battery-graphs">
+    <div id="divLoading">
+        <div id="loadingContent">
+            <img src="~/Resources/loader.gif">
+        </div>
     </div>
-</div>
-<div class="row">
-    <div class="panel maincontainer">
-        <div class="panel-heading">@ViewBag.SerialNumber</div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="panel subcontainer">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Begin Date</label>
-                                <div class="col-md-12">
-                                    <input type="text" value="" id="BeginDate" class="form-control" /> <br>
-                                </div>
+
+    <div class="row">
+        <div class="col-md-12 gv-fullwidth">
+            <div class="gv-top-serial" role="region" aria-label="Current Battery Serial Number">
+                <div class="gv-top-serial__label">Current Battery Serial Number :</div>
+                <div class="gv-top-serial__value">@(Model != null ? Model.SerialNumber : "")</div>
+                <div class="gv-top-serial__spacer"></div>
+
+                <button type="button" id="gvBatteryGraphsRefresh" class="refresh-btn" title="Refresh">
+                    <i class="fa fa-sync refresh-icon"></i>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="col-md-12 gv-fullwidth">
+            <div class="gv-card" id="gvBatteryFiltersCard">
+                <div class="gv-card__header" id="gvBatteryFiltersHeader" role="button" aria-controls="gvBatteryFiltersBody" aria-expanded="true">
+                    <div class="gv-card__title">
+                        <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Filters.svg")" alt="Filters" />
+                        <span>Filters</span>
+                    </div>
+
+                    <span class="gv-card__chevron" aria-hidden="true">
+                        <img src="@Url.Content("~/Content/Img/widgets/poly.svg")" alt="" />
+                    </span>
+                </div>
+
+                <div class="gv-card__body" id="gvBatteryFiltersBody">
+                    <div class="gv-filters-section-title">Axis Type Options</div>
+                    <div class="gv-axis-options" role="radiogroup" aria-label="Axis Type Options">
+                        <label class="gv-radio">
+                            <input type="radio" name="gvBatteryAxisType" id="gvBatteryAxisByDate" checked="checked" />
+                            <span>By Date</span>
+                        </label>
+                        <label class="gv-radio">
+                            <input type="radio" name="gvBatteryAxisType" id="gvBatteryAxisByIndex" />
+                            <span>By Index</span>
+                        </label>
+                    </div>
+
+                    <div class="gv-filters-grid">
+                        <div class="gv-field">
+                            <label for="BeginDate">Begin Date</label>
+                            <div class="gv-input-icon">
+                                <input type="text" value="" id="BeginDate" class="gv-input gv-input--date" placeholder="DD/MM/YYYY" />
+                                <span class="gv-input-icon__suffix" aria-hidden="true">
+                                    <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Date.svg")" alt="" />
+                                </span>
                             </div>
-                            <div class="form-group">
-                                <label class="control-label col-md-12">End Date</label>
-                                <div class="col-md-12">
-                                    <input type="text" value="" id="EndDate" class="form-control" />
-                                </div>
+                        </div>
+
+                        <div class="gv-field">
+                            <label for="EndDate">End Date</label>
+                            <div class="gv-input-icon">
+                                <input type="text" value="" id="EndDate" class="gv-input gv-input--date" placeholder="DD/MM/YYYY" />
+                                <span class="gv-input-icon__suffix" aria-hidden="true">
+                                    <img class="gv-icon" src="@Url.Content("~/Content/Img/widgets/Date.svg")" alt="" />
+                                </span>
                             </div>
+                        </div>
+
+                        <div class="gv-field">
+                            <label for="DropDownBattery">Select Battery to Compare</label>
+                            @Html.DropDownList("selBatteryID", (SelectList)ViewBag.BatteryItems, "None", new { @class = "gv-select", @id = "DropDownBattery" })
+                        </div>
+
+                        <div class="gv-field">
+                            <label for="LogType">Log Type</label>
+                            <select class="gv-select" id="LogType" name="LogType">
+                                <option value="1">Agent Battery Log</option>
+                                <option value="2">Internal Battery Log</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="panel subcontainer">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Select Battery to Compare</label>
-                                <div class="col-md-12">
-                                    @Html.DropDownList("selBatteryID", (SelectList)ViewBag.BatteryItems, "None", new { @class = "form-control", @id = "DropDownBattery" }) <br>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Log Type</label>
-                                <div class="col-md-12">
-                                    <select class="form-control" id="LogType" name="LogType">
-                                        <option value="1">Agent Battery Log</option>
-                                        <option value="2">Internal Battery Log</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+
+                    <div class="gv-filters-actions">
+                        <button type="button" id="applyFilter" class="gv-btn gv-btn--primary">Apply Filters</button>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="panel subcontainer">
-                        <div class="panel-body">
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Axis Type Option</label>
-                                <div class="col-md-12">
-                                    <ul id="xAxisOption" class="list-inline">
-                                        <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyDate" checked="checked" /><label for="xAxisbyDate">By Date</label></li>
-                                        <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyLog" /><label for="xAxisbyLog">By Index</label> </li>
-                                    </ul><br>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label col-md-12">Refresh</label>
-                                <div class="col-md-12">
-                                    <input type="button" id="applyFilter" class="btn btn-default form-control" value="Apply Filters" />
-                                </div>
-                            </div>
-                        </div>
+
+                    <div style="display:none;">
+                        <ul id="xAxisOption" class="list-inline">
+                            <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyDate" checked="checked" /><label for="xAxisbyDate">By Date</label></li>
+                            <li><input type="radio" class="checkbox" name="xAxisRadio" id="xAxisbyLog" /><label for="xAxisbyLog">By Index</label></li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="panel maincontainer">
-                <div class="panel-heading">
-                    <ul id="series" class="list-inline">
+
+        <div class="col-md-12 gv-fullwidth">
+            <div class="gv-master-card" role="region" aria-label="Battery Master Chart">
+                <div class="gv-master-card__header">
+                    <div class="gv-master-card__title" id="gvBatteryMasterChartHeaderTitle">Battery Master Chart</div>
+                </div>
+                <div class="gv-master-card__body">
+                    <ul id="series" class="gv-master-series">
                         <li><input type="checkbox" class="checkbox" id="checkboxV" name="series" value="1" checked="checked" /><label for="checkboxV">Voltage</label></li>
                         <li><input type="checkbox" class="checkbox" id="checkboxC" name="series" value="2" checked="checked" /><label for="checkboxC">Current</label></li>
                         <li><input type="checkbox" class="checkbox" id="checkboxT" name="series" value="3" checked="checked" /><label for="checkboxT">Temperature</label></li>
@@ -218,11 +716,13 @@
                         <li><input type="checkbox" class="checkbox" id="checkboxCC" name="series" value="7" checked="checked" /><label for="checkboxCC">Calculated Capacity</label></li>
                         <li><input type="checkbox" class="checkbox" id="checkboxCN" name="series" value="8" checked="checked" /><label for="checkboxCN">Cycle Count</label></li>
                     </ul>
+
+                    <div class="panel-body charts gv-fullwidth" id="MasterChartdiv"></div>
                 </div>
-                <div class="panel-body charts" id="MasterChartdiv"></div>
             </div>
         </div>
-        <div class="col-md-12">
+
+        <div class="col-md-12 gv-fullwidth">
             <div class="panel maincontainer">
                 <div class="panel-heading">Voltage Chart</div>
                 <div class="panel-body">
@@ -232,8 +732,9 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
-                <div class="panel-heading">Avarage Current Chart</div>
+                <div class="panel-heading">Average Current Chart</div>
                 <div class="panel-body">
                     <div>
                         <div class="col-md-6 charts" id="AverageCurrentdiv"></div>
@@ -241,6 +742,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Current Chart</div>
                 <div class="panel-body">
@@ -250,6 +752,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Power Chart</div>
                 <div class="panel-body">
@@ -259,6 +762,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Remaining Capacity Chart</div>
                 <div class="panel-body">
@@ -268,6 +772,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Temperature Chart</div>
                 <div class="panel-body">
@@ -277,6 +782,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="panel maincontainer">
                 <div class="panel-heading">Relative State of Charge Chart</div>
                 <div class="panel-body">

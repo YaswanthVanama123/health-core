@@ -26,7 +26,7 @@ namespace GeniView.Cloud.Controllers
         // ── Login ────────────────────────────────────────────────────────────
 
         [AllowAnonymous]
-        public ActionResult Login(string returnUrl)
+        public ActionResult Login(string? returnUrl)
         {
             ViewBag.ReturnUrl = returnUrl;
             return View();
@@ -35,10 +35,15 @@ namespace GeniView.Cloud.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
+        public async Task<ActionResult> Login(LoginViewModel model, string? returnUrl)
         {
             if (!ModelState.IsValid)
+            {
+                foreach (var kvp in ModelState)
+                    foreach (var err in kvp.Value.Errors)
+                        _logger.Warn("Login ModelState error [{Key}]: {Msg}", kvp.Key, err.ErrorMessage);
                 return View(model);
+            }
 
             var result = await _signInManager.PasswordSignInAsync(
                 model.Email,
