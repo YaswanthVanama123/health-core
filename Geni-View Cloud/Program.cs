@@ -260,9 +260,11 @@ static async Task EnsureDatabaseAsync(WebApplication app)
 
     try
     {
-        // Identity DB — MigrateAsync applies any pending EF Core migrations.
-        // On a fresh database with no migration files, use EnsureCreated as fallback.
         var identityDb = services.GetRequiredService<ApplicationDbContext>();
+
+        // Upgrade 4.8 Identity schema to Core Identity schema before running migrations
+        await UpgradeIdentitySchemaAsync(identityDb, log);
+
         try { await identityDb.Database.MigrateAsync(); }
         catch { await identityDb.Database.EnsureCreatedAsync(); }
 
@@ -279,6 +281,82 @@ static async Task EnsureDatabaseAsync(WebApplication app)
         log.LogError(ex, "Database migration/seed failed. The app will still start.");
     }
 }
+
+// Upgrades a restored .NET 4.8 ASP.NET Identity 2.x database to ASP.NET Core Identity 8 schema.
+// All statements are guarded with IF NOT EXISTS — safe to run on every startup.
+static async Task UpgradeIdentitySchemaAsync(ApplicationDbContext db, Microsoft.Extensions.Logging.ILogger log)
+{
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync("""
+            -- AspNetRoles: add columns introduced in Core Identity
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='NormalizedName')
+                ALTER TABLE AspNetRoles ADD NormalizedName nvarchar(256) NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='ConcurrencyStamp')
+                ALTER TABLE AspNetRoles ADD ConcurrencyStamp nvarchar(max) NULL;
+
+            -- AspNetUsers: add columns introduced in Core Identity
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedUserName')
+                ALTER TABLE AspNetUsers ADD NormalizedUserName nvarchar(256) NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedEmail')
+                ALTER TABLE AspNetUsers ADD NormalizedEmail nvarchar(256) NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='ConcurrencyStamp')
+                ALTER TABLE AspNetUsers ADD ConcurrencyStamp nvarchar(max) NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='LockoutEnd')
+                ALTER TABLE AspNetUsers ADD LockoutEnd datetimeoffset NULL;
+
+            -- Populate normalized columns from existing data
+            UPDATE AspNetRoles SET NormalizedName = UPPER(Name) WHERE NormalizedName IS NULL;
+            UPDATE AspNetUsers SET NormalizedUserName = UPPER(UserName) WHERE NormalizedUserName IS NULL;
+            UPDATE AspNetUsers SET NormalizedEmail = UPPER(Email) WHERE NormalizedEmail IS NULL;
+
+            -- AspNetRoleClaims: new table in Core Identity
+            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetRoleClaims')
+            BEGIN
+                CREATE TABLE AspNetRoleClaims (
+                    Id int IDENTITY(1,1) NOT NULL,
+                    RoleId nvarchar(450) NOT NULL,
+                    ClaimType nvarchar(max) NULL,
+                    ClaimValue nvarchar(max) NULL,
+                    CONSTRAINT PK_AspNetRoleClaims PRIMARY KEY (Id),
+                    CONSTRAINT FK_AspNetRoleClaims_AspNetRoles FOREIGN KEY (RoleId) REFERENCES AspNetRoles(Id) ON DELETE CASCADE
+                );
+                CREATE INDEX IX_AspNetRoleClaims_RoleId ON AspNetRoleClaims(RoleId);
+            END
+
+            -- AspNetUserTokens: new table in Core Identity
+            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetUserTokens')
+            BEGIN
+                CREATE TABLE AspNetUserTokens (
+                    UserId nvarchar(450) NOT NULL,
+                    LoginProvider nvarchar(450) NOT NULL,
+                    Name nvarchar(450) NOT NULL,
+                    Value nvarchar(max) NULL,
+                    CONSTRAINT PK_AspNetUserTokens PRIMARY KEY (UserId, LoginProvider, Name),
+                    CONSTRAINT FK_AspNetUserTokens_AspNetUsers FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+                );
+            END
+
+            -- Mark InitialIdentity migration as applied so EF Core skips table recreation
+            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='__EFMigrationsHistory')
+                CREATE TABLE __EFMigrationsHistory (
+                    MigrationId nvarchar(150) NOT NULL,
+                    ProductVersion nvarchar(32) NOT NULL,
+                    CONSTRAINT PK___EFMigrationsHistory PRIMARY KEY (MigrationId)
+                );
+            IF NOT EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId='20260226145844_InitialIdentity')
+                INSERT INTO __EFMigrationsHistory VALUES ('20260226145844_InitialIdentity', '8.0.0');
+            """);
+
+        log.LogInformation("Identity schema upgrade completed.");
+    }
+    catch (Exception ex)
+    {
+        log.LogWarning(ex, "Identity schema upgrade skipped (database may not exist yet).");
+    }
+}
+
+
 
 static async Task SeedAsync(IServiceProvider services, Microsoft.Extensions.Logging.ILogger log)
 {
