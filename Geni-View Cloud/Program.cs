@@ -283,76 +283,105 @@ static async Task EnsureDatabaseAsync(WebApplication app)
 }
 
 // Upgrades a restored .NET 4.8 ASP.NET Identity 2.x database to ASP.NET Core Identity 8 schema.
-// All statements are guarded with IF NOT EXISTS — safe to run on every startup.
-// Split into 4 separate batches: SQL Server compiles an entire batch before executing it,
-// so UPDATE statements referencing newly-added columns must run in a separate batch after
-// the DDL batch that adds those columns has already committed.
+// All statements are safe to run on every startup — idempotent IF NOT EXISTS / IF EXISTS guards.
+//
+// Split into 4 separate ExecuteSqlRawAsync calls because SQL Server compiles an entire batch
+// before executing it; an UPDATE referencing a newly-added column in the same batch fails at
+// compile time even if the ALTER TABLE precedes it.
+//
+// FK constraints are intentionally omitted from the new tables: a restored 4.8 backup has
+// AspNetRoles.Id as nvarchar(128) while EF Core 8 defaults to nvarchar(450), and SQL Server
+// rejects FK columns whose lengths differ from the referenced PK column.
 static async Task UpgradeIdentitySchemaAsync(ApplicationDbContext db, Microsoft.Extensions.Logging.ILogger log)
 {
     try
     {
-        // ── Batch 1: DDL — add missing columns ──────────────────────────────────
+        // ── Batch 1: DDL — add columns that Core Identity requires ───────────────
+        // Outer IF EXISTS ensures we only ALTER tables that already exist
+        // (i.e. a restored 4.8 backup). Fresh databases have no tables yet and
+        // MigrateAsync handles their creation from scratch.
         await db.Database.ExecuteSqlRawAsync("""
-            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='NormalizedName')
-                ALTER TABLE AspNetRoles ADD NormalizedName nvarchar(256) NULL;
-            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='ConcurrencyStamp')
-                ALTER TABLE AspNetRoles ADD ConcurrencyStamp nvarchar(max) NULL;
-            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedUserName')
-                ALTER TABLE AspNetUsers ADD NormalizedUserName nvarchar(256) NULL;
-            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedEmail')
-                ALTER TABLE AspNetUsers ADD NormalizedEmail nvarchar(256) NULL;
-            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='ConcurrencyStamp')
-                ALTER TABLE AspNetUsers ADD ConcurrencyStamp nvarchar(max) NULL;
-            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='LockoutEnd')
-                ALTER TABLE AspNetUsers ADD LockoutEnd datetimeoffset NULL;
+            IF EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetRoles' AND type='U')
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='NormalizedName')
+                    ALTER TABLE AspNetRoles ADD NormalizedName nvarchar(256) NULL;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='ConcurrencyStamp')
+                    ALTER TABLE AspNetRoles ADD ConcurrencyStamp nvarchar(max) NULL;
+            END
+            IF EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetUsers' AND type='U')
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedUserName')
+                    ALTER TABLE AspNetUsers ADD NormalizedUserName nvarchar(256) NULL;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedEmail')
+                    ALTER TABLE AspNetUsers ADD NormalizedEmail nvarchar(256) NULL;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='ConcurrencyStamp')
+                    ALTER TABLE AspNetUsers ADD ConcurrencyStamp nvarchar(max) NULL;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='LockoutEnd')
+                    ALTER TABLE AspNetUsers ADD LockoutEnd datetimeoffset NULL;
+            END
             """);
 
         // ── Batch 2: DML — populate normalized columns ───────────────────────────
-        // Uses sp_executesql so SQL Server resolves the column names at runtime (after Batch 1
-        // has already added them), not at compile time of this batch.
+        // Must be a separate batch from Batch 1: SQL Server compiles the whole batch
+        // before executing it, so an UPDATE referencing a just-added column fails.
+        // sp_executesql defers column resolution to runtime.
+        // IF EXISTS guards make this a no-op on fresh databases.
         await db.Database.ExecuteSqlRawAsync("""
-            EXEC sp_executesql N'UPDATE AspNetRoles SET NormalizedName = UPPER(Name) WHERE NormalizedName IS NULL';
-            EXEC sp_executesql N'UPDATE AspNetUsers SET NormalizedUserName = UPPER(UserName) WHERE NormalizedUserName IS NULL';
-            EXEC sp_executesql N'UPDATE AspNetUsers SET NormalizedEmail = UPPER(Email) WHERE NormalizedEmail IS NULL';
+            IF EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetRoles' AND type='U')
+                EXEC sp_executesql N'UPDATE AspNetRoles SET NormalizedName = UPPER(Name) WHERE NormalizedName IS NULL';
+            IF EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetUsers' AND type='U')
+            BEGIN
+                EXEC sp_executesql N'UPDATE AspNetUsers SET NormalizedUserName = UPPER(UserName) WHERE NormalizedUserName IS NULL';
+                EXEC sp_executesql N'UPDATE AspNetUsers SET NormalizedEmail = UPPER(Email) WHERE NormalizedEmail IS NULL';
+            END
             """);
 
-        // ── Batch 3: Create missing tables ───────────────────────────────────────
+        // ── Batch 3: Create tables that did not exist in Identity 2.x ────────────
+        // No FK constraints: a 4.8 backup has Id columns as nvarchar(128) while
+        // Core Identity uses nvarchar(450); SQL Server rejects FK column length mismatches.
+        // EF Core queries work correctly without FK constraints on the database side.
         await db.Database.ExecuteSqlRawAsync("""
-            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetRoleClaims')
+            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetRoleClaims' AND type='U')
+               AND EXISTS  (SELECT 1 FROM sys.objects WHERE name='AspNetRoles'     AND type='U')
             BEGIN
                 CREATE TABLE AspNetRoleClaims (
-                    Id int IDENTITY(1,1) NOT NULL,
-                    RoleId nvarchar(450) NOT NULL,
+                    Id        int          IDENTITY(1,1) NOT NULL,
+                    RoleId    nvarchar(128) NOT NULL,
                     ClaimType nvarchar(max) NULL,
                     ClaimValue nvarchar(max) NULL,
-                    CONSTRAINT PK_AspNetRoleClaims PRIMARY KEY (Id),
-                    CONSTRAINT FK_AspNetRoleClaims_AspNetRoles FOREIGN KEY (RoleId) REFERENCES AspNetRoles(Id) ON DELETE CASCADE
+                    CONSTRAINT PK_AspNetRoleClaims PRIMARY KEY (Id)
                 );
                 CREATE INDEX IX_AspNetRoleClaims_RoleId ON AspNetRoleClaims(RoleId);
             END
-            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetUserTokens')
+            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetUserTokens' AND type='U')
+               AND EXISTS  (SELECT 1 FROM sys.objects WHERE name='AspNetUsers'     AND type='U')
             BEGIN
                 CREATE TABLE AspNetUserTokens (
-                    UserId nvarchar(450) NOT NULL,
-                    LoginProvider nvarchar(450) NOT NULL,
-                    Name nvarchar(450) NOT NULL,
-                    Value nvarchar(max) NULL,
-                    CONSTRAINT PK_AspNetUserTokens PRIMARY KEY (UserId, LoginProvider, Name),
-                    CONSTRAINT FK_AspNetUserTokens_AspNetUsers FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+                    UserId        nvarchar(128) NOT NULL,
+                    LoginProvider nvarchar(128) NOT NULL,
+                    Name          nvarchar(128) NOT NULL,
+                    Value         nvarchar(max) NULL,
+                    CONSTRAINT PK_AspNetUserTokens PRIMARY KEY (UserId, LoginProvider, Name)
                 );
             END
             """);
 
-        // ── Batch 4: __EFMigrationsHistory — mark initial migration applied ──────
+        // ── Batch 4: Mark the EF Core initial migration as applied ───────────────
+        // Only do this once both new tables exist, so MigrateAsync does not try to
+        // recreate tables that were just built above (or already existed).
         await db.Database.ExecuteSqlRawAsync("""
-            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='__EFMigrationsHistory')
-                CREATE TABLE __EFMigrationsHistory (
-                    MigrationId nvarchar(150) NOT NULL,
-                    ProductVersion nvarchar(32) NOT NULL,
-                    CONSTRAINT PK___EFMigrationsHistory PRIMARY KEY (MigrationId)
-                );
-            IF NOT EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId='20260226145844_InitialIdentity')
-                INSERT INTO __EFMigrationsHistory VALUES ('20260226145844_InitialIdentity', '8.0.0');
+            IF EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetRoleClaims' AND type='U')
+               AND EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetUserTokens' AND type='U')
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='__EFMigrationsHistory')
+                    CREATE TABLE __EFMigrationsHistory (
+                        MigrationId    nvarchar(150) NOT NULL,
+                        ProductVersion nvarchar(32)  NOT NULL,
+                        CONSTRAINT PK___EFMigrationsHistory PRIMARY KEY (MigrationId)
+                    );
+                IF NOT EXISTS (SELECT 1 FROM __EFMigrationsHistory WHERE MigrationId='20260226145844_InitialIdentity')
+                    INSERT INTO __EFMigrationsHistory VALUES ('20260226145844_InitialIdentity', '8.0.0');
+            END
             """);
 
         log.LogInformation("Identity schema upgrade completed.");
