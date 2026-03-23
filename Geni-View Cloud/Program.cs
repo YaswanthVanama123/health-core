@@ -284,18 +284,19 @@ static async Task EnsureDatabaseAsync(WebApplication app)
 
 // Upgrades a restored .NET 4.8 ASP.NET Identity 2.x database to ASP.NET Core Identity 8 schema.
 // All statements are guarded with IF NOT EXISTS — safe to run on every startup.
+// Split into 4 separate batches: SQL Server compiles an entire batch before executing it,
+// so UPDATE statements referencing newly-added columns must run in a separate batch after
+// the DDL batch that adds those columns has already committed.
 static async Task UpgradeIdentitySchemaAsync(ApplicationDbContext db, Microsoft.Extensions.Logging.ILogger log)
 {
     try
     {
+        // ── Batch 1: DDL — add missing columns ──────────────────────────────────
         await db.Database.ExecuteSqlRawAsync("""
-            -- AspNetRoles: add columns introduced in Core Identity
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='NormalizedName')
                 ALTER TABLE AspNetRoles ADD NormalizedName nvarchar(256) NULL;
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetRoles') AND name='ConcurrencyStamp')
                 ALTER TABLE AspNetRoles ADD ConcurrencyStamp nvarchar(max) NULL;
-
-            -- AspNetUsers: add columns introduced in Core Identity
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedUserName')
                 ALTER TABLE AspNetUsers ADD NormalizedUserName nvarchar(256) NULL;
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='NormalizedEmail')
@@ -304,13 +305,19 @@ static async Task UpgradeIdentitySchemaAsync(ApplicationDbContext db, Microsoft.
                 ALTER TABLE AspNetUsers ADD ConcurrencyStamp nvarchar(max) NULL;
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID('AspNetUsers') AND name='LockoutEnd')
                 ALTER TABLE AspNetUsers ADD LockoutEnd datetimeoffset NULL;
+            """);
 
-            -- Populate normalized columns from existing data
-            UPDATE AspNetRoles SET NormalizedName = UPPER(Name) WHERE NormalizedName IS NULL;
-            UPDATE AspNetUsers SET NormalizedUserName = UPPER(UserName) WHERE NormalizedUserName IS NULL;
-            UPDATE AspNetUsers SET NormalizedEmail = UPPER(Email) WHERE NormalizedEmail IS NULL;
+        // ── Batch 2: DML — populate normalized columns ───────────────────────────
+        // Uses sp_executesql so SQL Server resolves the column names at runtime (after Batch 1
+        // has already added them), not at compile time of this batch.
+        await db.Database.ExecuteSqlRawAsync("""
+            EXEC sp_executesql N'UPDATE AspNetRoles SET NormalizedName = UPPER(Name) WHERE NormalizedName IS NULL';
+            EXEC sp_executesql N'UPDATE AspNetUsers SET NormalizedUserName = UPPER(UserName) WHERE NormalizedUserName IS NULL';
+            EXEC sp_executesql N'UPDATE AspNetUsers SET NormalizedEmail = UPPER(Email) WHERE NormalizedEmail IS NULL';
+            """);
 
-            -- AspNetRoleClaims: new table in Core Identity
+        // ── Batch 3: Create missing tables ───────────────────────────────────────
+        await db.Database.ExecuteSqlRawAsync("""
             IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetRoleClaims')
             BEGIN
                 CREATE TABLE AspNetRoleClaims (
@@ -323,8 +330,6 @@ static async Task UpgradeIdentitySchemaAsync(ApplicationDbContext db, Microsoft.
                 );
                 CREATE INDEX IX_AspNetRoleClaims_RoleId ON AspNetRoleClaims(RoleId);
             END
-
-            -- AspNetUserTokens: new table in Core Identity
             IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='AspNetUserTokens')
             BEGIN
                 CREATE TABLE AspNetUserTokens (
@@ -336,8 +341,10 @@ static async Task UpgradeIdentitySchemaAsync(ApplicationDbContext db, Microsoft.
                     CONSTRAINT FK_AspNetUserTokens_AspNetUsers FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
                 );
             END
+            """);
 
-            -- Mark InitialIdentity migration as applied so EF Core skips table recreation
+        // ── Batch 4: __EFMigrationsHistory — mark initial migration applied ──────
+        await db.Database.ExecuteSqlRawAsync("""
             IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE name='__EFMigrationsHistory')
                 CREATE TABLE __EFMigrationsHistory (
                     MigrationId nvarchar(150) NOT NULL,
