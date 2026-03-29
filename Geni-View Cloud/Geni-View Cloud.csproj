@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>GeniView.Cloud</RootNamespace>
     <AssemblyName>GeniView.Cloud</AssemblyName>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <UserSecretsId>geniview-cloud-dev</UserSecretsId>
   </PropertyGroup>
