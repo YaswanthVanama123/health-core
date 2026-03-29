@@ -25,9 +25,11 @@ namespace GeniView.Data.Web
         [Display(Name = "Create Date")]
         public DateTime CreateDate { get; set; }
 
+        [Column("Community_ID")]
         [ForeignKey(nameof(Community))]
         public long CommunityID { get; set; }
 
+        [Column("ParentGroup_ID")]
         [ForeignKey(nameof(ParentGroup))]
         public long? ParentGroupID { get; set; }
 

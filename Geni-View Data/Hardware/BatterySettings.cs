@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GeniView.Data.Hardware
 {
@@ -35,8 +36,15 @@ namespace GeniView.Data.Hardware
 
         #region Navigation Properties
 
+        // Explicit FK properties — EF6 DB columns are Battery_ID and Agent_ID (with underscores)
+        public long? Battery_ID { get; set; }
+
+        public long? Agent_ID { get; set; }
+
+        [ForeignKey("Battery_ID")]
         public virtual Battery Battery { get; set; }
 
+        [ForeignKey("Agent_ID")]
         public virtual Agent.Agent Agent { get; set; }
 
         public void ClearNavigationProperties()

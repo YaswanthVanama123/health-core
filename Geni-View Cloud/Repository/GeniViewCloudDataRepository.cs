@@ -65,6 +65,19 @@ namespace GeniView.Cloud.Repository
             modelBuilder.Entity<MailServer>().ToTable("MailServers");
             modelBuilder.Entity<DeviceEventNotification>().ToTable("DeviceEventNotifications");
             modelBuilder.Entity<UserActivityHistory>().ToTable("UserActivityHistories");
+
+            // EF6 convention for implicit FK columns: {NavigationPropertyName}_{PKPropertyName}
+            // EF Core convention for shadow FKs:     {NavigationPropertyName}{PKPropertyName}
+            // Configure column names explicitly for entities that couldn't have [Column] attributes added.
+            modelBuilder.Entity<InternalDeviceLog>()
+                .HasOne<Device>()
+                .WithMany(d => d.InternalDeviceLogCollection)
+                .HasForeignKey("Device_ID");
+
+            modelBuilder.Entity<InternalBatteryLog>()
+                .HasOne<Battery>()
+                .WithMany(b => b.InternalBatteryLogCollection)
+                .HasForeignKey("Battery_ID");
         }
     }
 }

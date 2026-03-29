@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Xml.Serialization;
 
 namespace GeniView.Data.Hardware
@@ -59,10 +60,17 @@ namespace GeniView.Data.Hardware
 
         #region Navigation Properties
 
+        // Explicit FK properties — EF6 DB columns are Device_ID and Agent_ID (with underscores)
+        public long? Device_ID { get; set; }
+
+        public long? Agent_ID { get; set; }
+
         [XmlIgnore] // Need this for XmlSerializer used for exporting settings to XML file.
+        [ForeignKey("Device_ID")]
         public virtual Device Device { get; set; }
 
         [XmlIgnore] // Need this for XmlSerializer used for exporting settings to XML file.
+        [ForeignKey("Agent_ID")]
         public virtual Agent.Agent Agent { get; set; }
 
         public void ClearNavigationProperties()
