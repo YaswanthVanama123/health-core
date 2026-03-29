@@ -78,6 +78,42 @@ namespace GeniView.Cloud.Repository
                 .HasOne<Battery>()
                 .WithMany(b => b.InternalBatteryLogCollection)
                 .HasForeignKey("Battery_ID");
+
+            // With <Nullable>disable</Nullable>, reference-type complex properties are implicitly
+            // nullable in EF Core 8's eyes. EF Core 8 does not support optional complex types.
+            // Mark all complex type properties as required to match EF6 behaviour.
+            modelBuilder.Entity<AgentBatteryLog>(b =>
+            {
+                b.ComplexProperty(x => x.OperatingData).IsRequired();
+                b.ComplexProperty(x => x.SlowChangingDataA).IsRequired();
+                b.ComplexProperty(x => x.SlowChangingDataB).IsRequired();
+                b.ComplexProperty(x => x.TimeEstimate).IsRequired();
+            });
+
+            modelBuilder.Entity<AgentDeviceLog>(b =>
+            {
+                b.ComplexProperty(x => x.Status).IsRequired();
+                b.ComplexProperty(x => x.PowerInput).IsRequired();
+                b.ComplexProperty(x => x.PowerOutput).IsRequired();
+                b.ComplexProperty(x => x.TimeEstimate).IsRequired();
+                b.ComplexProperty(x => x.Location).IsRequired();
+            });
+
+            modelBuilder.Entity<DeviceSettings>(b =>
+            {
+                b.ComplexProperty(x => x.StandbySettings).IsRequired();
+                b.ComplexProperty(x => x.AlertSettings).IsRequired();
+                b.ComplexProperty(x => x.BatteryStateOfChargeSettings).IsRequired();
+                b.ComplexProperty(x => x.UserInformation).IsRequired();
+                b.ComplexProperty(x => x.SystemInformation).IsRequired();
+                b.ComplexProperty(x => x.PowerOutputSettings).IsRequired();
+            });
+
+            modelBuilder.Entity<BatterySettings>()
+                .ComplexProperty(x => x.ServiceSettings).IsRequired();
+
+            modelBuilder.Entity<Community>()
+                .ComplexProperty(x => x.Address).IsRequired();
         }
     }
 }
