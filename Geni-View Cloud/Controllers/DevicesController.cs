@@ -387,7 +387,12 @@ namespace GeniView.Cloud.Controllers
                 }
 
                 if (id != null)
+                {
                     query.EventList = db.GetDeviceEventHistoryList(query, currentUser);
+
+                    var deviceModel = db.FindDeviceByID(id.Value);
+                    ViewBag.DeviceSerialNumber = deviceModel?.SerialNumber;
+                }
                 else
                 {
                     if (User.IsInRole("Application Admin") || User.IsInRole("Application User"))
@@ -409,10 +414,6 @@ namespace GeniView.Cloud.Controllers
                         else
                             query.EventList = db.GetDeviceEventHistoryList(currentUser.CommunityID, SessionHelper.GroupID, SessionHelper.IncludeAllSubGroups ?? true, query, currentUser);
                     }
-
-                    var deviceModel = db.FindDeviceByID(id.Value);
-
-                    ViewBag.DeviceSerialNumber = deviceModel.SerialNumber;
                 }
 
                 return View(query);
