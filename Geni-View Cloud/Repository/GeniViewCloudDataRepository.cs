@@ -55,8 +55,16 @@ namespace GeniView.Cloud.Repository
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Disable lazy loading proxies — same behaviour as EF6 ProxyCreationEnabled = false
-            // Use explicit .Include() calls in repositories for eager loading.
+
+            // EF6 used PluralizingTableNameConvention (entity class name → plural table name).
+            // EF Core uses the DbSet property name as-is. Map each mismatched table explicitly.
+            modelBuilder.Entity<AgentDeviceLog>().ToTable("AgentDeviceLogs");
+            modelBuilder.Entity<AgentBatteryLog>().ToTable("AgentBatteryLogs");
+            modelBuilder.Entity<InternalBatteryLog>().ToTable("InternalBatteryLogs");
+            modelBuilder.Entity<InternalDeviceLog>().ToTable("InternalDeviceLogs");
+            modelBuilder.Entity<MailServer>().ToTable("MailServers");
+            modelBuilder.Entity<DeviceEventNotification>().ToTable("DeviceEventNotifications");
+            modelBuilder.Entity<UserActivityHistory>().ToTable("UserActivityHistories");
         }
     }
 }
