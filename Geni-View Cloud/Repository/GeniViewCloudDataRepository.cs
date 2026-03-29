@@ -4,8 +4,11 @@ using GeniView.Data.Hardware;
 using GeniView.Data.Hardware.Event;
 using GeniView.Data.Web;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Configuration;
 using System.IO;
+using System.Linq;
 
 namespace GeniView.Cloud.Repository
 {
@@ -39,6 +42,14 @@ namespace GeniView.Cloud.Repository
         public virtual DbSet<ApplicationUpdate> ApplicationUpdates { get; set; }
         public virtual DbSet<ApplicationLog> ApplicationLogs { get; set; }
         public virtual DbSet<UserActivityHistory> UserActivityHistory { get; set; }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            // With <Nullable>disable</Nullable>, EF Core 8 treats every reference-type
+            // [ComplexType] property as optional, which it does not support at any nesting
+            // depth. This convention walks the whole type hierarchy and marks them all required.
+            configurationBuilder.Conventions.Add(_ => new RequiredComplexPropertiesConvention());
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -78,42 +89,31 @@ namespace GeniView.Cloud.Repository
                 .HasOne<Battery>()
                 .WithMany(b => b.InternalBatteryLogCollection)
                 .HasForeignKey("Battery_ID");
+        }
 
-            // With <Nullable>disable</Nullable>, reference-type complex properties are implicitly
-            // nullable in EF Core 8's eyes. EF Core 8 does not support optional complex types.
-            // Mark all complex type properties as required to match EF6 behaviour.
-            modelBuilder.Entity<AgentBatteryLog>(b =>
+        // Marks every [ComplexType] property as required at any nesting depth.
+        // RequiredComplexPropertiesConvention handles the case where <Nullable>disable</Nullable>
+        // causes EF Core 8 to treat all reference-type complex properties as optional (unsupported).
+        private sealed class RequiredComplexPropertiesConvention : IModelFinalizingConvention
+        {
+            public void ProcessModelFinalizing(
+                IConventionModelBuilder modelBuilder,
+                IConventionContext<IConventionModelBuilder> context)
             {
-                b.ComplexProperty(x => x.OperatingData).IsRequired();
-                b.ComplexProperty(x => x.SlowChangingDataA).IsRequired();
-                b.ComplexProperty(x => x.SlowChangingDataB).IsRequired();
-                b.ComplexProperty(x => x.TimeEstimate).IsRequired();
-            });
+                foreach (var entityType in modelBuilder.Metadata.GetEntityTypes())
+                {
+                    MakeComplexPropertiesRequired(entityType);
+                }
+            }
 
-            modelBuilder.Entity<AgentDeviceLog>(b =>
+            private static void MakeComplexPropertiesRequired(IConventionTypeBase typeBase)
             {
-                b.ComplexProperty(x => x.Status).IsRequired();
-                b.ComplexProperty(x => x.PowerInput).IsRequired();
-                b.ComplexProperty(x => x.PowerOutput).IsRequired();
-                b.ComplexProperty(x => x.TimeEstimate).IsRequired();
-                b.ComplexProperty(x => x.Location).IsRequired();
-            });
-
-            modelBuilder.Entity<DeviceSettings>(b =>
-            {
-                b.ComplexProperty(x => x.StandbySettings).IsRequired();
-                b.ComplexProperty(x => x.AlertSettings).IsRequired();
-                b.ComplexProperty(x => x.BatteryStateOfChargeSettings).IsRequired();
-                b.ComplexProperty(x => x.UserInformation).IsRequired();
-                b.ComplexProperty(x => x.SystemInformation).IsRequired();
-                b.ComplexProperty(x => x.PowerOutputSettings).IsRequired();
-            });
-
-            modelBuilder.Entity<BatterySettings>()
-                .ComplexProperty(x => x.ServiceSettings).IsRequired();
-
-            modelBuilder.Entity<Community>()
-                .ComplexProperty(x => x.Address).IsRequired();
+                foreach (var cp in typeBase.GetMembers().OfType<IConventionComplexProperty>())
+                {
+                    cp.Builder.IsRequired(true);
+                    MakeComplexPropertiesRequired(cp.ComplexType);
+                }
+            }
         }
     }
 }
