@@ -65,6 +65,13 @@ namespace GeniView.Data.Hardware
 
         #endregion
 
+        // Explicit FK properties mapping to EF6-era column names (Community_ID, Group_ID)
+        [Column("Community_ID")]
+        public long? CommunityID { get; set; }
+
+        [Column("Group_ID")]
+        public long? GroupID { get; set; }
+
         [NotMapped]
         public AgentDeviceLog AgentDeviceLog { get; set; }
 
@@ -84,8 +91,10 @@ namespace GeniView.Data.Hardware
 
         public virtual ICollection<DeviceEvent> DeviceEventCollection { get; set; }
 
+        [ForeignKey(nameof(CommunityID))]
         public virtual Community Community { get; set; }
 
+        [ForeignKey(nameof(GroupID))]
         public virtual Group Group { get; set; }
 
         public void ClearNavigationProperties()

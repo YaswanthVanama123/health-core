@@ -78,6 +78,13 @@ namespace GeniView.Data.Hardware
         [NotMapped]
         public BatterySettings BatterySettings { get; set; }
 
+        // Explicit FK properties mapping to EF6-era column names (Community_ID, Group_ID)
+        [Column("Community_ID")]
+        public long? CommunityID { get; set; }
+
+        [Column("Group_ID")]
+        public long? GroupID { get; set; }
+
         #region Navigation Properties
 
         public virtual ICollection<AgentBatteryLog> AgentBatteryLogCollection { get; set; }
@@ -86,8 +93,10 @@ namespace GeniView.Data.Hardware
 
         public virtual ICollection<InternalBatteryLog> InternalBatteryLogCollection { get; set; }
 
+        [ForeignKey(nameof(CommunityID))]
         public virtual Community Community { get; set; }
 
+        [ForeignKey(nameof(GroupID))]
         public virtual Group Group { get; set; }
 
         public void ClearNavigationProperties()

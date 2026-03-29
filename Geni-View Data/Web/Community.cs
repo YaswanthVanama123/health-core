@@ -21,11 +21,11 @@ namespace GeniView.Data.Web
 
         [StringLength(160)]
         [DataType(DataType.MultilineText)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public bool IsActive { get; set; }
 
-        public Address Address { get; set; }
+        public Address Address { get; set; } = new Address();
 
         [Display(Name = "Create Date")]
         public DateTime CreateDate { get; set; }
