@@ -16,11 +16,6 @@ namespace GeniView.Cloud.Controllers
         private static Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly DeviceEventsDataRepository _db = new DeviceEventsDataRepository();
 
-        public dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
-        {
-            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
-        }
-
         // GET: DeviceEvents
         public ActionResult Index()
         {
@@ -32,7 +27,11 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+                ApplicationUser currentUser;
+                using (var identityRepo = new IdentityDataRepository())
+                {
+                    currentUser = identityRepo.FindUserByID(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
+                }
                 ViewBag.CurrentUser = currentUser;
 
                 var count = 50;

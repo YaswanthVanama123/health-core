@@ -15,9 +15,10 @@ namespace GeniView.Cloud.Controllers
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
+        private ApplicationUser? GetCurrentUser()
         {
-            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
+            using var identityRepo = new IdentityDataRepository();
+            return identityRepo.FindUserByID(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
         }
 
         [HttpGet]
@@ -25,7 +26,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+                var currentUser = GetCurrentUser();
 
                 long? communityId = null;
                 long? groupId = null;
@@ -102,7 +103,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+                var currentUser = GetCurrentUser();
 
                 long? communityId = null;
                 long? groupId = null;
@@ -177,7 +178,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+                var currentUser = GetCurrentUser();
 
                 long? communityId = null;
                 long? groupId = null;
@@ -252,7 +253,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+                var currentUser = GetCurrentUser();
 
                 long? communityId = null;
                 long? groupId = null;
@@ -332,7 +333,7 @@ namespace GeniView.Cloud.Controllers
         {
             try
             {
-                var currentUser = UserManager.FindById(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+                var currentUser = GetCurrentUser();
 
                 long? communityId = null;
                 long? groupId = null;

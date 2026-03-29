@@ -21,9 +21,11 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         IdentityDataRepository repository = new IdentityDataRepository();
         private UserActivityHistory userAHM = new UserActivityHistory();
         private static Logger _logger = LogManager.GetCurrentClassLogger();
-        public dynamic /* TODO Phase 4: ApplicationUserManager */ UserManager
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public UsersController(UserManager<ApplicationUser> userManager)
         {
-            get { throw new NotImplementedException("TODO Phase 4: inject UserManager via ASP.NET Core Identity"); }
+            _userManager = userManager;
         }
         #endregion
 
@@ -125,23 +127,23 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                         }
                     }
 
-                    var result = UserManager.Create(user);
+                    var result = await _userManager.CreateAsync(user);
 
                     if (result.Succeeded)
                     {
-                        UserManager.AddToRole(user.Id, model.RoleName);
+                        await _userManager.AddToRoleAsync(user, model.RoleName);
                         // E-mail confirm message
                         if (!activateUserByEmail)
                         {
                             user.EmailConfirmed = true;
-                            UserManager.Update(user);
+                            await _userManager.UpdateAsync(user);
                         }
                         else
                         {
                             try
                             {
                                 // Generate link to confirm e-mail
-                                string code = UserManager.GenerateEmailConfirmationToken(user.Id);
+                                string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                                 var callbackUrl = Url.Action("ConfirmEmail", "Account", new { area = "", userId = user.Id, code = code }, protocol: Request.Scheme);
                                 MailHelper mailhelper = new MailHelper();
                                 await mailhelper.SendMailAsync(user.FullName, user.Email, MessageEnumeration.ConfirmEmail, callbackUrl);
@@ -150,14 +152,14 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                             {
                                 ModelState.AddModelError("DbFail", "Can not send email : " + ex.Message);
                                 _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
-                                UserManager.Delete(user);
+                                await _userManager.DeleteAsync(user);
                                 return View(model);
                             }
                         }
                     }
                     else
                     {
-                        ModelState.AddModelError("EmailError", string.Join("\n", result.Errors));
+                        ModelState.AddModelError("EmailError", string.Join("\n", result.Errors.Select(e => e.Description)));
                         return View(model);
                     }
                     userAHM.AddActivity("Create new User", ActivityObjectType.User, model.User.Email);
@@ -173,7 +175,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             return View(model);
         }
 
-        public ActionResult Edit(string id)
+        public async Task<ActionResult> Edit(string id)
         {
             if (id == null)
             {
@@ -182,12 +184,12 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             var model = new UserViewModel();
             try
             {
-                var user = UserManager.FindById(id);
+                var user = await _userManager.FindByIdAsync(id);
                 model = new UserViewModel
                 {
                     User = user,
-                    RoleName = UserManager.GetRoles(id).FirstOrDefault(),
-                    isUserLocked = user.LockoutEndDateUtc == null ? false : user.LockoutEndDateUtc.Value > DateTime.UtcNow ? true : false,
+                    RoleName = (await _userManager.GetRolesAsync(user)).FirstOrDefault(),
+                    isUserLocked = user.LockoutEnd == null ? false : user.LockoutEnd.Value > DateTimeOffset.UtcNow,
                 };
             }
             catch (Exception ex)
@@ -206,14 +208,14 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(UserViewModel model)
+        public async Task<ActionResult> Edit(UserViewModel model)
         {
             ViewBag.TimeZones = TimeZoneHelper.GetTimeZoneList();
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var user = UserManager.FindById(model.User.Id);
+                    var user = await _userManager.FindByIdAsync(model.User.Id);
 
                     user.FullName = model.User.FullName;
                     user.Email = model.User.Email;
@@ -223,11 +225,11 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
                     if (model.isUserLocked)
                     {
-                        user.LockoutEndDateUtc = DateTime.UtcNow.AddMinutes(GlobalSettings.UserLockoutTimeInMinutes);
+                        user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(GlobalSettings.UserLockoutTimeInMinutes);
                     }
                     else
                     {
-                        user.LockoutEndDateUtc = null;
+                        user.LockoutEnd = null;
                     }
 
                     if (model.RoleName.Contains("Application"))
@@ -266,20 +268,18 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                         user.CommunityID = model.User.CommunityID;
                         user.GroupID = model.User.GroupID;
                     }
-                    var result = UserManager.Update(user);
+                    var result = await _userManager.UpdateAsync(user);
                     if (result.Succeeded)
                     {
-                        var roles = UserManager.GetRoles(model.User.Id);
-                        var param = new string[roles.Count];
-                        roles.CopyTo(param, 0);
-                        UserManager.RemoveFromRoles(model.User.Id, param);
-                        UserManager.AddToRole(model.User.Id, model.RoleName);
+                        var currentRoles = await _userManager.GetRolesAsync(user);
+                        await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                        await _userManager.AddToRoleAsync(user, model.RoleName);
                     }
                     else
                     {
                         foreach (var error in result.Errors)
                         {
-                            ModelState.AddModelError("EmailError", error);
+                            ModelState.AddModelError("EmailError", error.Description);
                         }
                         return View(model);
                     }
@@ -296,7 +296,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             return View(model);
         }
 
-        public ActionResult Delete(string id)
+        public async Task<ActionResult> Delete(string id)
         {
             if (id == null)
             {
@@ -306,7 +306,8 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
             try
             {
-                model = new UserViewModel { User = UserManager.FindById(id) };
+                var user = await _userManager.FindByIdAsync(id);
+                model = new UserViewModel { User = user };
             }
             catch (Exception ex)
             {
@@ -324,17 +325,17 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(string id)
+        public async Task<ActionResult> DeleteConfirmed(string id)
         {
             var model = new UserViewModel();
             try
             {
                 var _userName = User.Identity.Name;
-                var user = UserManager.FindById(id);
+                var user = await _userManager.FindByIdAsync(id);
 
                 if (_userName != user.UserName)
                 {
-                    UserManager.Delete(user);
+                    await _userManager.DeleteAsync(user);
                     userAHM.AddActivity("Delete User", ActivityObjectType.User, user.Email);
                     return RedirectToAction("Index");
                 }
@@ -358,9 +359,9 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             var model = new UserViewModel();
             try
             {
-                var user = UserManager.FindById(id);
+                var user = await _userManager.FindByIdAsync(id);
                 // Generate link to confirm e-mail
-                string code = UserManager.GenerateEmailConfirmationToken(user.Id);
+                string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = Url.Action("ConfirmEmail", "Account", new { area = "", userId = user.Id, code = code }, protocol: Request.Scheme);
                 MailHelper mailhelper = new MailHelper();
                 await mailhelper.SendMailAsync(user.FullName, user.Email, MessageEnumeration.ConfirmEmail, callbackUrl);
@@ -368,8 +369,8 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                 model = new UserViewModel
                 {
                     User = user,
-                    RoleName = UserManager.GetRoles(id).FirstOrDefault(),
-                    isUserLocked = user.LockoutEndDateUtc == null ? false : user.LockoutEndDateUtc.Value > DateTime.UtcNow ? true : false,
+                    RoleName = (await _userManager.GetRolesAsync(user)).FirstOrDefault(),
+                    isUserLocked = user.LockoutEnd == null ? false : user.LockoutEnd.Value > DateTimeOffset.UtcNow,
                 };
             }
             catch (Exception ex)
@@ -381,19 +382,6 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             ViewBag.TimeZones = TimeZoneHelper.GetTimeZoneList();
             TempData["Success"] = string.Format("Confirmation Mail send to {0} successfully", model.User.Email);
             return View("Edit", model);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                if (UserManager != null)
-                {
-                    UserManager.Dispose();
-                }
-            }
-
-            base.Dispose(disposing);
         }
 
     }
