@@ -33,7 +33,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("DbFail", ex.Message);
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 return View();
             }
 
@@ -53,7 +53,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("DbFail", ex.Message);
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
             }
             return RedirectToAction("Assign");
         }
@@ -80,7 +80,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("DbFail", ex.Message);
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 return View(model);
             }
         }
@@ -98,7 +98,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("DbFail", ex.Message);
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 return View();
             }
             return RedirectToAction("Remove");
@@ -129,7 +129,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("DbFail", ex.Message);
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
             }
             return RedirectToAction("ActiveBatteries");
         }
@@ -146,7 +146,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("DbFail", ex.Message);
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
             }
             return RedirectToAction("DeactivatedBatteries");
         }

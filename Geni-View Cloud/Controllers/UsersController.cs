@@ -51,7 +51,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 ModelState.AddModelError("DbFail", ex.Message);
                 return View();
             }
@@ -159,7 +159,7 @@ namespace GeniView.Cloud.Controllers
                             }
                             catch (Exception ex)
                             {
-                                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                                 ModelState.AddModelError("DbFail", "Can not send email : " + ex.Message);
                                 await _userManager.DeleteAsync(user);
                                 return View(model);
@@ -180,7 +180,7 @@ namespace GeniView.Cloud.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                    _logger.Error(ex, "Geni-View Cloud encountered an error.");
                     ModelState.AddModelError("DbFail", ex.Message);
                 }
             }
@@ -220,7 +220,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 ModelState.AddModelError("DbFail", ex.Message);
                 return View(model);
             }
@@ -305,7 +305,7 @@ namespace GeniView.Cloud.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                    _logger.Error(ex, "Geni-View Cloud encountered an error.");
                     ModelState.AddModelError("DbFail", ex.Message);
                     return View(model);
                 }
@@ -347,7 +347,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 ModelState.AddModelError("DbFail", ex.Message);
                 return View(model);
             }
@@ -377,7 +377,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 ModelState.AddModelError("DbFail", ex.Message);
                 return RedirectToAction("Index");
             }
@@ -404,7 +404,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 TempData["Alert"] = ex.Message;
                 return View("Edit", model);
             }

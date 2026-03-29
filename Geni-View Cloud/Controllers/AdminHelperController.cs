@@ -43,6 +43,8 @@ namespace GeniView.Cloud.Controllers
                     }
                     else if (User.IsInRole("Community Admin") || User.IsInRole("Community Group Admin"))
                     {
+                        if (currentUser == null)
+                            return Json(emptyList);
                         model = model.Where(x => x.ID == currentUser.CommunityID).ToList();
                         return Json(new SelectList(model, "ID", "Name"));
                     }
@@ -53,7 +55,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 return Json(emptyList);
             }
         }
@@ -94,7 +96,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 return Json(emptyList);
             }
         }
@@ -132,7 +134,7 @@ namespace GeniView.Cloud.Controllers
             }
             catch (Exception ex)
             {
-                _logger.Error("Geni-View Cloud encountered an error. More information about error in details row.", ex);
+                _logger.Error(ex, "Geni-View Cloud encountered an error.");
                 return Json(emptyList);
             }
         }
