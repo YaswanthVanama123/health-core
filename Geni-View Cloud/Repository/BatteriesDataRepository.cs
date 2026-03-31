@@ -228,18 +228,18 @@ namespace GeniView.Cloud.Repository
             }
         }
 
-        public BatteryDetailViewModel GetBatteryDetails(long serialNumberCode)
+        public BatteryDetailViewModel GetBatteryDetails(string serialNumber)
         {
             using (var db = new GeniViewCloudDataRepository())
             {
 
-                // Note : Voltage Calculation max = 25.2 and min = 18; 
+                // Note : Voltage Calculation max = 25.2 and min = 18;
                 //      : Used Formula like (dataVoltage - 18 ) * 100 / (25.2 - 18), because we can calculate when min = 0, not min = 18
 
                 var mainQuery = (from b in db.Batteries
                                             .Include(x => x.AgentBatteryLogCollection)
                                             .Include(x => x.BatterySettingsCollection)
-                                            .Where(x => x.SerialNumberCode == serialNumberCode && x.IsDeactivated == false)
+                                            .Where(x => x.SerialNumber == serialNumber && x.IsDeactivated == false)
                                  let row = b.AgentBatteryLogCollection.OrderByDescending(t => t.Timestamp).FirstOrDefault()
                                  select new BatteryDetailViewModel()
                                  {
