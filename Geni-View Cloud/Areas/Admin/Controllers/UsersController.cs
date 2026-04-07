@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
@@ -29,6 +30,18 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         }
         #endregion
 
+        private void PopulateDropdowns(long? selectedCommunityID = null, long? selectedGroupID = null)
+        {
+            using (var communityRepo = new CommunitiesDataRepository())
+            {
+                ViewBag.Communities = new SelectList(communityRepo.GetCommunities(), "ID", "Name", selectedCommunityID);
+            }
+            using (var groupRepo = new GroupsDataRepository())
+            {
+                ViewBag.Groups = new SelectList(groupRepo.GetGroups(selectedCommunityID), "ID", "Name", selectedGroupID);
+            }
+        }
+
         public ActionResult Index(int? page)
         {
             ViewBag.TimeZones = TimeZoneHelper.GetTimeZoneList();
@@ -50,6 +63,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         public ActionResult CreateNewAccount()
         {
             ViewBag.TimeZones = TimeZoneHelper.GetTimeZoneList();
+            PopulateDropdowns();
             return View();
         }
 
@@ -203,6 +217,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                 return NotFound();
             }
             ViewBag.TimeZones = TimeZoneHelper.GetTimeZoneList();
+            PopulateDropdowns(model.User?.CommunityID, model.User?.GroupID);
             return View(model);
         }
 

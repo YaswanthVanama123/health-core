@@ -1,0 +1,29 @@
+@model GeniView.Cloud.Models.UserViewModel
+
+<div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
+
+<div class="panel panel-danger">
+    <div class="panel-heading"><h4>Delete User</h4></div>
+    <div class="panel-body">
+        <p>Are you sure you want to delete this user?</p>
+        <table class="table table-bordered" style="width:auto">
+            <tr>
+                <th>Full Name</th>
+                <td>@Model.User.FullName</td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td>@Model.User.Email</td>
+            </tr>
+        </table>
+    </div>
+    <div class="panel-footer">
+        @using (Html.BeginForm("Delete", "Users", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.User.Id)
+            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-default" })
+        }
+    </div>
+</div>

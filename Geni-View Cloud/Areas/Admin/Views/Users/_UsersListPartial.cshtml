@@ -1,0 +1,62 @@
+@model IEnumerable<GeniView.Cloud.Models.UserViewModel>
+
+<div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <div class="row">
+            <div class="col-sm-6">
+                <h4>Users</h4>
+            </div>
+            <div class="col-sm-6 text-right">
+                @Html.ActionLink("Add New User", "CreateNewAccount", null, new { @class = "btn btn-primary" })
+            </div>
+        </div>
+    </div>
+    <div class="panel-body">
+        <table id="UsersTable" class="table table-hover table-striped table-bordered" style="width:100%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name / Email</th>
+                    <th>Role</th>
+                    <th>Community</th>
+                    <th>Group</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null)
+                {
+                    var i = 1;
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>
+                                <strong>@item.User.FullName</strong>
+                                <br /><small class="text-muted">@item.User.Email</small>
+                                @if (!item.User.EmailConfirmed)
+                                {
+                                    <br /><span class="label label-warning">Unconfirmed</span>
+                                }
+                                @if (item.isUserLocked)
+                                {
+                                    <span class="label label-danger">Locked</span>
+                                }
+                            </td>
+                            <td>@(item.RoleName ?? "--")</td>
+                            <td>@(item.CommunityName ?? "--")</td>
+                            <td>@(item.GroupName ?? "--")</td>
+                            <td>
+                                @Html.ActionLink("Edit", "Edit", new { id = item.User.Id }, new { @class = "btn btn-sm btn-default" })
+                                @Html.ActionLink("Delete", "Delete", new { id = item.User.Id }, new { @class = "btn btn-sm btn-danger" })
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

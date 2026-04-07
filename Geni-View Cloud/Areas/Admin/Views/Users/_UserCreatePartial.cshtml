@@ -1,0 +1,108 @@
+@model GeniView.Cloud.Models.UserViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+<div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
+<div>@Html.ValidationMessage("EmailError", new { @class = "text-danger" })</div>
+<div>@Html.ValidationMessage("GroupIDError", new { @class = "text-danger" })</div>
+
+@using (Html.BeginForm("CreateNewAccount", "Users", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="panel panel-default">
+        <div class="panel-heading"><h4>Create New Account</h4></div>
+        <div class="panel-body">
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Full Name</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.User.FullName, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Email</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.User.Email, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.User.Email, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Role</label>
+                <div class="col-sm-6">
+                    @Html.DropDownListFor(m => m.RoleName,
+                        new SelectList(new[]
+                        {
+                            "Application Admin",
+                            "Application User",
+                            "Community Admin",
+                            "Community Group Admin",
+                            "Community User"
+                        }),
+                        "-- Select Role --",
+                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.RoleName, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Community</label>
+                <div class="col-sm-6">
+                    @Html.DropDownListFor(m => m.User.CommunityID,
+                        ViewBag.Communities as SelectList,
+                        "-- Select Community --",
+                        new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Group</label>
+                <div class="col-sm-6">
+                    @Html.DropDownListFor(m => m.User.GroupID,
+                        ViewBag.Groups as SelectList,
+                        "-- None --",
+                        new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Time Zone</label>
+                <div class="col-sm-6">
+                    @Html.DropDownListFor(m => m.User.TimeZoneId,
+                        ViewBag.TimeZones as SelectList,
+                        "-- Select Time Zone --",
+                        new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Notifications</label>
+                <div class="col-sm-6">
+                    @Html.CheckBoxFor(m => m.User.IsNotificationEnable)
+                    <span class="help-block">Enable email notifications for this user</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Activate by Email</label>
+                <div class="col-sm-6">
+                    @Html.CheckBoxFor(m => m.ActivateUserByEmail, new { id = "ActivateUserByEmail" })
+                    <span class="help-block">Send confirmation email to activate the account</span>
+                </div>
+            </div>
+
+            <div class="form-group" id="PasswordHideDiv">
+                <label class="control-label col-sm-2">Password</label>
+                <div class="col-sm-6">
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Leave blank to auto-generate" })
+                </div>
+            </div>
+
+        </div>
+        <div class="panel-footer">
+            <button type="submit" class="btn btn-primary">Create Account</button>
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+}
