@@ -359,15 +359,26 @@ namespace GeniView.Cloud.Controllers
             try
             {
                 model = batterydb.GetBatteryDetails(ID);
-                ViewBag.StateCount = EnumHelper.GetFriendlyText(model.State).Split('\n').Count() - 1 +
-                                     model.LastAgentBatteryLog.OperatingData.BatteryOperatingStatus.StatusAText.Split(',').Count() - 1 +
-                                     model.LastAgentBatteryLog.OperatingData.BatteryOperatingStatus.StatusBText.Split(',').Count() - 1;
+
+                if (model == null)
+                {
+                    return PartialView("_DetailsPartialView", new BatteryDetailViewModel());
+                }
+
+                var log = model.LastAgentBatteryLog;
+                ViewBag.StateCount = EnumHelper.GetFriendlyText(model.State).Split('\n').Count() - 1;
+                if (log?.OperatingData?.BatteryOperatingStatus != null)
+                {
+                    ViewBag.StateCount += (log.OperatingData.BatteryOperatingStatus.StatusAText ?? "").Split(',').Count() - 1 +
+                                          (log.OperatingData.BatteryOperatingStatus.StatusBText ?? "").Split(',').Count() - 1;
+                }
+
                 return PartialView("_DetailsPartialView", model);
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "Geni-View Cloud encountered an error.");
-                return PartialView("_DetailsPartialView", model);
+                return PartialView("_DetailsPartialView", model ?? new BatteryDetailViewModel());
             }
         }
 
