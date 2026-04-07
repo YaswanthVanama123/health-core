@@ -1,0 +1,59 @@
+@model GeniView.Cloud.Models.GroupViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+<div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
+
+@using (Html.BeginForm("Edit", "Groups", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Group.ID)
+    @Html.HiddenFor(m => m.Group.GroupID)
+    @Html.HiddenFor(m => m.Group.CreateDate)
+
+    <div class="panel panel-default">
+        <div class="panel-heading"><h4>Edit Group: @Model.Group.Name</h4></div>
+        <div class="panel-body">
+
+            <div class="form-group">
+                @Html.Label("Group Name", new { @class = "control-label col-sm-2" })
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Group.Name, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Group.Name, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.Label("Description", new { @class = "control-label col-sm-2" })
+                <div class="col-sm-6">
+                    @Html.TextAreaFor(m => m.Group.Description, new { @class = "form-control", rows = "3" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Community</label>
+                <div class="col-sm-6">
+                    @Html.DropDownListFor(m => m.CommunityID,
+                        ViewBag.Communities as SelectList,
+                        "-- Select Community --",
+                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.CommunityID, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Parent Group</label>
+                <div class="col-sm-6">
+                    @Html.DropDownListFor(m => m.ParentGroupID,
+                        ViewBag.Groups as SelectList,
+                        "-- None (Top Level) --",
+                        new { @class = "form-control" })
+                </div>
+            </div>
+
+        </div>
+        <div class="panel-footer">
+            <button type="submit" class="btn btn-primary">Save</button>
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+}

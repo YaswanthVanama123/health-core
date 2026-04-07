@@ -1,0 +1,50 @@
+@model IEnumerable<GeniView.Data.Web.Group>
+
+<div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <div class="row">
+            <div class="col-sm-6">
+                <h4>Groups</h4>
+            </div>
+            <div class="col-sm-6 text-right">
+                @Html.ActionLink("Add New Group", "Create", null, new { @class = "btn btn-primary" })
+            </div>
+        </div>
+    </div>
+    <div class="panel-body">
+        <table id="GroupsTable" class="table table-hover table-striped table-bordered" style="width:100%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Community</th>
+                    <th>Parent Group</th>
+                    <th>Create Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null)
+                {
+                    var i = 1;
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>@item.Name</td>
+                            <td>@(item.Community?.Name ?? "--")</td>
+                            <td>@(item.ParentGroup?.Name ?? "--")</td>
+                            <td>@item.CreateDate.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                @Html.ActionLink("Edit", "Edit", new { id = item.ID }, new { @class = "btn btn-sm btn-default" })
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

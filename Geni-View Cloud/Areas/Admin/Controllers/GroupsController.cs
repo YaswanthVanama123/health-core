@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -17,8 +18,18 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
     public class GroupsController : Controller
     {
         private GroupsDataRepository groupRepo = new GroupsDataRepository();
+        private CommunitiesDataRepository communityRepo = new CommunitiesDataRepository();
         private UserActivityHistory userAHM = new UserActivityHistory();
         private static Logger _logger = LogManager.GetCurrentClassLogger();
+
+        private void PopulateDropdowns(long? selectedCommunityID = null)
+        {
+            using (var repo = new CommunitiesDataRepository())
+            {
+                ViewBag.Communities = new SelectList(repo.GetCommunities(), "ID", "Name", selectedCommunityID);
+            }
+            ViewBag.Groups = new SelectList(groupRepo.GetGroups(selectedCommunityID), "ID", "Name");
+        }
 
         public ActionResult Index()
         {
@@ -42,7 +53,8 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
 
         public ActionResult Create()
         {
-            return View();
+            PopulateDropdowns();
+            return View(new GroupViewModel());
         }
 
         [HttpPost]
@@ -63,6 +75,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                     ModelState.AddModelError("DbFail", ex.Message);
                 }
             }
+            PopulateDropdowns(model.CommunityID);
             return View(model);
         }
 
@@ -88,6 +101,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                 ModelState.AddModelError("DbFail", ex.Message);
                 return View(model);
             }
+            PopulateDropdowns(model.CommunityID);
             return View(model);
         }
 
@@ -116,6 +130,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
                     ModelState.AddModelError("DbFail", ex.Message);
                 }
             }
+            PopulateDropdowns(model.CommunityID);
             return View(model);
         }
 
@@ -189,6 +204,7 @@ namespace GeniView.Cloud.Areas.Admin.Controllers
         protected override void Dispose(bool disposing)
         {
             groupRepo.Dispose();
+            communityRepo.Dispose();
             base.Dispose(disposing);
         }
     }

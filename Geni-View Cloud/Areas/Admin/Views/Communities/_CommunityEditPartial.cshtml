@@ -1,0 +1,102 @@
+@model GeniView.Data.Web.Community
+
+<div>@Html.ValidationMessage("DbFail", new { @class = "text-danger" })</div>
+
+@using (Html.BeginForm("Edit", "Communities", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.ID)
+    @Html.HiddenFor(m => m.CommunityID)
+    @Html.HiddenFor(m => m.CreateDate)
+
+    <div class="panel panel-default">
+        <div class="panel-heading"><h4>Edit Community: @Model.Name</h4></div>
+        <div class="panel-body">
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.Name, new { @class = "control-label col-sm-2" })
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.Description, new { @class = "control-label col-sm-2" })
+                <div class="col-sm-6">
+                    @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = "3" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Active</label>
+                <div class="col-sm-6">
+                    @Html.CheckBoxFor(m => m.IsActive)
+                </div>
+            </div>
+
+            <hr />
+            <h5>Address</h5>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Street Line 1</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.StreetLineOne, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Street Line 2</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.StreetLineTwo, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">City</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.City, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Region / State</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.Region, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Country</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.Country, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Postal Code</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.PostalCode, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Phone</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.Phone, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Email</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.Email, new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Website</label>
+                <div class="col-sm-6">
+                    @Html.TextBoxFor(m => m.Address.Website, new { @class = "form-control" })
+                </div>
+            </div>
+
+        </div>
+        <div class="panel-footer">
+            <button type="submit" class="btn btn-primary">Save</button>
+            @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+}
