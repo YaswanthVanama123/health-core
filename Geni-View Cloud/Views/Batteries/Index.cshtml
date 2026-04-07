@@ -22,7 +22,7 @@
 <div class="page-header-section"
      data-table-target="#BatteryTable"
      data-detail-url="/Batteries/GetBatteryDetailData"
-     data-detail-param="id">
+     data-detail-param="ID">
 
     <h1 class="page-header-title">Batteries</h1>
 
@@ -314,7 +314,7 @@
 
                             $icon.removeClass('fa-chevron-right').addClass('fa-sync fa-spin');
 
-                            $.get("/Batteries/GetBatteryDetailData?id=" + serialNumber, function (viewdata) {
+                            $.get("/Batteries/GetBatteryDetailData?ID=" + serialNumber, function (viewdata) {
 
                                 $icon.removeClass('fa-sync fa-spin').addClass('fa-chevron-up expanded');
                                 row.child('<div class="details-content">' + viewdata + '</div>', "details-row").show();
