@@ -43,6 +43,13 @@ try
 
     // ── MVC + Razor views ───────────────────────────────────────────────────
     builder.Services.AddControllersWithViews()
+        .AddJsonOptions(opts =>
+        {
+            // Preserve PascalCase JSON serialization to match the old ASP.NET MVC
+            // Newtonsoft.Json default. All existing JavaScript reads property names
+            // in PascalCase (e.g. data.PowerModulesCount, data.HighSoCCount).
+            opts.JsonSerializerOptions.PropertyNamingPolicy = null;
+        })
         .AddRazorOptions(opts =>
         {
             // Preserve the legacy partial view location used by NewPartialViewEngine.
