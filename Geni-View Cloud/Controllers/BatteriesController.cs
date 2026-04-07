@@ -353,12 +353,12 @@ namespace GeniView.Cloud.Controllers
             return Json(model);
         }
 
-        public ActionResult GetBatteryDetailData(string serialNumber)
+        public ActionResult GetBatteryDetailData(string id)
         {
             BatteryDetailViewModel model = new BatteryDetailViewModel();
             try
             {
-                model = batterydb.GetBatteryDetails(serialNumber);
+                model = batterydb.GetBatteryDetails(id);
                 ViewBag.StateCount = EnumHelper.GetFriendlyText(model.State).Split('\n').Count() - 1 +
                                      model.LastAgentBatteryLog.OperatingData.BatteryOperatingStatus.StatusAText.Split(',').Count() - 1 +
                                      model.LastAgentBatteryLog.OperatingData.BatteryOperatingStatus.StatusBText.Split(',').Count() - 1;
