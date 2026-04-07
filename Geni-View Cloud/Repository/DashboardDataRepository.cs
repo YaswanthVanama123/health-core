@@ -119,8 +119,8 @@ namespace GeniView.Cloud.Repository
                     .Select(b => new
                     {
                         BatteryID = b.ID,
-                        CommunityID = (long?)b.Community.ID,
-                        GroupID = (long?)b.Group.ID
+                        CommunityID = b.CommunityID,
+                        GroupID = b.GroupID
                     })
                     .ToList();
 
@@ -174,7 +174,7 @@ namespace GeniView.Cloud.Repository
                         HighCount = 0,
                         EndOfLifeCount = 0,
                         TotalCount = 0,
-                        PowerModulesCount = 0,
+                        PowerModulesCount = allowedBatteryIds.Count,
                         AverageCycleCount = 0,
                         LowPercent = 0,
                         HighPercent = 0,
@@ -271,8 +271,8 @@ namespace GeniView.Cloud.Repository
                     .Select(b => new
                     {
                         BatteryID = b.ID,
-                        CommunityID = (long?)b.Community.ID,
-                        GroupID = (long?)b.Group.ID
+                        CommunityID = b.CommunityID,
+                        GroupID = b.GroupID
                     })
                     .ToList();
 
@@ -417,8 +417,8 @@ namespace GeniView.Cloud.Repository
                     .Select(b => new
                     {
                         BatteryID = b.ID,
-                        CommunityID = (long?)b.Community.ID,
-                        GroupID = (long?)b.Group.ID
+                        CommunityID = b.CommunityID,
+                        GroupID = b.GroupID
                     })
                     .ToList();
 
@@ -563,8 +563,8 @@ namespace GeniView.Cloud.Repository
                     .Select(b => new
                     {
                         BatteryID = b.ID,
-                        CommunityID = (long?)b.Community.ID,
-                        GroupID = (long?)b.Group.ID
+                        CommunityID = b.CommunityID,
+                        GroupID = b.GroupID
                     })
                     .ToList();
 
@@ -711,8 +711,8 @@ namespace GeniView.Cloud.Repository
                     .Select(b => new
                     {
                         BatteryID = b.ID,
-                        CommunityID = (long?)b.Community.ID,
-                        GroupID = (long?)b.Group.ID
+                        CommunityID = b.CommunityID,
+                        GroupID = b.GroupID
                     })
                     .ToList();
 
@@ -978,8 +978,8 @@ namespace GeniView.Cloud.Repository
                     .Select(b => new
                     {
                         BatteryID = b.ID,
-                        CommunityID = (long?)b.Community.ID,
-                        GroupID = (long?)b.Group.ID
+                        CommunityID = b.CommunityID,
+                        GroupID = b.GroupID
                     })
                     .ToList();
 
