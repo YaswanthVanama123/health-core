@@ -43,7 +43,8 @@ namespace GeniView.Cloud.Models
             if (str == null) return defaultValue;
             try
             {
-                return (T?)Convert.ChangeType(str, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+                var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+                return (T?)Convert.ChangeType(str, targetType, System.Globalization.CultureInfo.InvariantCulture);
             }
             catch
             {
