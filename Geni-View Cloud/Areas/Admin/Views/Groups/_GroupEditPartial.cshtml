@@ -15,7 +15,7 @@
         <div class="panel-body">
 
             <div class="form-group">
-                @Html.Label("Group Name", new { @class = "control-label col-sm-2" })
+                <label class="control-label col-sm-2">Group Name</label>
                 <div class="col-sm-6">
                     @Html.TextBoxFor(m => m.Group.Name, new { @class = "form-control" })
                     @Html.ValidationMessageFor(m => m.Group.Name, "", new { @class = "text-danger" })
@@ -23,7 +23,7 @@
             </div>
 
             <div class="form-group">
-                @Html.Label("Description", new { @class = "control-label col-sm-2" })
+                <label class="control-label col-sm-2">Description</label>
                 <div class="col-sm-6">
                     @Html.TextAreaFor(m => m.Group.Description, new { @class = "form-control", rows = "3" })
                 </div>
