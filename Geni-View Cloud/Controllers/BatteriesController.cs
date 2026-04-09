@@ -353,12 +353,12 @@ namespace GeniView.Cloud.Controllers
             return Json(model);
         }
 
-        public ActionResult GetBatteryDetailData(string ID)
+        public ActionResult GetBatteryDetailData(string serialNumber)
         {
             BatteryDetailViewModel model = new BatteryDetailViewModel();
             try
             {
-                model = batterydb.GetBatteryDetails(ID);
+                model = batterydb.GetBatteryDetails(serialNumber);
 
                 if (model == null)
                 {

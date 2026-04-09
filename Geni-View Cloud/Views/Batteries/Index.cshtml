@@ -314,7 +314,7 @@
 
                             $icon.removeClass('fa-chevron-right').addClass('fa-sync fa-spin');
 
-                            $.get("/Batteries/GetBatteryDetailData?ID=" + serialNumber, function (viewdata) {
+                            $.get("/Batteries/GetBatteryDetailData?serialNumber=" + serialNumber, function (viewdata) {
 
                                 $icon.removeClass('fa-sync fa-spin').addClass('fa-chevron-up expanded');
                                 row.child('<div class="details-content">' + viewdata + '</div>', "details-row").show();
