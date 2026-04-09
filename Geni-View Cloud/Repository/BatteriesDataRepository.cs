@@ -232,36 +232,54 @@ namespace GeniView.Cloud.Repository
         {
             using (var db = new GeniViewCloudDataRepository())
             {
+                // Load battery + collections from SQL (only the WHERE filter runs in SQL).
+                // All arithmetic is done in C# below to avoid SQL Server divide-by-zero
+                // errors caused by the query optimizer evaluating all CASE branches.
+                var b = db.Batteries
+                    .Include(x => x.AgentBatteryLogCollection)
+                    .Include(x => x.BatterySettingsCollection)
+                    .Where(x => x.SerialNumberCode == serialNumber && x.IsDeactivated == false)
+                    .FirstOrDefault();
+
+                if (b == null) return null;
+
+                // All of the following runs in C# — no SQL divide-by-zero possible.
+                var row      = b.AgentBatteryLogCollection.OrderByDescending(t => t.Timestamp).FirstOrDefault();
+                var settings = b.BatterySettingsCollection.OrderByDescending(t => t.Timestamp).FirstOrDefault();
+                var logs     = b.AgentBatteryLogCollection;
 
                 // Note : Voltage Calculation max = 25.2 and min = 18;
                 //      : Used Formula like (dataVoltage - 18 ) * 100 / (25.2 - 18), because we can calculate when min = 0, not min = 18
+                return new BatteryDetailViewModel
+                {
+                    Battery            = b,
+                    LastSettings       = settings,
+                    LastAgentBatteryLog = row,
+                    FirstSeenOn        = logs.Any() ? logs.Min(t => t.Timestamp) : (DateTime?)null,
+                    LastSeenOn         = logs.Any() ? logs.Max(t => t.Timestamp) : (DateTime?)null,
 
-                var mainQuery = (from b in db.Batteries
-                                            .Include(x => x.AgentBatteryLogCollection)
-                                            .Include(x => x.BatterySettingsCollection)
-                                            .Where(x => x.SerialNumberCode == serialNumber && x.IsDeactivated == false)
-                                 let row = b.AgentBatteryLogCollection.OrderByDescending(t => t.Timestamp).FirstOrDefault()
-                                 select new BatteryDetailViewModel()
-                                 {
-                                     Battery = b,
-                                     LastSettings = b.BatterySettingsCollection.OrderByDescending(t => t.Timestamp).FirstOrDefault(),
-                                     LastAgentBatteryLog = row,
-                                     FirstSeenOn = b.AgentBatteryLogCollection.Min(t => t.Timestamp),
-                                     LastSeenOn = b.AgentBatteryLogCollection.Max(t => t.Timestamp),
-                                     Voltage = row != null ? new ExtraInfo { Name = Math.Round(((row.OperatingData.Voltage - 18) * 100) / (25.2 - 18), 2).ToString(), Color = GlobalSettings.SuccessColor, Value = Math.Round(Math.Abs(row.OperatingData.Voltage), 2), Title = "" }
-                                                           : new ExtraInfo { Name = "0", Color = GlobalSettings.AlertColor, Value = 0, Title = "" },
-                                     Charging = (row != null && row.Status == BatteryStates.Charging) ? new ExtraInfo { Name = Math.Abs(Math.Round((row.OperatingData.Current / 4) * 100)).ToString(), Color = GlobalSettings.SuccessColor, Value = Math.Round(Math.Abs(row.OperatingData.Current), 2), Title = "Charge Current" } :
-                                                (row != null && row.Status == BatteryStates.PoweringSystem) ? new ExtraInfo { Name = Math.Abs(Math.Round((row.OperatingData.Current / 9.2) * 100)).ToString(), Color = GlobalSettings.SuccessColor, Value = Math.Round(Math.Abs(row.OperatingData.Current), 2), Title = "Discharge Current" }
-                                                                                                                                                                                  : new ExtraInfo { Name = "0", Color = GlobalSettings.SuccessColor, Value = row != null ? Math.Round(Math.Abs(row.OperatingData.Current), 1) : 0, Title = "Idle Current" },
-                                     RemainingCapacity = (row != null) ? new ExtraInfo { Name = row.SlowChangingDataA.RelativeStateOfCharge.ToString(), Color = GlobalSettings.SuccessColor, Value = row.SlowChangingDataA.RemainingCapacity, Title = "" }
-                                                                       : new ExtraInfo { Name = "0", Color = GlobalSettings.AlertColor, Value = 0, Title = "" },
-                                     CalcCapacity = (row != null) ? (b.DesignCapacity > 0 && row.SlowChangingDataA.CalculatedCapacity < b.DesignCapacity) ? new ExtraInfo { Name = Math.Round(row.SlowChangingDataA.CalculatedCapacity / b.DesignCapacity * 100, 0).ToString(), Color = GlobalSettings.SuccessColor, Value = row.SlowChangingDataA.CalculatedCapacity, Title = "" }
-                                                                                                                                : new ExtraInfo { Name = "100", Color = GlobalSettings.SuccessColor, Value = row.SlowChangingDataA.CalculatedCapacity, Title = "" } // if capacity > design capacity
-                                                                                                                                : new ExtraInfo { Name = "0", Color = GlobalSettings.AlertColor, Value = 100, Title = "" }, // if row = null
-                                     State = row != null ? row.Status : BatteryStates.Unknown,
-                                 }).FirstOrDefault();
+                    Voltage = row != null
+                        ? new ExtraInfo { Name = Math.Round(((row.OperatingData.Voltage - 18) * 100) / (25.2 - 18), 2).ToString(), Color = GlobalSettings.SuccessColor, Value = Math.Round(Math.Abs(row.OperatingData.Voltage), 2), Title = "" }
+                        : new ExtraInfo { Name = "0", Color = GlobalSettings.AlertColor, Value = 0, Title = "" },
 
-                return mainQuery;
+                    Charging = (row != null && row.Status == BatteryStates.Charging)
+                        ? new ExtraInfo { Name = Math.Abs(Math.Round((row.OperatingData.Current / 4) * 100)).ToString(), Color = GlobalSettings.SuccessColor, Value = Math.Round(Math.Abs(row.OperatingData.Current), 2), Title = "Charge Current" }
+                        : (row != null && row.Status == BatteryStates.PoweringSystem)
+                            ? new ExtraInfo { Name = Math.Abs(Math.Round((row.OperatingData.Current / 9.2) * 100)).ToString(), Color = GlobalSettings.SuccessColor, Value = Math.Round(Math.Abs(row.OperatingData.Current), 2), Title = "Discharge Current" }
+                            : new ExtraInfo { Name = "0", Color = GlobalSettings.SuccessColor, Value = row != null ? Math.Round(Math.Abs(row.OperatingData.Current), 1) : 0, Title = "Idle Current" },
+
+                    RemainingCapacity = row != null
+                        ? new ExtraInfo { Name = row.SlowChangingDataA.RelativeStateOfCharge.ToString(), Color = GlobalSettings.SuccessColor, Value = row.SlowChangingDataA.RemainingCapacity, Title = "" }
+                        : new ExtraInfo { Name = "0", Color = GlobalSettings.AlertColor, Value = 0, Title = "" },
+
+                    CalcCapacity = row != null
+                        ? (b.DesignCapacity > 0 && row.SlowChangingDataA.CalculatedCapacity < b.DesignCapacity)
+                            ? new ExtraInfo { Name = Math.Round(row.SlowChangingDataA.CalculatedCapacity / b.DesignCapacity * 100, 0).ToString(), Color = GlobalSettings.SuccessColor, Value = row.SlowChangingDataA.CalculatedCapacity, Title = "" }
+                            : new ExtraInfo { Name = "100", Color = GlobalSettings.SuccessColor, Value = row.SlowChangingDataA.CalculatedCapacity, Title = "" }
+                        : new ExtraInfo { Name = "0", Color = GlobalSettings.AlertColor, Value = 100, Title = "" },
+
+                    State = row != null ? row.Status : BatteryStates.Unknown,
+                };
             }
         }
 
