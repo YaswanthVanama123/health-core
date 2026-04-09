@@ -228,7 +228,7 @@ namespace GeniView.Cloud.Repository
             }
         }
 
-        public BatteryDetailViewModel GetBatteryDetails(string serialNumber)
+        public BatteryDetailViewModel GetBatteryDetails(long id)
         {
             using (var db = new GeniViewCloudDataRepository())
             {
@@ -239,7 +239,7 @@ namespace GeniView.Cloud.Repository
                 var mainQuery = (from b in db.Batteries
                                             .Include(x => x.AgentBatteryLogCollection)
                                             .Include(x => x.BatterySettingsCollection)
-                                            .Where(x => x.SerialNumber == serialNumber && x.IsDeactivated == false)
+                                            .Where(x => x.ID == id && x.IsDeactivated == false)
                                  let row = b.AgentBatteryLogCollection.OrderByDescending(t => t.Timestamp).FirstOrDefault()
                                  select new BatteryDetailViewModel()
                                  {

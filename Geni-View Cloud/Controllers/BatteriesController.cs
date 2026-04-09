@@ -353,7 +353,7 @@ namespace GeniView.Cloud.Controllers
             return Json(model);
         }
 
-        public ActionResult GetBatteryDetailData(string serialNumber)
+        public ActionResult GetBatteryDetailData(long serialNumber)
         {
             BatteryDetailViewModel model = new BatteryDetailViewModel();
             try
