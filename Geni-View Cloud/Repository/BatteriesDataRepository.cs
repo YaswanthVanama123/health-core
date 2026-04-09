@@ -224,7 +224,11 @@ namespace GeniView.Cloud.Repository
                     }
                 }
 
-                return mainQuery.ToList();
+                return mainQuery
+                    .ToList()
+                    .GroupBy(x => x.ID)
+                    .Select(g => g.First())
+                    .ToList();
             }
         }
 
