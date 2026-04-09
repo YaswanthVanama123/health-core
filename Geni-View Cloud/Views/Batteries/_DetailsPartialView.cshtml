@@ -55,7 +55,7 @@
     var oemIdentifier = SafeString(settings?.OemIdentifier.ToString());
     var bsnNumber = SafeString(settings?.Battery?.SerialNumberCode?.ToString());
     var firmwareVersionText = battery.FirmwareVersion.ToString();
-    var serialCode = battery.ID.ToString();
+    var serialCode = battery.SerialNumber ?? Guid.NewGuid().ToString("N");
 
     <div class="gv-battery-details">
         <div class="gv-battery-top-metrics">
