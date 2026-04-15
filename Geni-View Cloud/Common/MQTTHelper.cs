@@ -89,7 +89,7 @@ namespace GeniView.Cloud.Common
             try
             {
                 // Connect to the MQTT broker.
-                _client.ConnectAsync(Options).Wait();
+                await _client.ConnectAsync(Options);
 
             }
             catch (AggregateException aggEx)
@@ -190,16 +190,15 @@ namespace GeniView.Cloud.Common
             _logger.Info("Client Connecting MQTT broker");
             return Task.CompletedTask;
         }
-        private Task mqttClient_ConnectedAsync(MqttClientConnectedEventArgs arg)
+        private async Task mqttClient_ConnectedAsync(MqttClientConnectedEventArgs arg)
         {
             _logger.Info("Client Connected MQTT broker");
             foreach (var topic in MQTTTopic.Topics)
             {
-                _client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);
+                await _client.SubscribeAsync(topic, MqttQualityOfServiceLevel.AtLeastOnce);
             }
-            return Task.CompletedTask;
         }
-        private async Task<Task> mqttClient_DisconnectedAsync(MqttClientDisconnectedEventArgs arg)
+        private async Task mqttClient_DisconnectedAsync(MqttClientDisconnectedEventArgs arg)
         {
             _logger.Warn("Client Disconnected MQTT broker");
 
@@ -210,7 +209,7 @@ namespace GeniView.Cloud.Common
                     _logger.Warn("Client Reconnecting MQTT broker");
 
                     await Task.Delay(new TimeSpan(0, 0, 10));  // Code delay for testing disconnect 10 seconds then reconnect.
-                    var retry = _client.ConnectAsync(Options);
+                    await _client.ConnectAsync(Options);
                 }
 
 
@@ -219,8 +218,6 @@ namespace GeniView.Cloud.Common
             {
                 _logger.Error("Mqtt reconnecting failed", ex);
             }
-
-            return Task.CompletedTask;
         }
         private Task mqttClient_MessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
         {

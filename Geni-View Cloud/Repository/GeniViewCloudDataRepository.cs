@@ -82,14 +82,14 @@ namespace GeniView.Cloud.Repository
             // EF Core convention for shadow FKs:     {NavigationPropertyName}{PKPropertyName}
             // Configure column names explicitly for entities that couldn't have [Column] attributes added.
             modelBuilder.Entity<InternalDeviceLog>()
-                .HasOne<Device>()
+                .HasOne(log => log.Device)
                 .WithMany(d => d.InternalDeviceLogCollection)
-                .HasForeignKey("Device_ID");
+                .HasForeignKey(log => log.Device_ID);
 
             modelBuilder.Entity<InternalBatteryLog>()
-                .HasOne<Battery>()
+                .HasOne(log => log.Battery)
                 .WithMany(b => b.InternalBatteryLogCollection)
-                .HasForeignKey("Battery_ID");
+                .HasForeignKey(log => log.Battery_ID);
         }
 
         // Marks every [ComplexType] property as required at any nesting depth.

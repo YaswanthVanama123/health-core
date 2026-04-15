@@ -16,12 +16,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Web;
+using RenityArtemis.Web.Common;
 using System;
 using System.Threading.Tasks;
 using WebOptimizer;
@@ -194,6 +196,9 @@ try
     // ── Initialise SessionHelper with IHttpContextAccessor ──────────────────
     var httpContextAccessor = app.Services.GetRequiredService<IHttpContextAccessor>();
     SessionHelper.Configure(httpContextAccessor);
+
+    // ── Initialise MemCacheHelper for MQTT command result caching ────────────
+    Global._memCacheHelper = new MemCacheHelper(app.Services.GetRequiredService<IMemoryCache>());
 
     // ── Set Global._serverPath for MailHelper / OTA file paths ──────────────
     Global._serverPath = app.Environment.ContentRootPath;

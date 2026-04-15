@@ -231,17 +231,13 @@ namespace GeniView.Cloud.Controllers.API
 
         public void ProcessLogJob(CancellationToken cancellationToken)
         {
-            Task.Run(() =>
+            if (cancellationToken.IsCancellationRequested)
             {
-            var ct = cancellationToken;
+                _logger.Error("ProcessLogJob is cancel.");
+                return;
+            }
 
-                if (ct.IsCancellationRequested == true)
-                {
-                    _logger.Error("ProcessLogJob is cancel.");
-                }
-
-                var ret = ProcessLog(ct);
-            });
+            var ret = ProcessLog(cancellationToken);
         }
 
         public void FinishLog(CancellationToken ct)
